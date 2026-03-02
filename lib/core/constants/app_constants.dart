@@ -4,7 +4,7 @@ class AppConstants {
   AppConstants._();
 
   // --- API ---
-  static const String baseUrl = 'https://api.convoquei.com.br';
+  static const String baseUrl = 'http://127.0.0.1:8080/api';
 
   // --- Timeouts ---
   static const Duration connectTimeout = Duration(seconds: 10);

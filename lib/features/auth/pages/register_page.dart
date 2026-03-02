@@ -1,44 +1,55 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../controllers/login_controller.dart';
 
-class RegisterPage extends ConsumerStatefulWidget {
-  const RegisterPage({super.key});
+class RegisterPage extends StatefulWidget {
+  final AuthController authController;
+
+  const RegisterPage({super.key, required this.authController});
 
   @override
-  ConsumerState<RegisterPage> createState() => _RegisterPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _RegisterPageState extends ConsumerState<RegisterPage> {
+class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _obscure = true;
 
+  AuthController get _auth => widget.authController;
+
+  @override
+  void initState() {
+    super.initState();
+    _auth.addListener(_onAuthChanged);
+  }
+
   @override
   void dispose() {
+    _auth.removeListener(_onAuthChanged);
     _nameCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
   }
 
+  void _onAuthChanged() => setState(() {});
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    await ref.read(authControllerProvider.notifier).register(
-          _nameCtrl.text.trim(),
-          _emailCtrl.text.trim(),
-          _passwordCtrl.text,
-        );
+    await _auth.register(
+      _nameCtrl.text.trim(),
+      _emailCtrl.text.trim(),
+      _passwordCtrl.text,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authControllerProvider);
-    final isLoading = authState.isLoading;
-    final errorMsg = authState.valueOrNull?.errorMessage;
+    final isLoading = _auth.isRegistering;
+    final errorMsg = _auth.state.errorMessage;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Criar conta')),

@@ -17,7 +17,7 @@ class AuthRepository {
 
   Future<LoginResponseDto> login(LoginRequestDto request) async {
     final data = await _apiClient.post<Map<String, dynamic>>(
-      '/api/v1/auth/login',
+      '/v1/auth/login',
       data: request.toJson(),
     );
     final dto = LoginResponseDto.fromJson(data);
@@ -27,7 +27,7 @@ class AuthRepository {
 
   Future<RegisterResponseDto> register(RegisterRequestDto request) async {
     final data = await _apiClient.post<Map<String, dynamic>>(
-      '/api/v1/auth/register',
+      '/v1/auth/register',
       data: request.toJson(),
     );
     return RegisterResponseDto.fromJson(data);
@@ -42,3 +42,4 @@ class AuthRepository {
     return token != null && token.isNotEmpty;
   }
 }
+

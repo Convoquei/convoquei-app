@@ -1,0 +1,11 @@
+<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Assinatura – Light Mode: arcos azuis, sem fundo -->
+  <g transform="translate(3, 0)">
+    <!-- Parte Superior (Sólida) -->
+    <path d="M 66 31 A 25 25 0 0 0 26.5 41.5" stroke="#1D4ED8" stroke-width="8" stroke-linecap="round"/>
+
+    <!-- Parte Inferior (Translúcida) -->
+    <path d="M 26.5 58.5 A 25 25 0 0 0 66 69" stroke="rgba(29,78,216,0.4)" stroke-width="8" stroke-linecap="round"/>
+  </g>
+</svg>
+

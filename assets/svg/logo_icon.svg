@@ -1,0 +1,17 @@
+<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fundo do App Icon (Azul Primário) -->
+  <rect width="100" height="100" rx="0" fill="#1D4ED8"/>
+
+  <!-- Elemento Geométrico Centralizado com respiro na esquerda -->
+  <g transform="translate(3, 0)">
+    <!-- Parte Superior (Sólida - Instituição) -->
+    <path d="M 66 31 A 25 25 0 0 0 26.5 41.5" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+
+    <!-- Parte Inferior (Translúcida - Membro/Fluidez) -->
+    <path d="M 26.5 58.5 A 25 25 0 0 0 66 69" stroke="rgba(255,255,255,0.4)" stroke-width="8" stroke-linecap="round"/>
+  </g>
+
+  <!-- Brilho sutil superior (Estilo Premium App) -->
+  <path d="M 0 0 C 0 9.8 0 0 0 0 L 100 0 L 0 100 Z" fill="white" fill-opacity="0.04"/>
+</svg>
+

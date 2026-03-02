@@ -63,12 +63,16 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final response = await _dio.get<T>(
-      path,
-      queryParameters: queryParameters,
-      options: options,
-    );
-    return _handleResponse<T>(response);
+    try {
+      final response = await _dio.get<T>(
+        path,
+        queryParameters: queryParameters,
+        options: options,
+      );
+      return _handleResponse<T>(response);
+    } on DioException catch (e) {
+      return _handleDioException<T>(e);
+    }
   }
 
   Future<T> post<T>(String path, {
@@ -76,13 +80,17 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final response = await _dio.post<T>(
-      path,
-      data: data,
-      queryParameters: queryParameters,
-      options: options,
-    );
-    return _handleResponse<T>(response);
+    try {
+      final response = await _dio.post<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+      );
+      return _handleResponse<T>(response);
+    } on DioException catch (e) {
+      return _handleDioException<T>(e);
+    }
   }
 
   Future<T> put<T>(String path, {
@@ -90,13 +98,17 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final response = await _dio.put<T>(
-      path,
-      data: data,
-      queryParameters: queryParameters,
-      options: options,
-    );
-    return _handleResponse<T>(response);
+    try {
+      final response = await _dio.put<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+      );
+      return _handleResponse<T>(response);
+    } on DioException catch (e) {
+      return _handleDioException<T>(e);
+    }
   }
 
   Future<T> patch<T>(String path, {
@@ -104,13 +116,17 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final response = await _dio.patch<T>(
-      path,
-      data: data,
-      queryParameters: queryParameters,
-      options: options,
-    );
-    return _handleResponse<T>(response);
+    try {
+      final response = await _dio.patch<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+      );
+      return _handleResponse<T>(response);
+    } on DioException catch (e) {
+      return _handleDioException<T>(e);
+    }
   }
 
   Future<void> delete(String path, {
@@ -118,17 +134,52 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final response = await _dio.delete<void>(
-      path,
-      data: data,
-      queryParameters: queryParameters,
-      options: options,
-    );
-    _handleResponse<void>(response);
+    try {
+      final response = await _dio.delete<void>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+      );
+      _handleResponse<void>(response);
+    } on DioException catch (e) {
+      _handleDioException<void>(e);
+    }
+  }
+
+  T _handleDioException<T>(DioException e) {
+    debugPrint('[ApiClient] DioException tipo: ${e.type}');
+    debugPrint('[ApiClient] DioException mensagem: ${e.message}');
+
+    final response = e.response;
+    if (response != null) {
+      debugPrint('[ApiClient] Tem resposta HTTP ${response.statusCode}, delegando para _handleResponse');
+      return _handleResponse<T>(Response<T>(
+        data: response.data as T?,
+        headers: response.headers,
+        requestOptions: response.requestOptions,
+        redirects: response.redirects,
+        statusCode: response.statusCode,
+        statusMessage: response.statusMessage,
+        extra: response.extra,
+      ));
+    }
+
+    debugPrint('[ApiClient] Sem resposta HTTP — falha de rede/timeout, tipo: ${e.type}');
+
+    if (e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.sendTimeout ||
+        e.type == DioExceptionType.receiveTimeout) {
+      throw TimeoutException();
+    }
+
+    throw NetworkException(message: e.message ?? 'Erro de conexão');
   }
 
   T _handleResponse<T>(Response<T> response) {
     final statusCode = response.statusCode ?? 0;
+
+    debugPrint('handle na resposta');
 
     if (statusCode >= 200 && statusCode < 300) {
       return response.data as T;
@@ -168,3 +219,4 @@ class ApiClient {
     };
   }
 }
+

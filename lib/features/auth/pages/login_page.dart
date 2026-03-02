@@ -1,41 +1,51 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/app_logo.dart';
 import '../controllers/login_controller.dart';
 import 'register_page.dart';
 
-class LoginPage extends ConsumerStatefulWidget {
-  const LoginPage({super.key});
+class LoginPage extends StatefulWidget {
+  final AuthController authController;
+
+  const LoginPage({super.key, required this.authController});
 
   @override
-  ConsumerState<LoginPage> createState() => _LoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends ConsumerState<LoginPage> {
+class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _obscure = true;
 
+  AuthController get _auth => widget.authController;
+
+  @override
+  void initState() {
+    super.initState();
+    _auth.addListener(_onAuthChanged);
+  }
+
   @override
   void dispose() {
+    _auth.removeListener(_onAuthChanged);
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
   }
 
+  void _onAuthChanged() => setState(() {});
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    await ref
-        .read(authControllerProvider.notifier)
-        .login(_emailCtrl.text.trim(), _passwordCtrl.text);
+    await _auth.login(_emailCtrl.text.trim(), _passwordCtrl.text);
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authControllerProvider);
-    final isLoading = authState.isLoading;
-    final errorMsg = authState.valueOrNull?.errorMessage;
+    final isLoading = _auth.isLoggingIn;
+    final errorMsg = _auth.state.errorMessage;
 
     return Scaffold(
       body: SafeArea(
@@ -47,11 +57,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    'Convoquei',
-                    style: Theme.of(context).textTheme.displayMedium,
-                    textAlign: TextAlign.center,
-                  ),
+                  const Center(child: AppLogo.signature(size: 40)),
                   const SizedBox(height: 8),
                   Text(
                     'Entre na sua conta',
@@ -123,7 +129,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ? null
                         : () => Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (_) => const RegisterPage(),
+                                builder: (_) => RegisterPage(
+                                  authController: _auth,
+                                ),
                               ),
                             ),
                     child: const Text('Não tem conta? Registre-se'),

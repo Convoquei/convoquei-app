@@ -1,18 +1,39 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../auth/controllers/login_controller.dart';
 import '../../auth/controllers/user_controller.dart';
 import '../../auth/models/user_model.dart';
 
 /// Home screen — shows the logged-in user's profile.
-class HomePage extends ConsumerWidget {
-  const HomePage({super.key});
+class HomePage extends StatefulWidget {
+  final AuthController authController;
+
+  const HomePage({super.key, required this.authController});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final userAsync = ref.watch(userControllerProvider);
+  State<HomePage> createState() => _HomePageState();
+}
 
+class _HomePageState extends State<HomePage> {
+  final _userController = UserController();
+
+  @override
+  void initState() {
+    super.initState();
+    _userController.addListener(_rebuild);
+  }
+
+  @override
+  void dispose() {
+    _userController.removeListener(_rebuild);
+    _userController.dispose();
+    super.dispose();
+  }
+
+  void _rebuild() => setState(() {});
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
@@ -20,47 +41,57 @@ class HomePage extends ConsumerWidget {
           IconButton(
             tooltip: 'Sair',
             icon: const Icon(Icons.logout),
-            onPressed: () =>
-                ref.read(authControllerProvider.notifier).logout(),
+            onPressed: () => widget.authController.logout(),
           ),
         ],
       ),
-      body: userAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.error_outline, size: 48, color: Colors.red),
-              const SizedBox(height: 12),
-              Text(
-                'Erro ao carregar perfil',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                e.toString(),
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 16),
-              FilledButton.icon(
-                onPressed: () =>
-                    ref.read(userControllerProvider.notifier).refresh(),
-                icon: const Icon(Icons.refresh),
-                label: const Text('Tentar novamente'),
-              ),
-            ],
-          ),
-        ),
-        data: (user) => _ProfileBody(user: user),
-      ),
+      body: _buildBody(context),
     );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    if (_userController.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final error = _userController.error;
+    if (error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            const SizedBox(height: 12),
+            Text(
+              'Erro ao carregar perfil',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              error.toString(),
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: _userController.refresh,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Tentar novamente'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final user = _userController.user;
+    if (user == null) return const SizedBox.shrink();
+    return _ProfileBody(user: user);
   }
 }
 
 class _ProfileBody extends StatelessWidget {
   final UserModel user;
+
   const _ProfileBody({required this.user});
 
   @override
@@ -76,15 +107,13 @@ class _ProfileBody extends StatelessWidget {
             // Avatar
             CircleAvatar(
               radius: 48,
-              backgroundImage: (user.avatarUrl != null &&
-                      user.avatarUrl!.isNotEmpty)
+              backgroundImage:
+                  (user.avatarUrl != null && user.avatarUrl!.isNotEmpty)
                   ? NetworkImage(user.avatarUrl!)
                   : null,
               child: (user.avatarUrl == null || user.avatarUrl!.isEmpty)
                   ? Text(
-                      user.name.isNotEmpty
-                          ? user.name[0].toUpperCase()
-                          : '?',
+                      user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
                       style: const TextStyle(fontSize: 36),
                     )
                   : null,
@@ -108,8 +137,7 @@ class _ProfileBody extends StatelessWidget {
                     ? 'E-mail verificado'
                     : 'E-mail não verificado',
                 style: TextStyle(
-                  color:
-                      user.isEmailVerified ? Colors.green : Colors.orange,
+                  color: user.isEmailVerified ? Colors.green : Colors.orange,
                 ),
               ),
             ),

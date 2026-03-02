@@ -1,21 +1,23 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../../core/providers.dart';
+import '../../../core/app_services.dart';
+import '../../../core/loading_controller.dart';
 import '../models/user_model.dart';
 import '../repository/user_repository.dart';
 
-class UserController extends AsyncNotifier<UserModel> {
-  UserRepository get _repo => ref.read(userRepositoryProvider);
+class UserController extends LoadingController {
+  final UserRepository _repo;
 
-  @override
-  Future<UserModel> build() => _repo.getProfile();
-
-  Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() => _repo.getProfile());
+  UserController([UserRepository? repo])
+      : _repo = repo ?? AppServices.instance.userRepository {
+    run(fetch);
   }
+
+  UserModel? _user;
+
+  UserModel? get user => _user;
+
+  Future<void> fetch() => run(() async {
+    _user = await _repo.getProfile();
+  });
+
+  Future<void> refresh() => fetch();
 }
-
-final userControllerProvider =
-    AsyncNotifierProvider<UserController, UserModel>(UserController.new);
-

@@ -1,90 +1,94 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../../core/providers.dart';
+import '../../../core/app_services.dart';
+import '../../../core/loading_controller.dart';
+import '../models/auth_state.dart';
 import '../models/dto/requests/login_request_dto.dart';
 import '../models/dto/requests/register_request_dto.dart';
 import '../repository/auth_repository.dart';
 
-// ── State ─────────────────────────────────────────────────────────────────────
+class AuthController extends LoadingController {
+  final AuthRepository _repo;
 
-enum AuthStatus { unknown, authenticated, unauthenticated }
+  AuthController() : _repo = AppServices.instance.authRepository {
+    _init();
+  }
 
-class AuthState {
-  final AuthStatus status;
-  final String? errorMessage;
+  AuthState _state = const AuthState();
+  bool isInitializing = false;
+  bool isLoggingIn = false;
+  bool isRegistering = false;
 
-  const AuthState({this.status = AuthStatus.unknown, this.errorMessage});
+  AuthState get state => _state;
 
-  AuthState copyWith({AuthStatus? status, String? errorMessage}) => AuthState(
-        status: status ?? this.status,
-        errorMessage: errorMessage,
-      );
-}
+  void _setState(AuthState next) {
+    _state = next;
+    notifyListeners();
+  }
 
-// ── Notifier ──────────────────────────────────────────────────────────────────
-
-class AuthController extends AsyncNotifier<AuthState> {
-  AuthRepository get _repo => ref.read(authRepositoryProvider);
-
-  @override
-  Future<AuthState> build() async {
-    final hasSession = await _repo.hasValidSession();
-    return AuthState(
-      status:
-          hasSession ? AuthStatus.authenticated : AuthStatus.unauthenticated,
+  Future<void> _init() async {
+    await run(
+      () async {
+        final hasSession = await _repo.hasValidSession();
+        _setState(
+          AuthState(
+            status: hasSession
+                ? AuthStatus.authenticated
+                : AuthStatus.unauthenticated,
+          ),
+        );
+      },
+      loading: (v) => isInitializing = v,
     );
+    if (error != null) {
+      _setState(const AuthState(status: AuthStatus.unauthenticated));
+    }
   }
 
   Future<void> login(String email, String password) async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      await _repo.login(LoginRequestDto(email: email, password: password));
-      debugPrint('✅ Logou com sucesso');
-      return const AuthState(status: AuthStatus.authenticated);
-    }).then(
-      (result) => result.hasError
-          ? AsyncData(AuthState(
-              status: AuthStatus.unauthenticated,
-              errorMessage: result.error.toString(),
-            ))
-          : result,
+    _setState(_state.copyWith(errorMessage: null));
+    await run(
+      () async {
+        await _repo.login(LoginRequestDto(email: email, password: password));
+
+        _setState(const AuthState(status: AuthStatus.authenticated));
+      },
+      loading: (v) => isLoggingIn = v,
     );
+    if (error != null) {
+      _setState(
+        AuthState(
+          status: AuthStatus.unauthenticated,
+          errorMessage: buildErrorFetchAPI(error),
+        ),
+      );
+    }
   }
 
   Future<void> register(String name, String email, String password) async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      await _repo.register(
-        RegisterRequestDto(name: name, email: email, password: password),
-      );
-      // After registering, log in immediately.
-      await _repo.login(LoginRequestDto(email: email, password: password));
-      debugPrint('✅ Registrou e logou com sucesso');
-      return const AuthState(status: AuthStatus.authenticated);
-    }).then(
-      (result) => result.hasError
-          ? AsyncData(AuthState(
-              status: AuthStatus.unauthenticated,
-              errorMessage: result.error.toString(),
-            ))
-          : result,
+    _setState(_state.copyWith(errorMessage: null));
+    await run(
+      () async {
+        await _repo.register(
+          RegisterRequestDto(name: name, email: email, password: password),
+        );
+
+        await _repo.login(LoginRequestDto(email: email, password: password));
+
+        _setState(const AuthState(status: AuthStatus.authenticated));
+      },
+      loading: (v) => isRegistering = v,
     );
+    if (error != null) {
+      _setState(
+        AuthState(
+          status: AuthStatus.unauthenticated,
+          errorMessage: buildErrorFetchAPI(error),
+        ),
+      );
+    }
   }
 
   Future<void> logout() async {
     await _repo.logout();
-    state = const AsyncData(AuthState(status: AuthStatus.unauthenticated));
-  }
-
-  /// Called by the AuthInterceptor redirect — tokens were cleared externally.
-  void onSessionExpired() {
-    state = const AsyncData(AuthState(status: AuthStatus.unauthenticated));
+    _setState(const AuthState(status: AuthStatus.unauthenticated));
   }
 }
-
-// ── Provider ──────────────────────────────────────────────────────────────────
-
-final authControllerProvider =
-    AsyncNotifierProvider<AuthController, AuthState>(AuthController.new);
-
