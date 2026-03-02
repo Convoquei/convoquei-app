@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/constants/app_breakpoints.dart';
 import '../../../core/services/user_feedback_service.dart';
 import '../../../core/widgets/app_logo.dart';
-import '../controllers/login_controller.dart';
+import '../controllers/auth_controller.dart';
 import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
-  final AuthController authController;
-
-  const LoginPage({super.key, required this.authController});
+  const LoginPage({super.key});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -21,29 +20,21 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordCtrl = TextEditingController();
   bool _obscure = true;
 
-  AuthController get _auth => widget.authController;
-
-  @override
-  void initState() {
-    super.initState();
-    _auth.addListener(_onAuthChanged);
-  }
-
   @override
   void dispose() {
-    _auth.removeListener(_onAuthChanged);
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
   }
 
-  void _onAuthChanged() => setState(() {});
-
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    await _auth.login(_emailCtrl.text.trim(), _passwordCtrl.text);
+    await context.read<AuthController>().login(
+          _emailCtrl.text.trim(),
+          _passwordCtrl.text,
+        );
     if (!mounted) return;
-    final errorMsg = _auth.state.errorMessage;
+    final errorMsg = context.read<AuthController>().state.errorMessage;
     if (errorMsg != null) {
       await UserFeedbackService.error(context, message: errorMsg);
     }
@@ -51,7 +42,8 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = _auth.isLoggingIn;
+    final auth = context.watch<AuthController>();
+    final isLoading = auth.isLoggingIn;
     final isWide = AppBreakpoints.isWide(context);
 
     final formContent = Form(
@@ -117,9 +109,7 @@ class _LoginPageState extends State<LoginPage> {
                 ? null
                 : () => Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => RegisterPage(
-                          authController: _auth,
-                        ),
+                        builder: (_) => const RegisterPage(),
                       ),
                     ),
             child: const Text('Não tem conta? Registre-se'),

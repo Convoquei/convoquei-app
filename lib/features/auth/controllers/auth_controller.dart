@@ -1,4 +1,3 @@
-import '../../../core/app_services.dart';
 import '../../../core/loading_controller.dart';
 import '../models/auth_state.dart';
 import '../models/dto/requests/login_request_dto.dart';
@@ -11,9 +10,11 @@ class AuthController extends LoadingController {
   final AuthRepository _repo;
   final UserRepository _userRepo;
 
-  AuthController()
-      : _repo = AppServices.instance.authRepository,
-        _userRepo = AppServices.instance.userRepository {
+  AuthController({
+    required AuthRepository authRepository,
+    required UserRepository userRepository,
+  })  : _repo = authRepository,
+        _userRepo = userRepository {
     _init();
   }
 

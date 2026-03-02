@@ -11,6 +11,14 @@ class UserModel {
     required this.isEmailVerified,
   });
 
+  String get nameAbbreviation {
+    final parts = name.split(' ');
+    if (parts.length >= 2) {
+      return '${parts[0]} ${parts[1]}';
+    }
+    return name;
+  }
+
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
         name: json['name'] as String,
         email: json['email'] as String,

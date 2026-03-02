@@ -1,89 +1,74 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../../auth/controllers/login_controller.dart';
+import '../../auth/controllers/auth_controller.dart';
 import '../../auth/models/user_model.dart';
+import '../controllers/user_organization_controller.dart';
+import '../widgets/perfil_header.dart';
 
-/// Home screen — shows the logged-in user's profile.
 class HomePage extends StatelessWidget {
-  final AuthController authController;
-
-  const HomePage({super.key, required this.authController});
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // user is guaranteed non-null when AuthStatus.authenticated
-    final user = authController.state.user!;
+    final user = context.select<AuthController, UserModel>(
+          (auth) => auth.state.user!,
+    );
+
+    final controller = context.read<UserOrganizationController>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-        actions: [
-          IconButton(
-            tooltip: 'Sair',
-            icon: const Icon(Icons.logout),
-            onPressed: () => authController.logout(),
+      body: Column(
+        children: [
+          SafeArea(
+            bottom: false,
+            child: PerfilHeader(
+              user: user,
+              onNotificationTap: () {},
+            ),
+          ),
+          Expanded(
+            child: FutureBuilder(
+              future: controller.fetchOrganizations(),
+              builder: (context, snapshot) {
+                // 🔄 Loading
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+
+                // ❌ Erro
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Text(
+                      controller.buildErrorFetchAPI(snapshot.error),
+                    ),
+                  );
+                }
+
+                // ✅ Sucesso
+                final organizations = controller.organizations;
+
+                if (organizations.isEmpty) {
+                  return const Center(
+                    child: Text('Nenhuma organização encontrada.'),
+                  );
+                }
+
+                return ListView.builder(
+                  itemCount: organizations.length,
+                  itemBuilder: (context, index) {
+                    final org = organizations[index];
+                    return ListTile(
+                      title: Text(org.name),
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ],
-      ),
-      body: _ProfileBody(user: user),
-    );
-  }
-}
-
-class _ProfileBody extends StatelessWidget {
-  final UserModel user;
-
-  const _ProfileBody({required this.user});
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Avatar
-            CircleAvatar(
-              radius: 48,
-              backgroundImage:
-                  (user.avatarUrl != null && user.avatarUrl!.isNotEmpty)
-                  ? NetworkImage(user.avatarUrl!)
-                  : null,
-              child: (user.avatarUrl == null || user.avatarUrl!.isEmpty)
-                  ? Text(
-                      user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
-                      style: const TextStyle(fontSize: 36),
-                    )
-                  : null,
-            ),
-            const SizedBox(height: 20),
-            Text(user.name, style: tt.titleLarge),
-            const SizedBox(height: 4),
-            Text(user.email, style: tt.bodyMedium),
-            const SizedBox(height: 12),
-            // E-mail verified badge
-            Chip(
-              avatar: Icon(
-                user.isEmailVerified
-                    ? Icons.verified_outlined
-                    : Icons.mark_email_unread_outlined,
-                size: 16,
-                color: user.isEmailVerified ? Colors.green : Colors.orange,
-              ),
-              label: Text(
-                user.isEmailVerified
-                    ? 'E-mail verificado'
-                    : 'E-mail não verificado',
-                style: TextStyle(
-                  color: user.isEmailVerified ? Colors.green : Colors.orange,
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

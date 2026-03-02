@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/constants/app_breakpoints.dart';
 import '../../../core/services/user_feedback_service.dart';
 import '../../../core/widgets/app_logo.dart';
-import '../controllers/login_controller.dart';
+import '../controllers/auth_controller.dart';
 
 class RegisterPage extends StatefulWidget {
-  final AuthController authController;
-
-  const RegisterPage({super.key, required this.authController});
+  const RegisterPage({super.key});
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
@@ -21,34 +20,23 @@ class _RegisterPageState extends State<RegisterPage> {
   final _passwordCtrl = TextEditingController();
   bool _obscure = true;
 
-  AuthController get _auth => widget.authController;
-
-  @override
-  void initState() {
-    super.initState();
-    _auth.addListener(_onAuthChanged);
-  }
-
   @override
   void dispose() {
-    _auth.removeListener(_onAuthChanged);
     _nameCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
   }
 
-  void _onAuthChanged() => setState(() {});
-
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    await _auth.register(
-      _nameCtrl.text.trim(),
-      _emailCtrl.text.trim(),
-      _passwordCtrl.text,
-    );
+    await context.read<AuthController>().register(
+          _nameCtrl.text.trim(),
+          _emailCtrl.text.trim(),
+          _passwordCtrl.text,
+        );
     if (!mounted) return;
-    final errorMsg = _auth.state.errorMessage;
+    final errorMsg = context.read<AuthController>().state.errorMessage;
     if (errorMsg != null) {
       await UserFeedbackService.error(context, message: errorMsg);
     }
@@ -56,7 +44,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = _auth.isRegistering;
+    final auth = context.watch<AuthController>();
+    final isLoading = auth.isRegistering;
     final isWide = AppBreakpoints.isWide(context);
 
     final formContent = Form(
