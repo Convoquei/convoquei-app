@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 // ---------------------------------------------------------------------------
 // AppLogo – Variants
@@ -85,12 +84,11 @@ class AppLogo extends StatelessWidget {
 
         Text(
           'convoquei',
-          style: GoogleFonts.poppins(
-            fontSize: markSize * 0.72,
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: size * 0.6,
             fontWeight: FontWeight.w700,
             color: textColor,
-            height: 1,
-            letterSpacing: -0.5,
           ),
         ),
       ],

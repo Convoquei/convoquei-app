@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   static const primaryColor = Color(0xFF1D4ED8);
@@ -9,60 +8,70 @@ class AppTheme {
   static const textSecondary = Color(0xFF64748B);
 
   static ThemeData get light {
-    final base = ThemeData.light();
+    return ThemeData(
+      useMaterial3: true,
 
-    return base.copyWith(
-      scaffoldBackgroundColor: backgroundColor,
-      primaryColor: primaryColor,
-      colorScheme: base.colorScheme.copyWith(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primaryColor,
         primary: primaryColor,
         secondary: secondaryColor,
         background: backgroundColor,
       ),
 
-      textTheme: TextTheme(
-        displayLarge: GoogleFonts.poppins(
+      scaffoldBackgroundColor: backgroundColor,
+
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(
+          fontFamily: 'Poppins',
           fontSize: 32,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w700,
           color: textPrimary,
         ),
-        displayMedium: GoogleFonts.poppins(
+        displayMedium: TextStyle(
+          fontFamily: 'Poppins',
           fontSize: 24,
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
-        titleLarge: GoogleFonts.poppins(
+        titleLarge: TextStyle(
+          fontFamily: 'Poppins',
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
-        bodyLarge: GoogleFonts.inter(
+        bodyLarge: TextStyle(
+          fontFamily: 'Inter',
           fontSize: 16,
           fontWeight: FontWeight.w400,
           color: textPrimary,
+          height: 1.4,
         ),
-        bodyMedium: GoogleFonts.inter(
+        bodyMedium: TextStyle(
+          fontFamily: 'Inter',
           fontSize: 14,
           fontWeight: FontWeight.w400,
           color: textSecondary,
+          height: 1.4,
         ),
-        labelLarge: GoogleFonts.inter(
+        labelLarge: TextStyle(
+          fontFamily: 'Inter',
           fontSize: 14,
           fontWeight: FontWeight.w600,
           color: Colors.white,
         ),
       ),
 
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
-        titleTextStyle: GoogleFonts.poppins(
+        titleTextStyle: TextStyle(
+          fontFamily: 'Poppins',
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
-        iconTheme: const IconThemeData(color: textPrimary),
+        iconTheme: IconThemeData(color: textPrimary),
       ),
 
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -70,23 +79,25 @@ class AppTheme {
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.all(Radius.circular(12)),
           ),
           padding: const EdgeInsets.symmetric(
             horizontal: 24,
             vertical: 14,
           ),
-          textStyle: GoogleFonts.inter(
+          textStyle: const TextStyle(
+            fontFamily: 'Inter',
             fontWeight: FontWeight.w600,
+            fontSize: 14,
           ),
         ),
       ),
 
-      cardTheme: CardThemeData(
+      cardTheme: const CardThemeData(
         color: Colors.white,
         elevation: 2,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.all(Radius.circular(16)),
         ),
       ),
     );

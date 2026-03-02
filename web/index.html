@@ -1,17 +1,4 @@
 <!DOCTYPE html><html><head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
@@ -34,7 +21,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      background: #1D4ED8; /* shown before #splash paints */
+      background: #1D4ED8;
     }
 
     /* ── Splash overlay ─────────────────────────────────────── */
@@ -48,6 +35,8 @@
       justify-content: space-between;
       padding: 0 0 48px;
       z-index: 9999;
+      will-change: opacity;
+      contain: layout style paint;
       transition: opacity 0.4s ease;
     }
 
@@ -56,7 +45,6 @@
       pointer-events: none;
     }
 
-    /* centre column */
     #splash-center {
       flex: 1;
       display: flex;
@@ -64,24 +52,29 @@
       align-items: center;
       justify-content: center;
       gap: 24px;
+      contain: layout style;
     }
 
     /* ── Logo SVG arcs ──────────────────────────────────────── */
     #splash-logo {
       width: 112px;
       height: 112px;
+      will-change: transform;
+      transform: translateZ(0);
     }
 
     .arc-solid {
       stroke-dasharray: 80;
       stroke-dashoffset: 80;
       animation: drawArc 1.2s cubic-bezier(0.65,0,0.35,1) 0s forwards;
+      will-change: stroke-dashoffset;
     }
 
     .arc-translucent {
       stroke-dasharray: 80;
       stroke-dashoffset: 80;
       animation: drawArc 1.2s cubic-bezier(0.65,0,0.35,1) 0.4s forwards;
+      will-change: stroke-dashoffset;
     }
 
     @keyframes drawArc {
@@ -97,6 +90,7 @@
       letter-spacing: -0.5px;
       opacity: 0;
       transform: translateY(20px);
+      will-change: opacity, transform;
       animation: fadeInUp 0.8s ease-out 1.2s forwards;
     }
 
@@ -111,6 +105,7 @@
       align-items: center;
       gap: 12px;
       opacity: 0;
+      will-change: opacity;
       animation: fadeIn 1s ease-out 2s forwards;
     }
 
@@ -129,6 +124,7 @@
       border-radius: 50%;
       background: #fff;
       opacity: 0.3;
+      will-change: opacity, transform;
       animation: pulse 1.5s infinite;
     }
     .dot:nth-child(2) { animation-delay: 0.2s; }
@@ -148,54 +144,66 @@
       text-transform: uppercase;
     }
   </style>
+
   <script id="splash-screen-script">
     function removeSplashFromWeb() {
       var splash = document.getElementById("splash");
-      if (splash) {
+      if (!splash) return;
+
+      requestAnimationFrame(function () {
         splash.classList.add("hidden");
         setTimeout(function () {
           splash.remove();
           document.getElementById("splash-branding")?.remove();
           document.body.style.background = "transparent";
         }, 450);
-      }
+      });
     }
   </script>
+
   <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
 </head>
 <body>
-  <!-- ── Web splash (visible while Flutter loads) ───────────── -->
-  <div id="splash">
-    <div id="splash-center">
-      <svg id="splash-logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <g transform="translate(3, 0)">
-          <!-- Parte Superior (Sólida - Instituição) -->
-          <path class="arc-solid"
-            d="M 66 31 A 25 25 0 0 0 26.5 41.5"
-            stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
-          <!-- Parte Inferior (Translúcida - Membro/Fluidez) -->
-          <path class="arc-translucent"
-            d="M 26.5 58.5 A 25 25 0 0 0 66 69"
-            stroke="rgba(255,255,255,0.4)" stroke-width="8" stroke-linecap="round"/>
-        </g>
-      </svg>
+<!-- ── Web splash (visible while Flutter loads) ───────────── -->
+<div id="splash">
+  <div id="splash-center">
+    <svg id="splash-logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g transform="translate(3, 0)">
+        <path class="arc-solid"
+              d="M 66 31 A 25 25 0 0 0 26.5 41.5"
+              stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+        <path class="arc-translucent"
+              d="M 26.5 58.5 A 25 25 0 0 0 66 69"
+              stroke="rgba(255,255,255,0.4)" stroke-width="8" stroke-linecap="round"/>
+      </g>
+    </svg>
 
-      <div id="splash-name">Convoquei</div>
-    </div>
-
-    <div id="splash-footer">
-      <div class="dots">
-        <div class="dot"></div>
-        <div class="dot"></div>
-        <div class="dot"></div>
-      </div>
-      <div id="splash-tagline">organize • convoque • escale</div>
-    </div>
+    <div id="splash-name">Convoquei</div>
   </div>
 
+  <div id="splash-footer">
+    <div class="dots">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+    <div id="splash-tagline">organize • convoque • escale</div>
+  </div>
+</div>
 
-  <script src="flutter_bootstrap.js" async=""></script>
-
-
+<script>
+  // ─────────────────────────────────────────────────────────────
+  // Aguarda 2.5s antes de injetar o flutter_bootstrap.js.
+  // Garante que toda a animação do splash rode sem concorrência
+  // com a compilação Wasm/JS do Flutter na main thread.
+  // O Flutter inicializa normalmente após o delay e chama
+  // removeSplashFromWeb() quando estiver pronto.
+  // ─────────────────────────────────────────────────────────────
+  setTimeout(function () {
+    var script = document.createElement('script');
+    script.src = 'flutter_bootstrap.js';
+    document.body.appendChild(script);
+  }, 2500);
+</script>
 
 </body></html>
