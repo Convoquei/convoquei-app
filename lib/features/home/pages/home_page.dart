@@ -1,39 +1,19 @@
 import 'package:flutter/material.dart';
 
 import '../../auth/controllers/login_controller.dart';
-import '../../auth/controllers/user_controller.dart';
 import '../../auth/models/user_model.dart';
 
 /// Home screen — shows the logged-in user's profile.
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   final AuthController authController;
 
   const HomePage({super.key, required this.authController});
 
   @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  final _userController = UserController();
-
-  @override
-  void initState() {
-    super.initState();
-    _userController.addListener(_rebuild);
-  }
-
-  @override
-  void dispose() {
-    _userController.removeListener(_rebuild);
-    _userController.dispose();
-    super.dispose();
-  }
-
-  void _rebuild() => setState(() {});
-
-  @override
   Widget build(BuildContext context) {
+    // user is guaranteed non-null when AuthStatus.authenticated
+    final user = authController.state.user!;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
@@ -41,51 +21,12 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             tooltip: 'Sair',
             icon: const Icon(Icons.logout),
-            onPressed: () => widget.authController.logout(),
+            onPressed: () => authController.logout(),
           ),
         ],
       ),
-      body: _buildBody(context),
+      body: _ProfileBody(user: user),
     );
-  }
-
-  Widget _buildBody(BuildContext context) {
-    if (_userController.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    final error = _userController.error;
-    if (error != null) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
-            const SizedBox(height: 12),
-            Text(
-              'Erro ao carregar perfil',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              error.toString(),
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: _userController.refresh,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Tentar novamente'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    final user = _userController.user;
-    if (user == null) return const SizedBox.shrink();
-    return _ProfileBody(user: user);
   }
 }
 

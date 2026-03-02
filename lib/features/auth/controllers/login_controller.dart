@@ -3,12 +3,17 @@ import '../../../core/loading_controller.dart';
 import '../models/auth_state.dart';
 import '../models/dto/requests/login_request_dto.dart';
 import '../models/dto/requests/register_request_dto.dart';
+import '../models/user_model.dart';
 import '../repository/auth_repository.dart';
+import '../repository/user_repository.dart';
 
 class AuthController extends LoadingController {
   final AuthRepository _repo;
+  final UserRepository _userRepo;
 
-  AuthController() : _repo = AppServices.instance.authRepository {
+  AuthController()
+      : _repo = AppServices.instance.authRepository,
+        _userRepo = AppServices.instance.userRepository {
     _init();
   }
 
@@ -24,17 +29,33 @@ class AuthController extends LoadingController {
     notifyListeners();
   }
 
+  /// Fetches the profile and returns it, or null if the request fails.
+  Future<UserModel?> _fetchProfile() async {
+    try {
+      return await _userRepo.getProfile();
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _init() async {
     await run(
       () async {
         final hasSession = await _repo.hasValidSession();
-        _setState(
-          AuthState(
-            status: hasSession
-                ? AuthStatus.authenticated
-                : AuthStatus.unauthenticated,
-          ),
-        );
+        if (!hasSession) {
+          _setState(const AuthState(status: AuthStatus.unauthenticated));
+          return;
+        }
+
+        final user = await _fetchProfile();
+        if (user == null) {
+          // Session exists but profile fetch failed — treat as unauthenticated.
+          await _repo.logout();
+          _setState(const AuthState(status: AuthStatus.unauthenticated));
+          return;
+        }
+
+        _setState(AuthState(status: AuthStatus.authenticated, user: user));
       },
       loading: (v) => isInitializing = v,
     );
@@ -49,7 +70,19 @@ class AuthController extends LoadingController {
       () async {
         await _repo.login(LoginRequestDto(email: email, password: password));
 
-        _setState(const AuthState(status: AuthStatus.authenticated));
+        final user = await _fetchProfile();
+        if (user == null) {
+          await _repo.logout();
+          _setState(
+            const AuthState(
+              status: AuthStatus.unauthenticated,
+              errorMessage: 'Não foi possível carregar o perfil. Tente novamente.',
+            ),
+          );
+          return;
+        }
+
+        _setState(AuthState(status: AuthStatus.authenticated, user: user));
       },
       loading: (v) => isLoggingIn = v,
     );
@@ -70,10 +103,21 @@ class AuthController extends LoadingController {
         await _repo.register(
           RegisterRequestDto(name: name, email: email, password: password),
         );
-
         await _repo.login(LoginRequestDto(email: email, password: password));
 
-        _setState(const AuthState(status: AuthStatus.authenticated));
+        final user = await _fetchProfile();
+        if (user == null) {
+          await _repo.logout();
+          _setState(
+            const AuthState(
+              status: AuthStatus.unauthenticated,
+              errorMessage: 'Não foi possível carregar o perfil. Tente novamente.',
+            ),
+          );
+          return;
+        }
+
+        _setState(AuthState(status: AuthStatus.authenticated, user: user));
       },
       loading: (v) => isRegistering = v,
     );
@@ -89,7 +133,6 @@ class AuthController extends LoadingController {
 
   Future<void> logout() async {
     await _repo.logout();
-    await AppServices.instance.userRepository.clearCache();
     _setState(const AuthState(status: AuthStatus.unauthenticated));
   }
 }

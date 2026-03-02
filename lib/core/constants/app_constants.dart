@@ -1,10 +1,26 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 class AppConstants {
   AppConstants._();
 
-  // --- API ---
-  static const String baseUrl = 'http://127.0.0.1:8080/api';
+  static const bool _isProduction = bool.fromEnvironment('dart.vm.product');
+
+  static String get baseUrl {
+    if (_isProduction) {
+      return 'https://api.convoquei.com.br';
+    }
+
+    if (kIsWeb) {
+      return 'http://localhost:8080/api';
+    }
+
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:8080/api';
+    }
+
+    return 'http://127.0.0.1:8080/api';
+  }
 
   // --- Timeouts ---
   static const Duration connectTimeout = Duration(seconds: 10);
@@ -18,4 +34,3 @@ class AppConstants {
   static const String accessTokenKey = 'access_token';
   static const String refreshTokenKey = 'refresh_token';
 }
-
