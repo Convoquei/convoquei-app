@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 import '../../features/auth/controllers/login_controller.dart';
 import '../../features/auth/models/auth_state.dart';
@@ -7,7 +8,10 @@ import '../../features/home/pages/home_page.dart';
 
 /// Listens to [AuthController] and routes to the correct screen.
 ///
-/// - Loading / unknown  → splash indicator
+/// The native splash is kept visible (via [FlutterNativeSplash.preserve])
+/// while auth is still initialising, then removed once the state is known.
+///
+/// - Loading / unknown  → native splash stays on screen
 /// - Authenticated      → [HomePage]
 /// - Unauthenticated    → [LoginPage]
 class AuthGate extends StatefulWidget {
@@ -34,10 +38,14 @@ class _AuthGateState extends State<AuthGate> {
         final state = _authController.state;
 
         if (_authController.isInitializing || state.status == AuthStatus.unknown) {
+          // Still loading – keep the native splash visible (do nothing).
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+            body: SizedBox.shrink(),
           );
         }
+
+        // Auth state resolved – dismiss the native splash.
+        FlutterNativeSplash.remove();
 
         return switch (state.status) {
           AuthStatus.authenticated => HomePage(authController: _authController),

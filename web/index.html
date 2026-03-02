@@ -23,24 +23,176 @@
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="convoquei_app">
+  <meta name="apple-mobile-web-app-title" content="Convoquei">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>convoquei_app</title>
+  <title>Convoquei</title>
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #1D4ED8; /* shown before #splash paints */
+    }
+
+    /* ── Splash overlay ─────────────────────────────────────── */
+    #splash {
+      position: fixed;
+      inset: 0;
+      background: #1D4ED8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 0 48px;
+      z-index: 9999;
+      transition: opacity 0.4s ease;
+    }
+
+    #splash.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* centre column */
+    #splash-center {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+    }
+
+    /* ── Logo SVG arcs ──────────────────────────────────────── */
+    #splash-logo {
+      width: 112px;
+      height: 112px;
+    }
+
+    .arc-solid {
+      stroke-dasharray: 120;
+      stroke-dashoffset: 120;
+      animation: drawArc 1.2s cubic-bezier(0.65,0,0.35,1) 0s forwards;
+    }
+
+    .arc-translucent {
+      stroke-dasharray: 120;
+      stroke-dashoffset: 120;
+      animation: drawArc 1.2s cubic-bezier(0.65,0,0.35,1) 0.4s forwards;
+    }
+
+    @keyframes drawArc {
+      to { stroke-dashoffset: 0; }
+    }
+
+    /* ── Brand name ─────────────────────────────────────────── */
+    #splash-name {
+      color: #fff;
+      font-size: 32px;
+      font-weight: 700;
+      font-family: 'Poppins', 'Segoe UI', sans-serif;
+      letter-spacing: -0.5px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.8s ease-out 1.2s forwards;
+    }
+
+    @keyframes fadeInUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Footer: dots + tagline ─────────────────────────────── */
+    #splash-footer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      opacity: 0;
+      animation: fadeIn 1s ease-out 2s forwards;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    .dots {
+      display: flex;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #fff;
+      opacity: 0.3;
+      animation: pulse 1.5s infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; transform: scale(0.8); }
+      50%       { opacity: 1;   transform: scale(1);   }
+    }
+
+    #splash-tagline {
+      color: rgba(255,255,255,0.5);
+      font-size: 10px;
+      font-weight: 600;
+      font-family: 'Poppins', 'Segoe UI', sans-serif;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+  </style>
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
 
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
+  <!-- ── Web splash (visible while Flutter loads) ───────────── -->
+  <div id="splash">
+    <div id="splash-center">
+      <!-- Logo mark (same paths as logo_mark_light.svg but white) -->
+      <svg id="splash-logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(3, 0)">
+          <path class="arc-solid"
+            d="M 66 31 A 25 25 0 0 0 26.5 41.5"
+            stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+          <path class="arc-translucent"
+            d="M 26.5 58.5 A 25 25 0 0 0 66 69"
+            stroke="rgba(255,255,255,0.4)" stroke-width="8" stroke-linecap="round"/>
+        </g>
+      </svg>
+
+      <span id="splash-name">convoquei</span>
+    </div>
+
+    <div id="splash-footer">
+      <div class="dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <span id="splash-tagline">Gestão de Escalas</span>
+    </div>
+  </div>
+
   <script src="flutter_bootstrap.js" async></script>
+
+  <script>
+    // Hide the HTML splash once Flutter renders its first frame.
+    window.addEventListener('flutter-first-frame', function () {
+      var splash = document.getElementById('splash');
+      if (splash) {
+        splash.classList.add('hidden');
+        // Remove from DOM after fade-out transition (400ms)
+        setTimeout(function () { splash.remove(); }, 450);
+      }
+    });
+  </script>
 </body>
 </html>

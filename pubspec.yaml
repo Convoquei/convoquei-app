@@ -39,6 +39,7 @@ dependencies:
   flutter_secure_storage: ^9.0.0
   dio_smart_retry: ^7.0.1
   flutter_svg: ^2.0.10+1
+  flutter_native_splash: ^2.4.3
 
 dev_dependencies:
   flutter_test:
@@ -51,6 +52,7 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.3
 
 flutter_launcher_icons:
   android: "ic_launcher"
@@ -105,3 +107,16 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_native_splash:
+  # Fundo azul institucional
+  color: "#1D4ED8"
+  # Logo branco (o foreground existente já é branco sobre transparente)
+  image: assets/app_icon_foreground.png
+  # Mantém a splash até chamarmos FlutterNativeSplash.remove()
+  android_12:
+    color: "#1D4ED8"
+    image: assets/app_icon_foreground.png
+    icon_background_color: "#1D4ED8"
+  web: false
+
