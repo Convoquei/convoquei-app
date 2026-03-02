@@ -3,6 +3,7 @@ import 'package:convoquei_app/features/home/widgets/home_empty_state.dart';
 import 'package:convoquei_app/features/home/widgets/home_section.dart';
 import 'package:convoquei_app/features/home/widgets/organization_home_card.dart';
 import 'package:convoquei_app/features/organizations/models/organization_model.dart';
+import 'package:convoquei_app/features/home/widgets/create_organization_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -35,7 +36,8 @@ class HomePage extends ConsumerWidget {
             Expanded(
               child: HomeEmptyState(
                 onJoinWithCode: () {},
-                onCreateOrganization: () {},
+                onCreateOrganization: () =>
+                    CreateOrganizationModal.show(context),
               ),
             )
           else
@@ -124,7 +126,10 @@ class HomePage extends ConsumerWidget {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            CreateOrganizationCardDashed(),
+                            CreateOrganizationCardDashed(
+                              onTap: () =>
+                                  CreateOrganizationModal.show(context),
+                            ),
                           ],
                         );
                       },

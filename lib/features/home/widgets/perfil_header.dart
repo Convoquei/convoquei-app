@@ -34,14 +34,43 @@ class _WideHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: AppTheme.primaryColor,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       child: Row(
         children: [
-          // Logo
-          const AppLogo.icon(size: 32),
+          Row(
+            children: [
+              UserAvatar(user: user, radius: 18),
+              const SizedBox(width: 12),
+
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Bem-vindo,',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      fontSize: 12,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  Text(
+                    user.nameAbbreviation,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ],
+              ),
+
+            ],
+          ),
+
           const SizedBox(width: 24),
 
-          // Search field
           Expanded(
             child: Padding(
               padding: const EdgeInsetsGeometry.fromLTRB(50, 0, 50, 0),
@@ -79,46 +108,8 @@ class _WideHeader extends StatelessWidget {
           ),
           const SizedBox(width: 16),
 
-          // Notification bell
           _NotificationBell(onTap: onNotificationTap),
           const SizedBox(width: 16),
-
-          // Greeting + avatar
-          Row(
-            children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'Bem-vindo,',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.8),
-                      fontSize: 12,
-                      fontFamily: 'Inter',
-                    ),
-                  ),
-                  Text(
-                    user.nameAbbreviation,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Inter',
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 10),
-              UserAvatar(user: user, radius: 18),
-              const SizedBox(width: 4),
-              Icon(
-                Icons.keyboard_arrow_down,
-                color: Colors.white.withValues(alpha: 0.8),
-                size: 18,
-              ),
-            ],
-          ),
         ],
       ),
     );
