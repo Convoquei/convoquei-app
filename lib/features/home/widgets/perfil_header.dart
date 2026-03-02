@@ -1,3 +1,4 @@
+import 'package:convoquei_app/core/widgets/user_avatar.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_breakpoints.dart';
@@ -109,7 +110,7 @@ class _WideHeader extends StatelessWidget {
                 ],
               ),
               const SizedBox(width: 10),
-              _UserAvatar(user: user, radius: 18),
+              UserAvatar(user: user, radius: 18),
               const SizedBox(width: 4),
               Icon(
                 Icons.keyboard_arrow_down,
@@ -136,11 +137,23 @@ class _NarrowHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppTheme.primaryColor,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryColor,
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(25),
+          bottomRight: Radius.circular(25),
+        ),
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.white.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: Row(
         children: [
-          _UserAvatar(user: user, radius: 20),
+          UserAvatar(user: user, radius: 26),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -148,10 +161,10 @@ class _NarrowHeader extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Bem-vindo,',
+                  'Bem-vindo de volta,',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.8),
-                    fontSize: 12,
+                    fontSize: 14,
                     fontFamily: 'Inter',
                   ),
                 ),
@@ -159,7 +172,7 @@ class _NarrowHeader extends StatelessWidget {
                   user.nameAbbreviation,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 15,
+                    fontSize: 16,
                     fontWeight: FontWeight.w700,
                     fontFamily: 'Poppins',
                   ),
@@ -170,37 +183,6 @@ class _NarrowHeader extends StatelessWidget {
           _NotificationBell(onTap: onNotificationTap),
         ],
       ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────
-// Shared sub-widgets
-// ─────────────────────────────────────────────
-
-class _UserAvatar extends StatelessWidget {
-  final UserModel user;
-  final double radius;
-
-  const _UserAvatar({required this.user, this.radius = 18});
-
-  @override
-  Widget build(BuildContext context) {
-    final hasAvatar = user.avatarUrl != null && user.avatarUrl!.isNotEmpty;
-    return CircleAvatar(
-      radius: radius,
-      backgroundImage: hasAvatar ? NetworkImage(user.avatarUrl!) : null,
-      backgroundColor: Colors.white.withValues(alpha: 0.3),
-      child: !hasAvatar
-          ? Text(
-              user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: radius * 0.85,
-                fontWeight: FontWeight.w600,
-              ),
-            )
-          : null,
     );
   }
 }

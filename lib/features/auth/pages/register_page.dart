@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_breakpoints.dart';
 import '../../../core/services/user_feedback_service.dart';
 import '../../../core/widgets/app_logo.dart';
-import '../controllers/auth_controller.dart';
+import '../providers/auth_providers.dart';
 
-class RegisterPage extends StatefulWidget {
+class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  ConsumerState<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
@@ -30,13 +30,13 @@ class _RegisterPageState extends State<RegisterPage> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    await context.read<AuthController>().register(
+    await ref.read(authProvider.notifier).register(
           _nameCtrl.text.trim(),
           _emailCtrl.text.trim(),
           _passwordCtrl.text,
         );
     if (!mounted) return;
-    final errorMsg = context.read<AuthController>().state.errorMessage;
+    final errorMsg = ref.read(authProvider).errorMessage;
     if (errorMsg != null) {
       await UserFeedbackService.error(context, message: errorMsg);
     }
@@ -44,8 +44,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthController>();
-    final isLoading = auth.isRegistering;
+    final authState = ref.watch(authProvider);
+    final isLoading = authState.isRegistering;
     final isWide = AppBreakpoints.isWide(context);
 
     final formContent = Form(

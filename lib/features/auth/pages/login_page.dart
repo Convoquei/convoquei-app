@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_breakpoints.dart';
 import '../../../core/services/user_feedback_service.dart';
 import '../../../core/widgets/app_logo.dart';
-import '../controllers/auth_controller.dart';
+import '../providers/auth_providers.dart';
 import 'register_page.dart';
 
-class LoginPage extends StatefulWidget {
+class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends ConsumerState<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
@@ -29,12 +29,15 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    await context.read<AuthController>().login(
-          _emailCtrl.text.trim(),
-          _passwordCtrl.text,
-        );
+
+    await ref
+        .read(authProvider.notifier)
+        .login(_emailCtrl.text.trim(), _passwordCtrl.text);
+
     if (!mounted) return;
-    final errorMsg = context.read<AuthController>().state.errorMessage;
+
+    final errorMsg = ref.read(authProvider).errorMessage;
+
     if (errorMsg != null) {
       await UserFeedbackService.error(context, message: errorMsg);
     }
@@ -42,8 +45,8 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthController>();
-    final isLoading = auth.isLoggingIn;
+    final authState = ref.watch(authProvider);
+    final isLoading = authState.isLoggingIn;
     final isWide = AppBreakpoints.isWide(context);
 
     final formContent = Form(
@@ -108,10 +111,8 @@ class _LoginPageState extends State<LoginPage> {
             onPressed: isLoading
                 ? null
                 : () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const RegisterPage(),
-                      ),
-                    ),
+                    MaterialPageRoute(builder: (_) => const RegisterPage()),
+                  ),
             child: const Text('Não tem conta? Registre-se'),
           ),
         ],
@@ -148,4 +149,3 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
-

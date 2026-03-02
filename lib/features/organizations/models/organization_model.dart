@@ -6,7 +6,7 @@ class OrganizationModel {
   final String slug;
   final String photoUrl;
   final OrganizationStatusEnum status;
-  final String totalMembers;
+  final int totalMembers;
   final DateTime createdAt;
 
   OrganizationModel({
@@ -25,8 +25,11 @@ class OrganizationModel {
       name: json['name'] as String,
       slug: json['slug'] as String,
       photoUrl: json['photoUrl'] as String,
-      status: OrganizationStatusEnum.values.firstWhere((e) => e.name == json['status']),
-      totalMembers: json['totalMembers'] as String,
+      status: OrganizationStatusEnum.values.firstWhere(
+        (e) => e.name.toLowerCase() == (json['status'] as String).toLowerCase(),
+        orElse: () => OrganizationStatusEnum.active,
+      ),
+      totalMembers: json['totalMembers'] as int,
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }

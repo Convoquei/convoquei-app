@@ -1,73 +1,138 @@
+import 'package:convoquei_app/features/home/widgets/create_organization_card.dart';
+import 'package:convoquei_app/features/home/widgets/home_empty_state.dart';
+import 'package:convoquei_app/features/home/widgets/home_section.dart';
+import 'package:convoquei_app/features/home/widgets/organization_home_card.dart';
+import 'package:convoquei_app/features/organizations/models/organization_model.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../auth/controllers/auth_controller.dart';
-import '../../auth/models/user_model.dart';
-import '../controllers/user_organization_controller.dart';
+import '../../auth/providers/auth_providers.dart';
+import '../../organizations/providers/organization_providers.dart';
 import '../widgets/perfil_header.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final user = context.select<AuthController, UserModel>(
-          (auth) => auth.state.user!,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authProvider).user!;
+    final AsyncValue<List<OrganizationModel>> organizationsAsync = ref.watch(
+      userOrganizationsProvider,
     );
-
-    final controller = context.read<UserOrganizationController>();
 
     return Scaffold(
       body: Column(
         children: [
           SafeArea(
             bottom: false,
-            child: PerfilHeader(
-              user: user,
-              onNotificationTap: () {},
-            ),
+            child: PerfilHeader(user: user, onNotificationTap: () {}),
           ),
-          Expanded(
-            child: FutureBuilder(
-              future: controller.fetchOrganizations(),
-              builder: (context, snapshot) {
-                // 🔄 Loading
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
 
-                // ❌ Erro
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Text(
-                      controller.buildErrorFetchAPI(snapshot.error),
+          if (organizationsAsync.maybeWhen(
+            data: (list) => list.isEmpty,
+            orElse: () => false,
+          ))
+            Expanded(
+              child: HomeEmptyState(
+                onJoinWithCode: () {},
+                onCreateOrganization: () {},
+              ),
+            )
+          else
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    organizationsAsync.when(
+                      loading: () => HomeSection(
+                        title: "Organizações",
+                        padding: const EdgeInsets.only(
+                          left: 16,
+                          right: 16,
+                          top: 12,
+                          bottom: 4,
+                        ),
+                        children: [
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 24),
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                        ],
+                      ),
+                      error: (error, _) => HomeSection(
+                        title: "Organizações",
+                        padding: const EdgeInsets.only(
+                          left: 16,
+                          right: 16,
+                          top: 12,
+                          bottom: 4,
+                        ),
+                        children: [
+                          Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  error.toString(),
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                                const SizedBox(height: 12),
+                                FilledButton(
+                                  onPressed: () =>
+                                      ref.invalidate(userOrganizationsProvider),
+                                  child: const Text('Tentar novamente'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      data: (organizations) {
+                        return HomeSection(
+                          title: "Organizações",
+                          trailing: Text("${organizations.length}"),
+                          padding: const EdgeInsets.only(
+                            left: 16,
+                            right: 16,
+                            top: 12,
+                            bottom: 4,
+                          ),
+                          children: [
+                            SizedBox(
+                              height: 180,
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 2,
+                                ),
+                                itemCount: organizations.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(width: 12),
+                                itemBuilder: (context, index) {
+                                  final org = organizations[index];
+                                  const role = 'Membro';
+                                  const isAdmin = true;
+                                  return OrganizationHomeCard(
+                                    organization: org,
+                                    role: role,
+                                    isAdmin: isAdmin,
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            CreateOrganizationCardDashed(),
+                          ],
+                        );
+                      },
                     ),
-                  );
-                }
-
-                // ✅ Sucesso
-                final organizations = controller.organizations;
-
-                if (organizations.isEmpty) {
-                  return const Center(
-                    child: Text('Nenhuma organização encontrada.'),
-                  );
-                }
-
-                return ListView.builder(
-                  itemCount: organizations.length,
-                  itemBuilder: (context, index) {
-                    final org = organizations[index];
-                    return ListTile(
-                      title: Text(org.name),
-                    );
-                  },
-                );
-              },
+                  ],
+                ),
+              ),
             ),
-          ),
         ],
       ),
     );
