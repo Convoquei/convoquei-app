@@ -89,6 +89,7 @@ class AuthController extends LoadingController {
 
   Future<void> logout() async {
     await _repo.logout();
+    await AppServices.instance.userRepository.clearCache();
     _setState(const AuthState(status: AuthStatus.unauthenticated));
   }
 }

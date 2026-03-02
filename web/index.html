@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
+<!DOCTYPE html><html><head>
   <!--
     If you are serving your web app in a path other than the root, change the
     href value below to reflect the base path you are serving from.
@@ -27,7 +25,7 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" href="favicon.png">
 
   <title>Convoquei</title>
   <link rel="manifest" href="manifest.json">
@@ -75,14 +73,14 @@
     }
 
     .arc-solid {
-      stroke-dasharray: 120;
-      stroke-dashoffset: 120;
+      stroke-dasharray: 80;
+      stroke-dashoffset: 80;
       animation: drawArc 1.2s cubic-bezier(0.65,0,0.35,1) 0s forwards;
     }
 
     .arc-translucent {
-      stroke-dasharray: 120;
-      stroke-dashoffset: 120;
+      stroke-dasharray: 80;
+      stroke-dashoffset: 80;
       animation: drawArc 1.2s cubic-bezier(0.65,0,0.35,1) 0.4s forwards;
     }
 
@@ -150,25 +148,39 @@
       text-transform: uppercase;
     }
   </style>
+  <script id="splash-screen-script">
+    function removeSplashFromWeb() {
+      var splash = document.getElementById("splash");
+      if (splash) {
+        splash.classList.add("hidden");
+        setTimeout(function () {
+          splash.remove();
+          document.getElementById("splash-branding")?.remove();
+          document.body.style.background = "transparent";
+        }, 450);
+      }
+    }
+  </script>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
 </head>
 <body>
-
   <!-- ── Web splash (visible while Flutter loads) ───────────── -->
   <div id="splash">
     <div id="splash-center">
-      <!-- Logo mark (same paths as logo_mark_light.svg but white) -->
       <svg id="splash-logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <g transform="translate(3, 0)">
+          <!-- Parte Superior (Sólida - Instituição) -->
           <path class="arc-solid"
             d="M 66 31 A 25 25 0 0 0 26.5 41.5"
             stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+          <!-- Parte Inferior (Translúcida - Membro/Fluidez) -->
           <path class="arc-translucent"
             d="M 26.5 58.5 A 25 25 0 0 0 66 69"
             stroke="rgba(255,255,255,0.4)" stroke-width="8" stroke-linecap="round"/>
         </g>
       </svg>
 
-      <span id="splash-name">convoquei</span>
+      <div id="splash-name">Convoquei</div>
     </div>
 
     <div id="splash-footer">
@@ -177,22 +189,13 @@
         <div class="dot"></div>
         <div class="dot"></div>
       </div>
-      <span id="splash-tagline">Gestão de Escalas</span>
+      <div id="splash-tagline">organize • convoque • escale</div>
     </div>
   </div>
 
-  <script src="flutter_bootstrap.js" async></script>
 
-  <script>
-    // Hide the HTML splash once Flutter renders its first frame.
-    window.addEventListener('flutter-first-frame', function () {
-      var splash = document.getElementById('splash');
-      if (splash) {
-        splash.classList.add('hidden');
-        // Remove from DOM after fade-out transition (400ms)
-        setTimeout(function () { splash.remove(); }, 450);
-      }
-    });
-  </script>
-</body>
-</html>
+  <script src="flutter_bootstrap.js" async=""></script>
+
+
+
+</body></html>

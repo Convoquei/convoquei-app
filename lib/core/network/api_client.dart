@@ -173,7 +173,11 @@ class ApiClient {
       throw TimeoutException();
     }
 
-    throw NetworkException(message: e.message ?? 'Erro de conexão');
+    if (e.type == DioExceptionType.connectionError) {
+      throw const NetworkException();
+    }
+
+    throw const NetworkException();
   }
 
   T _handleResponse<T>(Response<T> response) {
@@ -195,8 +199,7 @@ class ApiClient {
       }
     }
 
-    final fallbackMessage =
-        problem?.firstError ?? 'Erro desconhecido (HTTP $statusCode)';
+    final fallbackMessage = problem?.firstError ?? _friendlyHttpError(statusCode);
 
     throw switch (statusCode) {
       400 => BadRequestException(message: fallbackMessage, problem: problem),
@@ -216,6 +219,20 @@ class ApiClient {
             statusCode: statusCode,
             problem: problem,
           ),
+    };
+  }
+
+  static String _friendlyHttpError(int statusCode) {
+    return switch (statusCode) {
+      400 => 'Os dados enviados são inválidos. Verifique e tente novamente.',
+      401 => 'Sessão expirada. Faça login novamente.',
+      403 => 'Você não tem permissão para realizar esta ação.',
+      404 => 'O recurso solicitado não foi encontrado.',
+      409 => 'Operação não permitida devido a um conflito de dados.',
+      422 => 'Os dados enviados não puderam ser processados.',
+      _ when statusCode >= 500 =>
+        'O serviço está temporariamente indisponível. Tente novamente em instantes.',
+      _ => 'Ocorreu um erro inesperado. Tente novamente.',
     };
   }
 }

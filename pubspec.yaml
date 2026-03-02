@@ -40,6 +40,7 @@ dependencies:
   dio_smart_retry: ^7.0.1
   flutter_svg: ^2.0.10+1
   flutter_native_splash: ^2.4.3
+  shared_preferences: ^2.5.4
 
 dev_dependencies:
   flutter_test:
@@ -109,14 +110,11 @@ flutter:
   # see https://flutter.dev/to/font-from-package
 
 flutter_native_splash:
-  # Fundo azul institucional
   color: "#1D4ED8"
-  # Logo branco (o foreground existente já é branco sobre transparente)
   image: assets/app_icon_foreground.png
-  # Mantém a splash até chamarmos FlutterNativeSplash.remove()
+  fullscreen: true
   android_12:
     color: "#1D4ED8"
     image: assets/app_icon_foreground.png
     icon_background_color: "#1D4ED8"
-  web: false
 

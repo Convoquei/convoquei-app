@@ -17,4 +17,11 @@ class UserModel {
         avatarUrl: json['avatarUrl'] as String?,
         isEmailVerified: json['isEmailVerified'] as bool? ?? false,
       );
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'email': email,
+        'avatarUrl': avatarUrl,
+        'isEmailVerified': isEmailVerified,
+      };
 }

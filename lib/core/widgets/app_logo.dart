@@ -82,14 +82,15 @@ class AppLogo extends StatelessWidget {
           height: markSize,
           fit: BoxFit.contain,
         ),
-        SizedBox(width: markSize * 0.28),
+
         Text(
           'convoquei',
           style: GoogleFonts.poppins(
             fontSize: markSize * 0.72,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
             color: textColor,
             height: 1,
+            letterSpacing: -0.5,
           ),
         ),
       ],

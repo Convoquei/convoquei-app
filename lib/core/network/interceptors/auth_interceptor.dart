@@ -24,8 +24,8 @@ class AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    // Skip auth header for the refresh endpoint itself to avoid loops.
-    if (_isRefreshRequest(options)) {
+    // Skip auth header when explicitly opted-out or for the refresh endpoint.
+    if (_shouldSkip(options)) {
       handler.next(options);
       return;
     }
@@ -47,7 +47,7 @@ class AuthInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    if (err.response?.statusCode != 401 || _isRefreshRequest(err.requestOptions)) {
+    if (err.response?.statusCode != 401 || _shouldSkip(err.requestOptions)) {
       handler.next(err);
       return;
     }
@@ -76,7 +76,8 @@ class AuthInterceptor extends Interceptor {
   // Private helpers
   // -------------------------------------------------------------------------
 
-  bool _isRefreshRequest(RequestOptions options) =>
+  bool _shouldSkip(RequestOptions options) =>
+      options.extra['skipAuthInterceptor'] == true ||
       options.path.contains('/auth/refresh');
 
   /// Ensures only one refresh request runs at a time.
