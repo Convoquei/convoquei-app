@@ -3,8 +3,8 @@ import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/features/organizations/models/organization_model.dart';
 import 'package:convoquei_app/features/organizations/pages/events/org_events_page.dart';
 import 'package:convoquei_app/features/organizations/pages/home/org_home_page.dart';
+import 'package:convoquei_app/features/organizations/pages/members/org_members_page.dart';
 import 'package:convoquei_app/features/organizations/pages/scales/org_scales_page.dart';
-import 'package:convoquei_app/features/organizations/pages/team/org_team_page.dart';
 import 'package:convoquei_app/features/organizations/providers/selected_organization_provider.dart';
 import 'package:convoquei_app/features/organizations/widgets/organization_avatar.dart';
 import 'package:flutter/material.dart';
@@ -70,7 +70,7 @@ class _OrganizationShellState extends ConsumerState<OrganizationShell>
       0 => const OrgHomePage(),
       1 => const OrgEventsPage(),
       2 => const OrgScalesPage(),
-      3 => const OrgTeamPage(),
+      3 => const OrgMembersPage(),
       _ => const SizedBox.shrink(),
     };
   }
