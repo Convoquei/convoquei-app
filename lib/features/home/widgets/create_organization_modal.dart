@@ -1,67 +1,31 @@
 import 'package:convoquei_app/core/constants/app_breakpoints.dart';
 import 'package:convoquei_app/core/theme/app_theme.dart';
+import 'package:convoquei_app/core/widgets/action_button.dart';
+import 'package:convoquei_app/core/widgets/base_modal_stateful_widget.dart';
 import 'package:flutter/material.dart';
 
-class CreateOrganizationModal extends StatefulWidget {
-  const CreateOrganizationModal({super.key});
+class CreateOrganizationModal extends BaseModalStatefulWidget {
+  final Future<void> Function(String name, String type) onSubmit;
 
-  static Future<bool?> show(BuildContext context) {
-    if (AppBreakpoints.isWide(context)) {
-      return showDialog<bool>(
-        context: context,
-        builder: (_) => Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 32,
-            vertical: 24,
-          ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: const _CreateOrganizationContent(isDialog: true),
-          ),
-        ),
-      );
-    }
+  const CreateOrganizationModal({super.key, required this.onSubmit});
 
-    return showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const CreateOrganizationModal(),
-    );
-  }
+  static Future<bool?> show(
+    BuildContext context,
+    Future<void> Function(String name, String type) onSubmit,
+  ) => BaseModalStatefulWidget.show<bool>(
+    context,
+    CreateOrganizationModal(onSubmit: onSubmit),
+  );
 
   @override
   State<CreateOrganizationModal> createState() =>
       _CreateOrganizationModalState();
 }
 
-class _CreateOrganizationModalState
-    extends State<CreateOrganizationModal> {
-  @override
-  Widget build(BuildContext context) {
-    return const _CreateOrganizationContent(isDialog: false);
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Conteúdo reutilizável
-// ---------------------------------------------------------------------------
-
-class _CreateOrganizationContent extends StatefulWidget {
-  final bool isDialog;
-
-  const _CreateOrganizationContent({required this.isDialog});
-
-  @override
-  State<_CreateOrganizationContent> createState() =>
-      _CreateOrganizationContentState();
-}
-
-class _CreateOrganizationContentState
-    extends State<_CreateOrganizationContent> {
+class _CreateOrganizationModalState extends State<CreateOrganizationModal> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  String _selectedType = 'igreja';
   bool _isLoading = false;
 
   @override
@@ -70,32 +34,38 @@ class _CreateOrganizationContentState
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isLoading = true);
 
-    // TODO: chamar provider/repositório para criar a organização
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) Navigator.of(context).pop(true);
-    });
+    try {
+      await widget.onSubmit(_nameController.text.trim(), _selectedType);
+
+      if (!mounted) return;
+
+      BaseModalStatefulWidget.hide(context, true);
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = widget.isDialog
+    final isDialog = AppBreakpoints.isWide(context);
+    final bottomPadding = isDialog
         ? 0.0
         : MediaQuery.viewInsetsOf(context).bottom;
     final theme = Theme.of(context);
 
-    final borderRadius = widget.isDialog
-        ? BorderRadius.circular(32)
-        : const BorderRadius.vertical(top: Radius.circular(32));
-
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: borderRadius,
+        borderRadius: isDialog
+            ? BorderRadius.circular(32)
+            : const BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: SafeArea(
         top: false,
@@ -103,7 +73,7 @@ class _CreateOrganizationContentState
           mainAxisSize: MainAxisSize.min,
           children: [
             // Drag handle — só no bottom sheet
-            if (!widget.isDialog) ...[
+            if (!isDialog) ...[
               const SizedBox(height: 12),
               Container(
                 width: 48,
@@ -134,7 +104,8 @@ class _CreateOrganizationContentState
                     ),
                     child: IconButton(
                       icon: const Icon(Icons.close, size: 20),
-                      onPressed: () => Navigator.pop(context, false),
+                      onPressed: () =>
+                          BaseModalStatefulWidget.hide(context, false),
                     ),
                   ),
                 ],
@@ -152,7 +123,6 @@ class _CreateOrganizationContentState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // NOME
                       Text(
                         "Nome da Organização",
                         style: theme.textTheme.labelLarge?.copyWith(
@@ -191,14 +161,9 @@ class _CreateOrganizationContentState
                           return null;
                         },
                       ),
-
                       const SizedBox(height: 8),
-
                       _SlugPreview(name: _nameController.text),
-
                       const SizedBox(height: 24),
-
-                      // TIPO
                       Text(
                         "Tipo de Organização",
                         style: theme.textTheme.labelLarge?.copyWith(
@@ -207,7 +172,7 @@ class _CreateOrganizationContentState
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
-                        value: "igreja",
+                        initialValue: _selectedType,
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: const Color(0xFFF8FAFC),
@@ -240,11 +205,12 @@ class _CreateOrganizationContentState
                             child: Text("Outro"),
                           ),
                         ],
-                        onChanged: (_) {},
+                        onChanged: (value) {
+                          if (value != null)
+                            setState(() => _selectedType = value);
+                        },
                       ),
-
                       const SizedBox(height: 24),
-
                       _FreePlanCard(),
                     ],
                   ),
@@ -259,28 +225,10 @@ class _CreateOrganizationContentState
               padding: EdgeInsets.fromLTRB(24, 16, 24, 24 + bottomPadding),
               child: Column(
                 children: [
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: FilledButton(
-                      onPressed: _isLoading ? null : _submit,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppTheme.primaryColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text("Criar Organização"),
-                    ),
+                  ActionButton(
+                    label: 'Criar Organização',
+                    isLoading: _isLoading,
+                    onPressed: _submit,
                   ),
                   const SizedBox(height: 12),
                   Text(
@@ -299,7 +247,7 @@ class _CreateOrganizationContentState
 }
 
 // ---------------------------------------------------------------------------
-// Widgets internos (inalterados)
+// Widgets internos
 // ---------------------------------------------------------------------------
 
 class _SlugPreview extends StatelessWidget {

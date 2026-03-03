@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_breakpoints.dart';
 import '../../../core/services/user_feedback_service.dart';
+import '../../../core/widgets/action_button.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../providers/auth_providers.dart';
 import 'register_page.dart';
@@ -93,18 +94,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 (v == null || v.isEmpty) ? 'Informe a senha' : null,
           ),
           const SizedBox(height: 24),
-          FilledButton(
-            onPressed: isLoading ? null : _submit,
-            child: isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Text('Entrar'),
+          ActionButton(
+            label: 'Entrar',
+            isLoading: isLoading,
+            onPressed: _submit,
           ),
           const SizedBox(height: 16),
           TextButton(
