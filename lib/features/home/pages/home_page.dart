@@ -5,6 +5,8 @@ import 'package:convoquei_app/features/home/widgets/create_organization_modal.da
 import 'package:convoquei_app/features/home/widgets/my_invite_card.dart';
 import 'package:convoquei_app/features/organizations/models/organization_invite_model.dart';
 import 'package:convoquei_app/features/organizations/models/organization_model.dart';
+import 'package:convoquei_app/features/organizations/pages/organization_shell.dart';
+import 'package:convoquei_app/features/organizations/providers/selected_organization_provider.dart';
 import 'package:convoquei_app/features/organizations/widgets/organization_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -184,6 +186,17 @@ class HomePage extends ConsumerWidget {
                                 (name, type) =>
                                     handleCreateOrganization(name, type),
                               ),
+                          onOrganizationTap: (org) {
+                            ref
+                                .read(selectedOrganizationProvider.notifier)
+                                .select(org);
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    OrganizationShell(organization: org),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -332,11 +345,13 @@ class _OrganizationsGrid extends StatelessWidget {
   final List<OrganizationModel> organizations;
   final VoidCallback onJoinWithLink;
   final VoidCallback onCreateOrganization;
+  final ValueChanged<OrganizationModel> onOrganizationTap;
 
   const _OrganizationsGrid({
     required this.organizations,
     required this.onJoinWithLink,
     required this.onCreateOrganization,
+    required this.onOrganizationTap,
   });
 
   @override
@@ -347,7 +362,10 @@ class _OrganizationsGrid extends StatelessWidget {
         ...organizations.map(
           (org) => Padding(
             padding: const EdgeInsets.only(bottom: 10),
-            child: _OrgListTile(organization: org),
+            child: _OrgListTile(
+              organization: org,
+              onTap: () => onOrganizationTap(org),
+            ),
           ),
         ),
 
@@ -379,8 +397,9 @@ class _OrganizationsGrid extends StatelessWidget {
 
 class _OrgListTile extends StatelessWidget {
   final OrganizationModel organization;
+  final VoidCallback onTap;
 
-  const _OrgListTile({required this.organization});
+  const _OrgListTile({required this.organization, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -388,7 +407,7 @@ class _OrgListTile extends StatelessWidget {
       color: Colors.white,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
-        onTap: () {},
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.all(16),
