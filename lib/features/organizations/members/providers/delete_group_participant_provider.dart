@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:convoquei_app/features/organizations/members/providers/group_participants_paged_provider.dart';
+import 'package:convoquei_app/features/organizations/members/providers/list_all_groups_query_provider.dart';
 import 'package:convoquei_app/features/organizations/members/repositories/organization_groups_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -38,6 +39,7 @@ class DeleteGroupParticipantNotifier extends AsyncNotifier<void> {
       ref
           .read(groupParticipantsPagedProvider(groupId).notifier)
           .removeParticipant(participantId);
+      ref.read(groupsPagedProvider.notifier).decrementParticipantCount(groupId);
     } finally {
       link.close();
     }

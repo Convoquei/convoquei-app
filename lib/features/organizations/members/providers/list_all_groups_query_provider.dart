@@ -57,4 +57,24 @@ class GroupsNotifier extends Notifier<StateListPaged<OrganizationGroupModel>> {
     state = state.reset();
     loadNextPage();
   }
+
+  void decrementParticipantCount(String groupId) {
+    state = state.copyWith(
+      items: state.items.map((g) {
+        if (g.id == groupId) {
+          return g.copyWith(participantCount: (g.participantCount - 1).clamp(0, double.infinity).toInt());
+        }
+        return g;
+      }).toList(),
+    );
+  }
+
+  void clearParticipantCount(String groupId) {
+    state = state.copyWith(
+      items: state.items.map((g) {
+        if (g.id == groupId) return g.copyWith(participantCount: 0);
+        return g;
+      }).toList(),
+    );
+  }
 }

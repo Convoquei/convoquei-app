@@ -4,11 +4,13 @@ import 'package:convoquei_app/core/widgets/action_button.dart';
 import 'package:convoquei_app/core/widgets/base_modal_stateful_widget.dart';
 import 'package:convoquei_app/features/organizations/members/models/organization_group_model.dart';
 import 'package:convoquei_app/features/organizations/members/models/requests/find_all_organization_groups_request.dart';
+import 'package:convoquei_app/features/organizations/members/providers/list_all_members_query_provider.dart';
 import 'package:convoquei_app/features/organizations/members/providers/update_member_groups_provider.dart';
 import 'package:convoquei_app/features/organizations/members/repositories/organization_groups_repository.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/create_group_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/header_member_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/no_groups_empty_state.dart';
+import 'package:convoquei_app/features/organizations/shared/models/organization_member_group_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_member_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -82,6 +84,17 @@ class _ManageGroupsMemberModalState
       );
 
       if (!mounted) return;
+
+      final allGroups =
+          ref.read(_modalGroupsProvider(widget.organizationId)).asData?.value ??
+          [];
+      final selectedGroups = allGroups
+          .where((g) => _selectedGroupIds.contains(g.id))
+          .map((g) => OrganizationMemberGroupModel(id: g.id, name: g.name))
+          .toList();
+      ref
+          .read(membersPagedProvider.notifier)
+          .updateMemberGroups(widget.member.id, selectedGroups);
 
       ToastFeedbackService.showToast(
         context,

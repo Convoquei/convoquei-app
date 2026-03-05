@@ -1,6 +1,7 @@
 import 'package:convoquei_app/core/models/state_list_paged.dart';
 import 'package:convoquei_app/features/organizations/members/models/requests/find_all_organization_members_request.dart';
 import 'package:convoquei_app/features/organizations/members/repositories/organization_members_repository.dart';
+import 'package:convoquei_app/features/organizations/shared/models/organization_member_group_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_member_model.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/selected_organization_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -61,5 +62,14 @@ class MembersNotifier extends Notifier<StateListPaged<OrganizationMemberModel>> 
   void reset({String? name}) {
     state = state.reset();
     loadNextPage(name: name);
+  }
+
+  void updateMemberGroups(String memberId, List<OrganizationMemberGroupModel> groups) {
+    state = state.copyWith(
+      items: state.items.map((m) {
+        if (m.id == memberId) return m.copyWith(groups: groups);
+        return m;
+      }).toList(),
+    );
   }
 }
