@@ -1,5 +1,5 @@
-import 'package:convoquei_app/features/organizations/models/organization_model.dart';
-import 'package:convoquei_app/features/organizations/widgets/organization_avatar.dart';
+import 'package:convoquei_app/features/organizations/shared/models/organization_model.dart';
+import 'package:convoquei_app/features/organizations/shared/widgets/organization_avatar.dart';
 import 'package:flutter/material.dart';
 
 class OrganizationHomeCard extends StatelessWidget {

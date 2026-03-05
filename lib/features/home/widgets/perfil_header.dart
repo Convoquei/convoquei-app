@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_breakpoints.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/app_logo.dart';
 import '../../auth/models/user_model.dart';
 
 class PerfilHeader extends StatelessWidget {

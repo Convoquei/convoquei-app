@@ -1,5 +1,4 @@
 import 'package:convoquei_app/core/theme/app_theme.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class ActionCard extends StatelessWidget {
@@ -9,7 +8,7 @@ class ActionCard extends StatelessWidget {
   final VoidCallback? onTap;
   final bool outlined;
 
-  const ActionCard({
+  const ActionCard({super.key, 
     required this.icon,
     required this.title,
     required this.subtitle,

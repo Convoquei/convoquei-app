@@ -1,9 +1,9 @@
 import 'package:convoquei_app/core/models/base_paged_request.dart';
 
-class OrganizationRequestModel extends BasePagedRequest {
+class ListOrganizationRequest extends BasePagedRequest {
   final String? name;
 
-  OrganizationRequestModel({
+  ListOrganizationRequest({
     required super.page,
     required super.size,
     this.name,

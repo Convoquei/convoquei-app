@@ -206,8 +206,9 @@ class _CreateOrganizationModalState extends State<CreateOrganizationModal> {
                           ),
                         ],
                         onChanged: (value) {
-                          if (value != null)
+                          if (value != null) {
                             setState(() => _selectedType = value);
+                          }
                         },
                       ),
                       const SizedBox(height: 24),

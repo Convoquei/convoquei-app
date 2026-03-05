@@ -148,12 +148,8 @@ class ApiClient {
   }
 
   T _handleDioException<T>(DioException e) {
-    debugPrint('[ApiClient] DioException tipo: ${e.type}');
-    debugPrint('[ApiClient] DioException mensagem: ${e.message}');
-
     final response = e.response;
     if (response != null) {
-      debugPrint('[ApiClient] Tem resposta HTTP ${response.statusCode}, delegando para _handleResponse');
       return _handleResponse<T>(Response<T>(
         data: response.data as T?,
         headers: response.headers,
@@ -182,8 +178,6 @@ class ApiClient {
 
   T _handleResponse<T>(Response<T> response) {
     final statusCode = response.statusCode ?? 0;
-
-    debugPrint('handle na resposta');
 
     if (statusCode >= 200 && statusCode < 300) {
       return response.data as T;

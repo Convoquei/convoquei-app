@@ -3,16 +3,16 @@ import 'package:convoquei_app/core/services/user_feedback_service.dart';
 import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/features/home/widgets/create_organization_modal.dart';
 import 'package:convoquei_app/features/home/widgets/my_invite_card.dart';
-import 'package:convoquei_app/features/organizations/models/organization_invite_model.dart';
-import 'package:convoquei_app/features/organizations/models/organization_model.dart';
-import 'package:convoquei_app/features/organizations/pages/organization_shell.dart';
-import 'package:convoquei_app/features/organizations/providers/selected_organization_provider.dart';
-import 'package:convoquei_app/features/organizations/widgets/organization_avatar.dart';
+import 'package:convoquei_app/features/organizations/shared/models/organization_invite_model.dart';
+import 'package:convoquei_app/features/organizations/shared/models/organization_model.dart';
+import 'package:convoquei_app/features/organizations/organization_shell.dart';
+import 'package:convoquei_app/features/organizations/shared/providers/selected_organization_provider.dart';
+import 'package:convoquei_app/features/organizations/shared/widgets/organization_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../auth/providers/auth_providers.dart';
-import '../../organizations/providers/organization_providers.dart';
+import '../../organizations/shared/providers/organization_providers.dart';
 import '../widgets/perfil_header.dart';
 
 class HomePage extends ConsumerWidget {
@@ -137,7 +137,7 @@ class HomePage extends ConsumerWidget {
                               ],
                             ),
                       loading: () => const SizedBox.shrink(),
-                      error: (_, __) => const SizedBox.shrink(),
+                      error: (_, _) => const SizedBox.shrink(),
                     ),
 
                     // ── Aguardando Resposta ──────────────────────────────
@@ -257,7 +257,7 @@ class _SectionHeader extends StatelessWidget {
               context,
             ).textTheme.titleLarge?.copyWith(fontSize: 18),
           ),
-          if (trailing != null) trailing!,
+          ?trailing,
         ],
       ),
     );

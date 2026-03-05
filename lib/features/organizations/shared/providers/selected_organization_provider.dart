@@ -1,9 +1,6 @@
+import 'package:convoquei_app/features/organizations/shared/models/organization_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../models/organization_model.dart';
-
-/// Holds the currently "entered" organization.
-/// Null means the user is not inside any organization.
 class SelectedOrganizationNotifier extends Notifier<OrganizationModel?> {
   @override
   OrganizationModel? build() => null;
@@ -14,5 +11,5 @@ class SelectedOrganizationNotifier extends Notifier<OrganizationModel?> {
 
 final selectedOrganizationProvider =
     NotifierProvider<SelectedOrganizationNotifier, OrganizationModel?>(
-  SelectedOrganizationNotifier.new,
-);
+      SelectedOrganizationNotifier.new,
+    );

@@ -1,4 +1,4 @@
-import 'package:convoquei_app/features/organizations/enums/organization_status_enum.dart';
+import 'package:convoquei_app/features/organizations/shared/models/enums/organization_status_enum.dart';
 
 class OrganizationModel {
   final String id;

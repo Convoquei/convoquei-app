@@ -1,5 +1,5 @@
 import 'package:convoquei_app/core/theme/app_theme.dart';
-import 'package:convoquei_app/features/organizations/models/organization_invite_model.dart';
+import 'package:convoquei_app/features/organizations/shared/models/organization_invite_model.dart';
 import 'package:flutter/material.dart';
 
 class InviteCard extends StatelessWidget {

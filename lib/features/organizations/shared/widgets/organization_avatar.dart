@@ -30,7 +30,7 @@ class OrganizationAvatar extends StatelessWidget {
                 width: size,
                 height: size,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => AppLogo.icon(size: iconSize),
+                errorBuilder: (_, _, _) => AppLogo.icon(size: iconSize),
               ),
             )
           : AppLogo.icon(size: iconSize),
