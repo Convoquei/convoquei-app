@@ -3,7 +3,6 @@ import 'package:convoquei_app/features/organizations/members/models/requests/fin
 import 'package:convoquei_app/features/organizations/members/repositories/organization_members_repository.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_member_model.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/selected_organization_provider.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final membersPagedProvider =
@@ -14,10 +13,6 @@ final membersPagedProvider =
 class MembersNotifier extends Notifier<StateListPaged<OrganizationMemberModel>> {
   @override
   StateListPaged<OrganizationMemberModel> build() {
-    ref.onDispose(() => debugPrint("Descartar MembersNotifier"));
-
-    Future.microtask(() => loadNextPage());
-    
     return StateListPaged();
   }
 
@@ -65,47 +60,6 @@ class MembersNotifier extends Notifier<StateListPaged<OrganizationMemberModel>> 
 
   void reset({String? name}) {
     state = state.reset();
-
     loadNextPage(name: name);
-  }
-
-  void removeMember(String memberId) {
-    final before = state.items.length;
-
-    final newItems = state.items.where((m) => m.id != memberId).toList();
-    if (newItems.length == before) return;
-
-    state = state.copyWith(
-      items: newItems,
-    );
-  }
-
-  void updateMember(OrganizationMemberModel updated) {
-    final newItems = state.items.map((m) => m.id == updated.id ? updated : m).toList();
-    state = state.copyWith(items: newItems);
-  }
-
-  /// Remove [groupId] from every member's groups list.
-  void removeGroupFromAllMembers(String groupId) {
-    state = state.copyWith(
-      items: state.items
-          .map((m) => m.copyWith(
-                groups: m.groups.where((g) => g.id != groupId).toList(),
-              ))
-          .toList(),
-    );
-  }
-
-  /// Remove [groupId] only from the member identified by [memberId].
-  void removeGroupFromMember(String memberId, String groupId) {
-    state = state.copyWith(
-      items: state.items
-          .map((m) => m.id == memberId
-              ? m.copyWith(
-                  groups: m.groups.where((g) => g.id != groupId).toList(),
-                )
-              : m)
-          .toList(),
-    );
   }
 }

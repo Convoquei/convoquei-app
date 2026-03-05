@@ -3,16 +3,28 @@ import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/core/widgets/action_button.dart';
 import 'package:convoquei_app/core/widgets/base_modal_stateful_widget.dart';
 import 'package:convoquei_app/features/organizations/members/models/organization_group_model.dart';
-import 'package:convoquei_app/features/organizations/members/providers/list_all_groups_query_provider.dart';
+import 'package:convoquei_app/features/organizations/members/models/requests/find_all_organization_groups_request.dart';
 import 'package:convoquei_app/features/organizations/members/providers/update_member_groups_provider.dart';
+import 'package:convoquei_app/features/organizations/members/repositories/organization_groups_repository.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/create_group_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/header_member_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/no_groups_empty_state.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_member_model.dart';
-import 'package:convoquei_app/features/organizations/shared/providers/selected_organization_provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// Provider isolado para listar grupos dentro do modal — não compartilha estado
+/// com o [groupsPagedProvider] usado na aba de grupos.
+final _modalGroupsProvider = FutureProvider.autoDispose
+    .family<List<OrganizationGroupModel>, String>((ref, organizationId) async {
+  final repo = ref.read(organizationGroupsRepositoryProvider);
+  final result = await repo.findAllGroups(
+    organizationId,
+    FindAllOrganizationGroupsRequest(page: 0, size: 100),
+  );
+  return result.items;
+});
 
 class ManageGroupsMemberModal extends BaseModalStatefulWidget {
   final OrganizationMemberModel member;
@@ -93,85 +105,75 @@ class _ManageGroupsMemberModalState
     final theme = Theme.of(context);
 
     return [
-      // BODY
       Flexible(
         child: Consumer(
           builder: (context, ref, _) {
-            final groupState = ref.watch(groupsPagedProvider);
+            final asyncGroups =
+                ref.watch(_modalGroupsProvider(widget.organizationId));
 
-            if (!groupState.isInitialLoading && groupState.page == 0) {
-              Future.microtask(
-                    () => ref
-                    .read(groupsPagedProvider.notifier)
-                    .loadNextPage(size: 100),
-              );
-            }
-
-            if (groupState.isInitialLoading) {
-              return const Center(
+            return asyncGroups.when(
+              loading: () => const Center(
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 48),
                   child: CupertinoActivityIndicator(),
                 ),
-              );
-            }
-
-            if (groupState.error != null) {
-              return Center(
+              ),
+              error: (_, __) => Center(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 48),
                   child: Text(
                     "Erro ao carregar grupos",
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.red,
-                    ),
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(color: Colors.red),
                   ),
                 ),
-              );
-            }
-
-            if (groupState.items.isEmpty) {
-              return SingleChildScrollView(
-                child: NoGroupsEmptyState(
-                  onCreateGroup: () async {
-                    final created = await CreateGroupModal.show(
-                      context,
-                      widget.organizationId,
-                    );
-                    if (created == true) {
-                      // groupsPagedProvider was already reset inside
-                      // createGroupProvider — nothing else needed.
-                    }
-                  },
-                ),
-              );
-            }
-
-            return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12, top: 8),
-                    child: Text(
-                      "Selecione os grupos do membro",
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: const Color(0xFF94A3B8),
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                  ),
-                  ...groupState.items.map(
-                        (group) => _GroupTile(
-                      group: group,
-                      isSelected: _selectedGroupIds.contains(group.id),
-                      onTap: () => _toggleGroup(group.id),
-                    ),
-                  ),
-                ],
               ),
+              data: (groups) {
+                if (groups.isEmpty) {
+                  return SingleChildScrollView(
+                    child: NoGroupsEmptyState(
+                      onCreateGroup: () async {
+                        final created = await CreateGroupModal.show(
+                          context,
+                          widget.organizationId,
+                        );
+                        if (created == true) {
+                          ref.invalidate(
+                            _modalGroupsProvider(widget.organizationId),
+                          );
+                        }
+                      },
+                    ),
+                  );
+                }
+
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12, top: 8),
+                        child: Text(
+                          "Selecione os grupos do membro",
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: const Color(0xFF94A3B8),
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ),
+                      ...groups.map(
+                        (group) => _GroupTile(
+                          group: group,
+                          isSelected: _selectedGroupIds.contains(group.id),
+                          onTap: () => _toggleGroup(group.id),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             );
           },
         ),

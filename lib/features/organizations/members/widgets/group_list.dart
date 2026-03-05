@@ -19,25 +19,50 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class GroupsList extends ConsumerStatefulWidget {
   const GroupsList({
     super.key,
-    required this.state,
     required this.organizationId,
     required this.canManageGroups,
-    required this.scrollController,
   });
 
-  final StateListPaged<OrganizationGroupModel> state;
   final String organizationId;
   final bool canManageGroups;
-  final ScrollController scrollController;
 
   @override
   ConsumerState<GroupsList> createState() => _GroupsListState();
 }
 
 class _GroupsListState extends ConsumerState<GroupsList> {
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    Future.microtask(
+      () => ref.read(groupsPagedProvider.notifier).loadNextPage(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    final nearBottom =
+        _scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200;
+    if (!nearBottom) return;
+
+    final s = ref.read(groupsPagedProvider);
+    if (s.isLoadingMore || s.isInitialLoading || !s.hasNextPage) return;
+
+    ref.read(groupsPagedProvider.notifier).loadNextPage();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final state = widget.state;
+    final state = ref.watch(groupsPagedProvider);
 
     if (state.isInitialLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -72,7 +97,7 @@ class _GroupsListState extends ConsumerState<GroupsList> {
     }
 
     return ListView.separated(
-      controller: widget.scrollController,
+      controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
       itemCount: state.items.length + (state.hasNextPage ? 1 : 0),
       separatorBuilder: (_, __) => const SizedBox(height: 8),
@@ -397,7 +422,6 @@ class _ParticipantTile extends ConsumerWidget {
             organizationId: organizationId,
             groupId: groupId,
             participantId: participant.id,
-            memberId: participant.memberId,
           );
     } catch (e) {
       if (!context.mounted) return;

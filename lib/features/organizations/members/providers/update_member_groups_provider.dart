@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:convoquei_app/features/organizations/members/providers/list_all_groups_query_provider.dart';
 import 'package:convoquei_app/features/organizations/members/providers/list_all_members_query_provider.dart';
 import 'package:convoquei_app/features/organizations/members/repositories/organization_members_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,7 +25,7 @@ class UpdateMemberGroupsNotifier extends AsyncNotifier<void> {
 
       final repo = ref.read(organizationMembersRepositoryProvider);
 
-      final updated = await repo.updateMemberGroups(
+      await repo.updateMemberGroups(
         organizationId,
         memberId,
         groupIds,
@@ -34,10 +33,7 @@ class UpdateMemberGroupsNotifier extends AsyncNotifier<void> {
 
       if (!ref.mounted) return;
 
-      ref.read(membersPagedProvider.notifier).updateMember(updated);
-
-      ref.read(groupsPagedProvider.notifier).reset();
-
+      ref.read(membersPagedProvider.notifier).reset();
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);

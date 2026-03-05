@@ -1,24 +1,77 @@
 import 'package:convoquei_app/core/models/state_list_paged.dart';
+import 'package:convoquei_app/features/organizations/members/providers/list_all_members_query_provider.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/member_list_tile.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_member_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class MembersList extends StatelessWidget {
+class MembersList extends ConsumerStatefulWidget {
   const MembersList({
     super.key,
-    required this.state,
     required this.currentUserId,
-    required this.scrollController,
+    this.searchQuery,
     this.onOptionsPressed,
   });
 
-  final StateListPaged<OrganizationMemberModel> state;
   final String currentUserId;
-  final ScrollController scrollController;
+  final String? searchQuery;
   final void Function(OrganizationMemberModel member)? onOptionsPressed;
 
   @override
+  ConsumerState<MembersList> createState() => _MembersListState();
+}
+
+class _MembersListState extends ConsumerState<MembersList> {
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    Future.microtask(
+      () => ref
+          .read(membersPagedProvider.notifier)
+          .loadNextPage(name: widget.searchQuery),
+    );
+  }
+
+  @override
+  void didUpdateWidget(MembersList old) {
+    super.didUpdateWidget(old);
+    if (old.searchQuery != widget.searchQuery) {
+      Future.microtask(() {
+        if (!mounted) return;
+        ref
+            .read(membersPagedProvider.notifier)
+            .reset(name: widget.searchQuery);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    final nearBottom =
+        _scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200;
+    if (!nearBottom) return;
+
+    final s = ref.read(membersPagedProvider);
+    if (s.isLoadingMore || s.isInitialLoading || !s.hasNextPage) return;
+
+    ref
+        .read(membersPagedProvider.notifier)
+        .loadNextPage(name: widget.searchQuery);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final state = ref.watch(membersPagedProvider);
+
     if (state.isInitialLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -29,7 +82,12 @@ class MembersList extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text('Erro ao carregar membros'),
-            TextButton(onPressed: () {}, child: const Text('Tentar novamente')),
+            TextButton(
+              onPressed: () => ref
+                  .read(membersPagedProvider.notifier)
+                  .loadNextPage(name: widget.searchQuery),
+              child: const Text('Tentar novamente'),
+            ),
           ],
         ),
       );
@@ -40,7 +98,7 @@ class MembersList extends StatelessWidget {
     }
 
     return ListView.separated(
-      controller: scrollController,
+      controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
       itemCount: state.items.length + (state.hasNextPage ? 1 : 0),
       separatorBuilder: (_, __) => const SizedBox(height: 4),
@@ -55,10 +113,10 @@ class MembersList extends StatelessWidget {
         final m = state.items[index];
         return MemberListTile(
           member: m,
-          isCurrentUser: m.id == currentUserId,
+          isCurrentUser: m.id == widget.currentUserId,
           onOptionsPressed: () {
-            if (onOptionsPressed != null) {
-              onOptionsPressed!(m);
+            if (widget.onOptionsPressed != null) {
+              widget.onOptionsPressed!(m);
             }
           },
         );

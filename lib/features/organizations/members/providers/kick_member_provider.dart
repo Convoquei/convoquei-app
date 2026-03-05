@@ -30,7 +30,7 @@ class KickMemberNotifier extends AsyncNotifier<void> {
 
       if (!ref.mounted) return;
 
-      ref.read(membersPagedProvider.notifier).removeMember(memberId);
+      ref.read(membersPagedProvider.notifier).reset();
     } finally {
       link.close(); // ✅ sempre executa, erro ou não
     }
