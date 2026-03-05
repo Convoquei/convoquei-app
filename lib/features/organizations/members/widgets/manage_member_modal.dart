@@ -93,32 +93,11 @@ class _ManageMemberModalState extends BaseModalState<ManageMemberModal> {
   @override
   List<Widget> buildBody(BuildContext context) {
     final bool isSelf = widget.member.id == widget.currentUserProfile.id;
+    final bool isOwner = widget.member.permissions.any((p) => p == OrganizationPermissionEnum.owner);
 
-    if (isSelf) {
-      return [
-        _buildEmptyState(
-          context,
-          icon: Icons.manage_accounts_rounded,
-          title: 'Não é possível gerenciar a si mesmo',
-          message: 'Você não pode gerenciar o seu próprio perfil. Peça a outro administrador para realizar essa ação.',
-        ),
-      ];
-    }
-
-    if (widget.member.permissions.any((p) => p == OrganizationPermissionEnum.owner)) {
-      return [
-        _buildEmptyState(
-          context,
-          icon: Icons.shield_rounded,
-          title: 'Membro é proprietário',
-          message: 'Este membro é o proprietário da organização e não pode ser gerenciado.',
-        ),
-      ];
-    }
-
-    final bool canKickMembers = widget.currentUserProfile.hasPermission(OrganizationPermissionEnum.kickMembers);
+    final bool canKickMembers = widget.currentUserProfile.hasPermission(OrganizationPermissionEnum.kickMembers) && !isSelf && !isOwner;
     final bool canManageGroups = widget.currentUserProfile.hasPermission(OrganizationPermissionEnum.manageGroups);
-    final bool canEditRoles = widget.currentUserProfile.hasPermission(OrganizationPermissionEnum.owner);
+    final bool canEditRoles = widget.currentUserProfile.hasPermission(OrganizationPermissionEnum.owner) && !isOwner;
 
     final List<Widget> actions = [
       if (canManageGroups)

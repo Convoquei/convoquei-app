@@ -4,17 +4,17 @@ import 'package:convoquei_app/core/services/user_feedback_service.dart';
 import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/core/widgets/app_search_input.dart';
 import 'package:convoquei_app/features/organizations/members/models/enums/manage_member_action.dart';
+import 'package:convoquei_app/features/organizations/members/providers/invite_member_provider.dart';
 import 'package:convoquei_app/features/organizations/members/providers/kick_member_provider.dart';
 import 'package:convoquei_app/features/organizations/members/providers/list_all_members_query_provider.dart';
+import 'package:convoquei_app/features/organizations/members/widgets/invite_member_by_email_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/manage_member_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/member_list.dart';
-import 'package:convoquei_app/features/organizations/members/widgets/member_list_tile.dart';
 import 'package:convoquei_app/features/organizations/shared/models/enums/organization_permission.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_member_model.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/organization_providers.dart';
 import 'package:convoquei_app/features/organizations/home/widgets/team_toggle_widget.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/selected_organization_provider.dart';
-import 'package:convoquei_app/core/models/state_list_paged.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
@@ -84,32 +84,65 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
     OrganizationMemberModel member,
   ) async {
     switch (action) {
-      case ManageMemberActionEnum.kickMember: {
-        final organizationId = ref.watch(selectedOrganizationProvider)?.id;
+      case ManageMemberActionEnum.kickMember:
+        {
+          final organizationId = ref.watch(selectedOrganizationProvider)?.id;
 
-        try {
-          await ref.read(kickOrganizationMemberProvider.notifier).kick(organizationId: organizationId!, memberId: member.id);
+          try {
+            await ref
+                .read(kickOrganizationMemberProvider.notifier)
+                .kick(organizationId: organizationId!, memberId: member.id);
 
-          ToastFeedbackService.showToast(context, "${member.name} foi expulsado com sucesso!", ToastType.success);
-        }
-        catch (e) {
-          if (!mounted) return;
+            ToastFeedbackService.showToast(
+              context,
+              "${member.name} foi expulsado com sucesso!",
+              ToastType.success,
+            );
+          } catch (e) {
+            if (!mounted) return;
 
-          if (e is ApiException) {
-            UserFeedbackService.error(context, message: e.message);
-            return;
+            if (e is ApiException) {
+              UserFeedbackService.error(context, message: e.message);
+              return;
+            }
           }
         }
-      }
-      case ManageMemberActionEnum.manageGroups: {
+      case ManageMemberActionEnum.manageGroups:
+        {
+          break;
+        }
+      case ManageMemberActionEnum.manageRoles:
+        {
+          break;
+        }
+    }
+  }
 
-        break;
-      }
-      case ManageMemberActionEnum.manageRoles: {
+  Future<bool> _handleInviteMember(String email) async {
+    try {
+      final orgId = ref.read(selectedOrganizationProvider)!.id;
 
-        break;
+      await ref
+          .read(inviteOrganizationMemberProvider.notifier)
+          .invite(organizationId: orgId, email: email);
+
+      ToastFeedbackService.showToast(
+        context,
+        "Convite enviado com sucesso!",
+        ToastType.success,
+      );
+      return true;
+    }
+    catch (e) {
+      if (!mounted) return false;
+
+      if (e is ApiException) {
+        UserFeedbackService.error(context, message: e.message);
+        return false;
       }
     }
+
+    return false;
   }
 
   @override
@@ -165,7 +198,14 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
                         color: AppTheme.primaryColor,
                         borderRadius: BorderRadius.circular(12),
                         child: InkWell(
-                          onTap: () {},
+                          onTap: () {
+                            if (_tab == OrgMembersTab.membros) {
+                              InviteMemberByEmailModal.show(
+                                context,
+                                _handleInviteMember,
+                              );
+                            }
+                          },
                           borderRadius: BorderRadius.circular(12),
                           child: SizedBox(
                             width: 48,
