@@ -2,6 +2,7 @@ import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/features/home/widgets/action_tile.dart';
 import 'package:convoquei_app/features/organizations/members/pages/org_members_page.dart'
     show OrgMembersTab;
+import 'package:convoquei_app/features/organizations/settings/pages/manage_roles_page.dart';
 import 'package:convoquei_app/features/organizations/settings/widgets/organization_header_card.dart';
 import 'package:convoquei_app/features/organizations/settings/widgets/section_buttons_organization_settings.dart';
 import 'package:convoquei_app/features/organizations/settings/widgets/subscription_plan_card.dart';
@@ -9,7 +10,6 @@ import 'package:convoquei_app/features/organizations/shared/models/enums/organiz
 import 'package:convoquei_app/features/organizations/shared/models/organization_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_my_member_profile_model.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/organization_providers.dart';
-import 'package:convoquei_app/features/organizations/shared/widgets/organization_shell_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -43,13 +43,7 @@ class OrgSettingsPage extends ConsumerWidget {
       OrganizationPermissionEnum.manageGroups,
     );
 
-    return Scaffold(
-      appBar: OrganizationShellAppBar(
-        organization: organization,
-        currentPage: 'Configurações',
-        onBackTap: () => Navigator.of(context).pop(),
-      ),
-      body: SingleChildScrollView(
+    return SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -71,7 +65,18 @@ class OrgSettingsPage extends ConsumerWidget {
                         'Gerencie os papéis da organização (Admin, Líder)',
                     icon: Icons.shield_outlined,
                     iconColor: const Color(0xFF9333EA),
-                    onTap: () {},
+                    onTap: () {
+                      if (canPermissionManageRoles) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            settings: const RouteSettings(name: 'Gerenciar Papéis'),
+                            builder: (context) => ManageRolesPage(
+                              organization: organization,
+                            ),
+                          ),
+                        );
+                      }
+                    },
                     visible: canPermissionManageRoles,
                   ),
                   ActionTile(
@@ -143,7 +148,6 @@ class OrgSettingsPage extends ConsumerWidget {
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 }

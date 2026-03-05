@@ -2,7 +2,7 @@ import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/core/widgets/app_search_input.dart';
 import 'package:flutter/material.dart';
 
-class BaseScrollablePage extends StatelessWidget {
+class BaseScrollablePage extends StatefulWidget {
   const BaseScrollablePage({
     super.key,
     required this.children,
@@ -23,20 +23,25 @@ class BaseScrollablePage extends StatelessWidget {
   final bool useSafeArea;
 
   @override
+  State<BaseScrollablePage> createState() => _BaseScrollablePageState();
+}
+
+class _BaseScrollablePageState extends State<BaseScrollablePage> {
+  @override
   Widget build(BuildContext context) {
     final scaffold = Scaffold(
       body: Column(
         children: [
           _SearchBar(
-            hint: searchHint,
-            onAddTap: onAddTap,
-            onChanged: onSearchChanged,
+            hint: widget.searchHint,
+            onAddTap: widget.onAddTap,
+            onChanged: widget.onSearchChanged,
           ),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
               child: Column(
-                children: children,
+                children: widget.children,
               ),
             ),
           ),
@@ -44,7 +49,7 @@ class BaseScrollablePage extends StatelessWidget {
       ),
     );
 
-    return useSafeArea ? SafeArea(child: scaffold) : scaffold;
+    return widget.useSafeArea ? SafeArea(child: scaffold) : scaffold;
   }
 }
 

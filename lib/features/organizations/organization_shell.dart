@@ -8,7 +8,7 @@ import 'package:convoquei_app/features/organizations/members/pages/org_members_p
 import 'package:convoquei_app/features/organizations/members/pages/org_members_page.dart' show OrgMembersTab;
 import 'package:convoquei_app/features/organizations/organization_tab.dart';
 import 'package:convoquei_app/features/organizations/scales/pages/org_scales_page.dart';
-import 'package:convoquei_app/features/organizations/settings/pages/org_settings_page.dart';
+import 'package:convoquei_app/features/organizations/settings/org_settings_shell.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/organization_providers.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/selected_organization_provider.dart';
 import 'package:convoquei_app/features/organizations/shared/widgets/organization_shell_app_bar.dart';
@@ -66,7 +66,7 @@ class _OrganizationShellState extends ConsumerState<OrganizationShell> {
   void _openSettings() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => OrgSettingsPage(
+        builder: (_) => OrgSettingsShell(
           organization: widget.organization,
           onNavigateToMembersTab: _navigateToMembersTab,
         ),
@@ -86,17 +86,6 @@ class _OrganizationShellState extends ConsumerState<OrganizationShell> {
       onGenerateRoute: (_) =>
           MaterialPageRoute(builder: (_) => _pageForIndex(_currentIndex)),
     );
-    
-    // return IndexedStack(
-    //   index: _currentIndex,
-    //   children: List.generate(kOrgTabs.length, (index) {
-    //     return Navigator(
-    //       key: _navigatorKeys[index],
-    //       onGenerateRoute: (_) =>
-    //           MaterialPageRoute(builder: (_) => _pageForIndex(index)),
-    //     );
-    //   }),
-    // );
   }
 
   Widget _buildWideLayout({required OrganizationMyMemberProfile? member}) {
