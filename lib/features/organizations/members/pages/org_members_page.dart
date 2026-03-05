@@ -24,14 +24,16 @@ import 'dart:async';
 enum OrgMembersTab { membros, grupos }
 
 class OrgMembersPage extends ConsumerStatefulWidget {
-  const OrgMembersPage({super.key});
+  final OrgMembersTab initialTab;
+
+  const OrgMembersPage({super.key, this.initialTab = OrgMembersTab.membros});
 
   @override
   ConsumerState<OrgMembersPage> createState() => _OrgMembersPageState();
 }
 
 class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
-  OrgMembersTab _tab = OrgMembersTab.membros;
+  late OrgMembersTab _tab = widget.initialTab;
   final _searchController = TextEditingController();
   String? _searchQuery;
   Timer? _debounce;
@@ -134,7 +136,7 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
   Widget build(BuildContext context) {
     final orgId = ref.watch(selectedOrganizationProvider)?.id;
     final currentUser = orgId != null
-        ? ref.watch(currentOrgMemberProvider(orgId)).asData?.value
+        ? ref.watch(currentUserMembershipOrganizationProvider(orgId)).asData?.value
         : null;
 
     final canInviteMembers =

@@ -25,7 +25,7 @@ final userOrganizationsProvider = FutureProvider<List<OrganizationModel>>((
 /// Fetches the current user membership for a given organization.
 /// - Returns [OrganizationMyMemberProfile] on success.
 /// - Propagates [ForbiddenException] when the user is no longer a member (403).
-final currentOrgMemberProvider =
+final currentUserMembershipOrganizationProvider =
     FutureProvider.family<OrganizationMyMemberProfile, String>((
       ref,
       organizationId,

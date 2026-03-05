@@ -10,16 +10,16 @@ import 'package:flutter/material.dart';
 class OrganizationShellAppBar extends StatelessWidget
     implements PreferredSizeWidget {
   final OrganizationModel organization;
-  final int currentIndex;
+  final String currentPage;
   final VoidCallback onBackTap;
-  final VoidCallback onSettingsTap;
+  final VoidCallback? onSettingsTap;
 
   const OrganizationShellAppBar({
     super.key,
     required this.organization,
-    required this.currentIndex,
+    required this.currentPage,
     required this.onBackTap,
-    required this.onSettingsTap,
+    this.onSettingsTap,
   });
 
   @override
@@ -77,7 +77,7 @@ class OrganizationShellAppBar extends StatelessWidget
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        kOrgTabs[currentIndex].label,
+                        currentPage,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -91,14 +91,16 @@ class OrganizationShellAppBar extends StatelessWidget
                     ],
                   ),
                 ),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: IconButton(
-                    icon: const Icon(Icons.settings_rounded, color: Colors.white),
-                    tooltip: 'Configurações',
-                    onPressed: onSettingsTap,
+
+                if (onSettingsTap != null)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: IconButton(
+                      icon: const Icon(Icons.settings_rounded, color: Colors.white),
+                      tooltip: 'Configurações',
+                      onPressed: onSettingsTap,
+                    ),
                   ),
-                ),
               ],
             ),
           ),

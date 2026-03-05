@@ -20,6 +20,8 @@ class ActionTile extends StatelessWidget {
 
   final VoidCallback? onTap;
 
+  final bool? visible;
+
   const ActionTile({
     super.key,
     required this.title,
@@ -30,6 +32,7 @@ class ActionTile extends StatelessWidget {
     this.destructive = false,
     this.trailing,
     this.onTap,
+    this.visible
   });
 
   @override
@@ -62,6 +65,10 @@ class ActionTile extends StatelessWidget {
           color: AppTheme.textSecondary.withValues(alpha: 0.35),
           size: 22,
         );
+
+    if (visible != null && !visible!) {
+      return const SizedBox.shrink();
+    }
 
     return Material(
       color: Colors.transparent,
