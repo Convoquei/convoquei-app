@@ -22,6 +22,21 @@ class OrganizationMemberModel {
     this.groups = const [],
   });
 
+  OrganizationMemberModel copyWith({
+    List<OrganizationMemberGroupModel>? groups,
+  }) {
+    return OrganizationMemberModel(
+      id: id,
+      name: name,
+      avatarUrl: avatarUrl,
+      status: status,
+      joinedAt: joinedAt,
+      leftAt: leftAt,
+      permissions: permissions,
+      groups: groups ?? this.groups,
+    );
+  }
+
   factory OrganizationMemberModel.fromJson(Map<String, dynamic> json) {
     final rawPerms = json['permissions'] as List<dynamic>? ?? [];
 

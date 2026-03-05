@@ -13,6 +13,16 @@ class OrganizationGroupModel {
     required this.createdAt,
   });
 
+  OrganizationGroupModel copyWith({int? participantCount}) {
+    return OrganizationGroupModel(
+      id: id,
+      name: name,
+      emoji: emoji,
+      participantCount: participantCount ?? this.participantCount,
+      createdAt: createdAt,
+    );
+  }
+
   factory OrganizationGroupModel.fromJson(Map<String, dynamic> json) {
     return OrganizationGroupModel(
       id: json['id'] as String,

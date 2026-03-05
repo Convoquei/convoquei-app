@@ -5,7 +5,9 @@ import 'package:convoquei_app/core/widgets/base_modal_stateful_widget.dart';
 import 'package:convoquei_app/features/organizations/members/models/organization_group_model.dart';
 import 'package:convoquei_app/features/organizations/members/providers/list_all_groups_query_provider.dart';
 import 'package:convoquei_app/features/organizations/members/providers/update_member_groups_provider.dart';
+import 'package:convoquei_app/features/organizations/members/widgets/create_group_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/header_member_modal.dart';
+import 'package:convoquei_app/features/organizations/members/widgets/no_groups_empty_state.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_member_model.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/selected_organization_provider.dart';
 import 'package:flutter/cupertino.dart';
@@ -129,15 +131,18 @@ class _ManageGroupsMemberModalState
             }
 
             if (groupState.items.isEmpty) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 48),
-                  child: Text(
-                    "Nenhum grupo encontrado",
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFF94A3B8),
-                    ),
-                  ),
+              return SingleChildScrollView(
+                child: NoGroupsEmptyState(
+                  onCreateGroup: () async {
+                    final created = await CreateGroupModal.show(
+                      context,
+                      widget.organizationId,
+                    );
+                    if (created == true) {
+                      // groupsPagedProvider was already reset inside
+                      // createGroupProvider — nothing else needed.
+                    }
+                  },
                 ),
               );
             }

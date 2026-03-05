@@ -84,4 +84,28 @@ class MembersNotifier extends Notifier<StateListPaged<OrganizationMemberModel>> 
     final newItems = state.items.map((m) => m.id == updated.id ? updated : m).toList();
     state = state.copyWith(items: newItems);
   }
+
+  /// Remove [groupId] from every member's groups list.
+  void removeGroupFromAllMembers(String groupId) {
+    state = state.copyWith(
+      items: state.items
+          .map((m) => m.copyWith(
+                groups: m.groups.where((g) => g.id != groupId).toList(),
+              ))
+          .toList(),
+    );
+  }
+
+  /// Remove [groupId] only from the member identified by [memberId].
+  void removeGroupFromMember(String memberId, String groupId) {
+    state = state.copyWith(
+      items: state.items
+          .map((m) => m.id == memberId
+              ? m.copyWith(
+                  groups: m.groups.where((g) => g.id != groupId).toList(),
+                )
+              : m)
+          .toList(),
+    );
+  }
 }
