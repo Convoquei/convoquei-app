@@ -105,6 +105,17 @@ class _ManageMemberModalState extends BaseModalState<ManageMemberModal> {
       ];
     }
 
+    if (widget.member.permissions.any((p) => p == OrganizationPermissionEnum.owner)) {
+      return [
+        _buildEmptyState(
+          context,
+          icon: Icons.shield_rounded,
+          title: 'Membro é proprietário',
+          message: 'Este membro é o proprietário da organização e não pode ser gerenciado.',
+        ),
+      ];
+    }
+
     final bool canKickMembers = widget.currentUserProfile.hasPermission(OrganizationPermissionEnum.kickMembers);
     final bool canManageGroups = widget.currentUserProfile.hasPermission(OrganizationPermissionEnum.manageGroups);
     final bool canEditRoles = widget.currentUserProfile.hasPermission(OrganizationPermissionEnum.owner);
