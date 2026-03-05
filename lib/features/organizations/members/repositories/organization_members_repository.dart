@@ -22,6 +22,14 @@ class OrganizationMembersRepository extends BaseRepository {
       (item) => OrganizationMemberModel.fromJson(item),
     );
   }
+
+  Future<OrganizationMemberModel> kickMember(String organizationId, String memberId) async {
+    final data = await apiClient.delete(
+      '/v1/organizations/$organizationId/members/$memberId',
+    );
+
+    return OrganizationMemberModel.fromJson(data);
+  }
 }
 
 final organizationMembersRepositoryProvider =

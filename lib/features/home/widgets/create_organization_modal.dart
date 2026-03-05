@@ -1,4 +1,3 @@
-import 'package:convoquei_app/core/constants/app_breakpoints.dart';
 import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/core/widgets/action_button.dart';
 import 'package:convoquei_app/core/widgets/base_modal_stateful_widget.dart';
@@ -22,11 +21,15 @@ class CreateOrganizationModal extends BaseModalStatefulWidget {
       _CreateOrganizationModalState();
 }
 
-class _CreateOrganizationModalState extends State<CreateOrganizationModal> {
+class _CreateOrganizationModalState
+    extends BaseModalState<CreateOrganizationModal> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   String _selectedType = 'igreja';
   bool _isLoading = false;
+
+  @override
+  String? get titleText => 'Nova Organização';
 
   @override
   void dispose() {
@@ -41,209 +44,136 @@ class _CreateOrganizationModalState extends State<CreateOrganizationModal> {
 
     try {
       await widget.onSubmit(_nameController.text.trim(), _selectedType);
-
       if (!mounted) return;
-
       BaseModalStatefulWidget.hide(context, true);
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    final isDialog = AppBreakpoints.isWide(context);
-    final bottomPadding = isDialog
-        ? 0.0
-        : MediaQuery.viewInsetsOf(context).bottom;
+  List<Widget> buildBody(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: isDialog
-            ? BorderRadius.circular(32)
-            : const BorderRadius.vertical(top: Radius.circular(32)),
+    return [
+      // BODY
+      Flexible(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Nome da Organização",
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _nameController,
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    hintText: "Ex: Igreja Central, Ministério de Louvor...",
+                    filled: true,
+                    fillColor: const Color(0xFFF8FAFC),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Informe o nome da organização';
+                    }
+                    if (value.trim().length < 3) {
+                      return 'Nome deve ter pelo menos 3 caracteres';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 8),
+                _SlugPreview(name: _nameController.text),
+                const SizedBox(height: 24),
+                Text(
+                  "Tipo de Organização",
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  initialValue: _selectedType,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: const Color(0xFFF8FAFC),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: "igreja",
+                      child: Text("Igreja / Congregação"),
+                    ),
+                    DropdownMenuItem(
+                      value: "ministerio",
+                      child: Text("Ministério / Grupo Interno"),
+                    ),
+                    DropdownMenuItem(
+                      value: "voluntarios",
+                      child: Text("Equipe de Voluntários"),
+                    ),
+                    DropdownMenuItem(
+                      value: "empresa",
+                      child: Text("Empresa / Negócio"),
+                    ),
+                    DropdownMenuItem(
+                      value: "outro",
+                      child: Text("Outro"),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) setState(() => _selectedType = value);
+                  },
+                ),
+                const SizedBox(height: 24),
+                _FreePlanCard(),
+              ],
+            ),
+          ),
+        ),
       ),
-      child: SafeArea(
-        top: false,
+
+      const Divider(height: 1),
+
+      // FOOTER
+      Padding(
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            // Drag handle — só no bottom sheet
-            if (!isDialog) ...[
-              const SizedBox(height: 12),
-              Container(
-                width: 48,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
-                  borderRadius: BorderRadius.circular(100),
-                ),
-              ),
-            ] else
-              const SizedBox(height: 8),
-
-            // HEADER
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 16, 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      "Nova Organização",
-                      style: theme.textTheme.titleLarge,
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.close, size: 20),
-                      onPressed: () =>
-                          BaseModalStatefulWidget.hide(context, false),
-                    ),
-                  ),
-                ],
-              ),
+            ActionButton(
+              label: 'Criar Organização',
+              isLoading: _isLoading,
+              onPressed: _submit,
             ),
-
-            const Divider(height: 1),
-
-            // BODY
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Nome da Organização",
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: AppTheme.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _nameController,
-                        onChanged: (_) => setState(() {}),
-                        decoration: InputDecoration(
-                          hintText:
-                              "Ex: Igreja Central, Ministério de Louvor...",
-                          filled: true,
-                          fillColor: const Color(0xFFF8FAFC),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: const BorderSide(
-                              color: Color(0xFFE2E8F0),
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: const BorderSide(
-                              color: Color(0xFFE2E8F0),
-                            ),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Informe o nome da organização';
-                          }
-                          if (value.trim().length < 3) {
-                            return 'Nome deve ter pelo menos 3 caracteres';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 8),
-                      _SlugPreview(name: _nameController.text),
-                      const SizedBox(height: 24),
-                      Text(
-                        "Tipo de Organização",
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: AppTheme.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      DropdownButtonFormField<String>(
-                        initialValue: _selectedType,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: const Color(0xFFF8FAFC),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: const BorderSide(
-                              color: Color(0xFFE2E8F0),
-                            ),
-                          ),
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: "igreja",
-                            child: Text("Igreja / Congregação"),
-                          ),
-                          DropdownMenuItem(
-                            value: "ministerio",
-                            child: Text("Ministério / Grupo Interno"),
-                          ),
-                          DropdownMenuItem(
-                            value: "voluntarios",
-                            child: Text("Equipe de Voluntários"),
-                          ),
-                          DropdownMenuItem(
-                            value: "empresa",
-                            child: Text("Empresa / Negócio"),
-                          ),
-                          DropdownMenuItem(
-                            value: "outro",
-                            child: Text("Outro"),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() => _selectedType = value);
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      _FreePlanCard(),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            const Divider(height: 1),
-
-            // FOOTER
-            Padding(
-              padding: EdgeInsets.fromLTRB(24, 16, 24, 24 + bottomPadding),
-              child: Column(
-                children: [
-                  ActionButton(
-                    label: 'Criar Organização',
-                    isLoading: _isLoading,
-                    onPressed: _submit,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    "Ao criar, você concorda com os Termos de Uso.",
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ],
-              ),
+            const SizedBox(height: 12),
+            Text(
+              "Ao criar, você concorda com os Termos de Uso.",
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall,
             ),
           ],
         ),
       ),
-    );
+    ];
   }
 }
 

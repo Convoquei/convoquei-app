@@ -1,6 +1,13 @@
+import 'package:convoquei_app/core/network/exceptions/api_exception.dart';
+import 'package:convoquei_app/core/services/toast_feedback_service.dart';
+import 'package:convoquei_app/core/services/user_feedback_service.dart';
 import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/core/widgets/app_search_input.dart';
+import 'package:convoquei_app/features/organizations/members/models/enums/manage_member_action.dart';
+import 'package:convoquei_app/features/organizations/members/providers/kick_member_provider.dart';
 import 'package:convoquei_app/features/organizations/members/providers/list_all_members_query_provider.dart';
+import 'package:convoquei_app/features/organizations/members/widgets/manage_member_modal.dart';
+import 'package:convoquei_app/features/organizations/members/widgets/member_list.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/member_list_tile.dart';
 import 'package:convoquei_app/features/organizations/shared/models/enums/organization_permission.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_member_model.dart';
@@ -54,9 +61,7 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
     ref
         .read(membersPagedProvider.notifier)
         .loadNextPage(
-          name: _searchController.text.isEmpty
-              ? null
-              : _searchController.text,
+          name: _searchController.text.isEmpty ? null : _searchController.text,
         );
   }
 
@@ -64,7 +69,7 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
     if (value.length < 3 && value.isNotEmpty) {
       return;
     }
-    
+
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 400), () {
       if (!mounted) return;
@@ -74,18 +79,52 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
     });
   }
 
+  void _handleActionManageMember(
+    ManageMemberActionEnum action,
+    OrganizationMemberModel member,
+  ) async {
+    switch (action) {
+      case ManageMemberActionEnum.kickMember: {
+        final organizationId = ref.watch(selectedOrganizationProvider)?.id;
+
+        try {
+          await ref.read(kickOrganizationMemberProvider.notifier).kick(organizationId: organizationId!, memberId: member.id);
+
+          ToastFeedbackService.showToast(context, "${member.name} foi expulsado com sucesso!", ToastType.success);
+        }
+        catch (e) {
+          if (!mounted) return;
+
+          if (e is ApiException) {
+            UserFeedbackService.error(context, message: e.message);
+            return;
+          }
+        }
+      }
+      case ManageMemberActionEnum.manageGroups: {
+
+        break;
+      }
+      case ManageMemberActionEnum.manageRoles: {
+
+        break;
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final orgId = ref.watch(selectedOrganizationProvider)?.id;
-    final member = orgId != null
+    final currentUser = orgId != null
         ? ref.watch(currentOrgMemberProvider(orgId)).asData?.value
         : null;
 
     final canInviteMembers =
-        member?.hasPermission(OrganizationPermissionEnum.inviteMembers) ??
+        currentUser?.hasPermission(OrganizationPermissionEnum.inviteMembers) ??
         false;
     final canManageGroups =
-        member?.hasPermission(OrganizationPermissionEnum.manageGroups) ?? false;
+        currentUser?.hasPermission(OrganizationPermissionEnum.manageGroups) ??
+        false;
 
     final membersState = ref.watch(membersPagedProvider);
 
@@ -148,81 +187,23 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
           ),
           Expanded(
             child: _tab == OrgMembersTab.membros
-                ? _MembersList(
+                ? MembersList(
                     state: membersState,
-                    currentUserId: 'TODO COLOCAR O ID',
+                    currentUserId: currentUser?.id ?? '',
                     scrollController: _scrollController,
                     onOptionsPressed: (m) {
-                      // TODO: abrir bottom sheet de ações
+                      ManageMemberModal.show(context, m, currentUser!, (
+                        action,
+                      ) {
+                        _handleActionManageMember(action, m);
+                        return true;
+                      });
                     },
                   )
                 : const Center(child: Text('Grupos')),
           ),
         ],
       ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _MembersList extends StatelessWidget {
-  const _MembersList({
-    required this.state,
-    required this.currentUserId,
-    required this.scrollController,
-    this.onOptionsPressed,
-  });
-
-  final StateListPaged<OrganizationMemberModel> state;
-  final String currentUserId;
-  final ScrollController scrollController;
-  final void Function(OrganizationMemberModel member)? onOptionsPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    if (state.isInitialLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (state.error != null && state.items.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Erro ao carregar membros'),
-            TextButton(onPressed: () {}, child: const Text('Tentar novamente')),
-          ],
-        ),
-      );
-    }
-
-    if (state.items.isEmpty) {
-      return const Center(child: Text('Nenhum membro encontrado'));
-    }
-
-    return ListView.separated(
-      controller: scrollController,
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
-      itemCount: state.items.length + (state.hasNextPage ? 1 : 0),
-      separatorBuilder: (_, __) => const SizedBox(height: 4),
-      itemBuilder: (context, index) {
-        if (index == state.items.length) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        final m = state.items[index];
-        return MemberListTile(
-          member: m,
-          isCurrentUser: m.id == currentUserId,
-          onOptionsPressed: onOptionsPressed != null
-              ? () => onOptionsPressed!(m)
-              : null,
-        );
-      },
     );
   }
 }

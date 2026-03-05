@@ -68,4 +68,15 @@ class MembersNotifier extends Notifier<StateListPaged<OrganizationMemberModel>> 
 
     loadNextPage(name: name);
   }
+
+  void removeMember(String memberId) {
+    final before = state.items.length;
+
+    final newItems = state.items.where((m) => m.id != memberId).toList();
+    if (newItems.length == before) return;
+
+    state = state.copyWith(
+      items: newItems,
+    );
+  }
 }

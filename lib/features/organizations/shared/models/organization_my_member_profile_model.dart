@@ -1,12 +1,14 @@
 import 'package:convoquei_app/features/organizations/shared/models/enums/organization_permission.dart';
 
 class OrganizationMyMemberProfile {
+  final String id;
   final String name;
   final String avatarUrl;
   final String status;
   final List<OrganizationPermissionEnum> permissions;
 
   const OrganizationMyMemberProfile({
+    required this.id,
     required this.name,
     required this.avatarUrl,
     required this.status,
@@ -18,6 +20,7 @@ class OrganizationMyMemberProfile {
   factory OrganizationMyMemberProfile.fromJson(Map<String, dynamic> json) {
     final rawPerms = json['permissions'] as List<dynamic>? ?? [];
     return OrganizationMyMemberProfile(
+      id: json['id'] as String? ?? '',
       name: json['name'] as String? ?? '',
       avatarUrl: json['avatarUrl'] as String? ?? '',
       status: json['status'] as String? ?? '',
