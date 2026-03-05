@@ -79,4 +79,9 @@ class MembersNotifier extends Notifier<StateListPaged<OrganizationMemberModel>> 
       items: newItems,
     );
   }
+
+  void updateMember(OrganizationMemberModel updated) {
+    final newItems = state.items.map((m) => m.id == updated.id ? updated : m).toList();
+    state = state.copyWith(items: newItems);
+  }
 }

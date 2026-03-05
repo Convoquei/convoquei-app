@@ -8,6 +8,7 @@ import 'package:convoquei_app/features/organizations/members/providers/invite_me
 import 'package:convoquei_app/features/organizations/members/providers/kick_member_provider.dart';
 import 'package:convoquei_app/features/organizations/members/providers/list_all_members_query_provider.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/invite_member_by_email_modal.dart';
+import 'package:convoquei_app/features/organizations/members/widgets/manage_groups_member_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/manage_member_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/member_list.dart';
 import 'package:convoquei_app/features/organizations/shared/models/enums/organization_permission.dart';
@@ -109,6 +110,12 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
         }
       case ManageMemberActionEnum.manageGroups:
         {
+          final organizationId = ref.read(selectedOrganizationProvider)?.id;
+          if (organizationId == null) break;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            ManageGroupsMemberModal.show(context, member, organizationId);
+          });
           break;
         }
       case ManageMemberActionEnum.manageRoles:

@@ -2,6 +2,7 @@ import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/core/widgets/base_modal_stateful_widget.dart';
 import 'package:convoquei_app/features/home/widgets/action_tile.dart';
 import 'package:convoquei_app/features/organizations/members/models/enums/manage_member_action.dart';
+import 'package:convoquei_app/features/organizations/members/widgets/header_member_modal.dart';
 import 'package:convoquei_app/features/organizations/shared/models/enums/organization_permission.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_member_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_my_member_profile_model.dart';
@@ -38,22 +39,9 @@ class _ManageMemberModalState extends BaseModalState<ManageMemberModal> {
   }
   
   @override
-  Widget? get titleWidget => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        widget.member.name,
-        style: Theme.of(
-          context,
-        ).textTheme.titleMedium?.copyWith(color: AppTheme.textPrimary),
-      ),
-      Text(
-        "Gerenciar membro",
-        style: Theme.of(
-          context,
-        ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
-      ),
-    ],
+  Widget? get titleWidget => HeaderMemberModal(
+    title: "Gerenciar membro",
+    userName: widget.member.name,
   );
 
   Widget _buildEmptyState(BuildContext context, {required IconData icon, required String title, required String message}) {

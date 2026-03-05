@@ -21,6 +21,7 @@ class OrganizationRepository {
       (item) => OrganizationModel.fromJson(item),
     );
   }
+
   Future<PagedResponseModel<OrganizationInviteModel>> findAllInvitesByUser(
     FindInvitesUserRequest request,
   ) async {
@@ -33,12 +34,15 @@ class OrganizationRepository {
       (item) => OrganizationInviteModel.fromJson(item),
     );
   }
+
   Future<void> acceptInvite(String inviteId) async {
     await _apiClient.post('/v1/users/me/invites/$inviteId/accept');
   }
+
   Future<void> declineInvite(String inviteId) async {
     await _apiClient.post('/v1/users/me/invites/$inviteId/decline');
   }
+
   Future<OrganizationModel> create({
     required String name,
     required String type,
@@ -49,8 +53,7 @@ class OrganizationRepository {
     );
     return OrganizationModel.fromJson(data);
   }
-  /// Fetches the current authenticated user membership inside [organizationId].
-  /// Throws [ForbiddenException] (403) when the user is not a member.
+
   Future<OrganizationMyMemberProfile> findMe(String organizationId) async {
     final data = await _apiClient.get<Map<String, dynamic>>(
       '/v1/organizations/$organizationId/members/me',
