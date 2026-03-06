@@ -13,6 +13,7 @@ class BaseScrollablePage extends StatefulWidget {
     this.icon = Icons.add,
     this.onSearchChanged,
     this.onRequestNextPage,
+    this.emptyState,
   });
 
   final List<Widget> children;
@@ -21,8 +22,11 @@ class BaseScrollablePage extends StatefulWidget {
   final IconData icon;
   final ValueChanged<String>? onSearchChanged;
   final bool useSafeArea;
-
   final AsyncCallback? onRequestNextPage;
+
+  /// Quando fornecido, substitui o scroll e é centralizado no espaço disponível.
+  /// Use quando não há itens para listar.
+  final Widget? emptyState;
 
   @override
   State<BaseScrollablePage> createState() => _BaseScrollablePageState();
@@ -30,8 +34,6 @@ class BaseScrollablePage extends StatefulWidget {
 
 class _BaseScrollablePageState extends State<BaseScrollablePage> {
   ScrollController? _scrollController;
-
-  // Lock: só dispara novo fetch após a Future anterior completar.
   bool _isFetching = false;
 
   @override
@@ -87,19 +89,28 @@ class _BaseScrollablePageState extends State<BaseScrollablePage> {
     final scaffold = Scaffold(
       body: Column(
         children: [
-          _SearchBar(
-            hint: widget.searchHint,
-            onIconTap: widget.onIconTap,
-            addIcon: widget.icon,
-            onChanged: widget.onSearchChanged,
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
-              child: Column(children: widget.children),
+          if (widget.emptyState != null)
+            Expanded(
+              child: Align(
+                alignment: const Alignment(0, -0.2),
+                child: widget.emptyState!,
+              ),
+            )
+          else ...[
+            _SearchBar(
+              hint: widget.searchHint,
+              onIconTap: widget.onIconTap,
+              addIcon: widget.icon,
+              onChanged: widget.onSearchChanged,
             ),
-          ),
+            Expanded(
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+                child: Column(children: widget.children),
+              ),
+            ),
+          ]
         ],
       ),
     );
@@ -141,6 +152,8 @@ class _SearchBar extends StatelessWidget {
     );
   }
 }
+
+// ─── Add button ───────────────────────────────────────────────────────────────
 
 class _AddButton extends StatelessWidget {
   const _AddButton({required this.onTap, this.icon = Icons.add});

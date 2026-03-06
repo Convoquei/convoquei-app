@@ -86,6 +86,18 @@ class OrganizationRoleRepository extends BaseRepository {
       '/v1/organizations/$organizationId/roles/$roleId/members/$memberId',
     );
   }
+
+  Future<OrganizationRoleModel> createRole({
+    required String organizationId,
+    required String name,
+    List<String> permissions = const [],
+  }) async {
+    final data = await apiClient.post(
+      '/v1/organizations/$organizationId/roles',
+      data: {'name': name, 'permissions': permissions},
+    );
+    return OrganizationRoleModel.fromJson(data);
+  }
 }
 
 final organizationRoleRepositoryProvider = Provider<OrganizationRoleRepository>(

@@ -7,13 +7,16 @@ import 'package:convoquei_app/core/widgets/modals/multi_select_modal.dart';
 import 'package:convoquei_app/core/widgets/selectable_tile.dart';
 import 'package:convoquei_app/core/widgets/tag_label.dart';
 import 'package:convoquei_app/features/organizations/settings/providers/avaliable_permissions_provider.dart';
+import 'package:convoquei_app/features/organizations/settings/providers/create_role_provider.dart';
 import 'package:convoquei_app/features/organizations/settings/providers/delete_role_provider.dart';
 import 'package:convoquei_app/features/organizations/settings/providers/expanded_roles_provider.dart';
 import 'package:convoquei_app/features/organizations/settings/providers/list_members_in_role_provider.dart';
 import 'package:convoquei_app/features/organizations/settings/providers/list_roles_organization_provider.dart';
 import 'package:convoquei_app/features/organizations/settings/providers/remove_role_member_provider.dart';
 import 'package:convoquei_app/features/organizations/settings/providers/update_role_permissions_provider.dart';
+import 'package:convoquei_app/features/organizations/settings/widgets/create_role_modal.dart';
 import 'package:convoquei_app/features/organizations/settings/widgets/member_role_card.dart';
+import 'package:convoquei_app/features/organizations/settings/widgets/no_roles_empty_state.dart';
 import 'package:convoquei_app/features/organizations/shared/models/OrganizationRolePermissionModel.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_my_member_profile_model.dart';
@@ -39,6 +42,21 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
     await ref
         .read(listRolesOrganizationProvider.notifier)
         .loadNextPage(widget.organization.id);
+  }
+
+  Future<void> _handleCreateRole() async {
+    if (!mounted) return;
+
+    final role = await CreateRoleModal.show(
+      context,
+      (name) => ref
+          .read(createRoleProvider.notifier)
+          .execute(organizationId: widget.organization.id, name: name),
+    );
+
+    if (role == null || !mounted) return;
+
+    await _handleOpenModalEditRole(role);
   }
 
   Future<void> _handleDeleteRole(OrganizationRoleModel role) async {
@@ -195,27 +213,23 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
     final rolesAsync = ref.watch(listRolesOrganizationProvider);
     final hasNextPage = rolesAsync.value?.hasNextPage ?? false;
 
+    final emptyState = rolesAsync.whenOrNull(
+      data: (paged) => paged.items.isEmpty
+          ? NoRolesEmptyState(onCreateRole: _handleCreateRole)
+          : null,
+    );
+
     return BaseScrollablePage(
       useSafeArea: true,
       searchHint: "Procurar pepéis...",
       onRequestNextPage: hasNextPage ? _handleRequestNextPage : null,
       icon: Icons.add_moderator_outlined,
-      onIconTap: () {
-        debugPrint("Create new role");
-      },
+      emptyState: emptyState,
+      onIconTap: _handleCreateRole,
       children: [
-        AlertBanner(
-          icon: Icons.security_outlined,
-          color: AppTheme.primaryColor,
-          text:
-              'Os papéis definem o nível de acesso à organização. '
-              'Atribua as permissões de gestão e expulsão com extrema responsabilidade.',
-        ),
-
-        SizedBox(height: 8),
-
         rolesAsync.when(
           data: (paged) {
+
             return Column(
               spacing: 6,
               children: paged.items.map((role) {
@@ -250,6 +264,24 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
                     ],
                   ),
                   title: role.name,
+                  actions: [
+                    TextButton.icon(
+                      onPressed: () => _handleDeleteRole(role),
+                      icon: const Icon(
+                        Icons.delete_outline_rounded,
+                        size: 16,
+                        color: Color(0xFFDC2626),
+                      ),
+                      label: const Text(
+                        'Excluir papel',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFFDC2626),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                   children: [
                     Container(
                       width: double.infinity,
@@ -296,14 +328,6 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
                                 variant: TagLabelVariant.elevated,
                               );
                             }).toList(),
-
-                            // const [
-                            //   TagLabel(
-                            //     label: 'Admin',
-                            //     color: AppTheme.primaryColor,
-                            //     variant: TagLabelVariant.elevated,
-                            //   ),
-                            // ],
                           ),
                         ],
                       ),
@@ -329,24 +353,6 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
                     ),
                     const SizedBox(height: 8),
                     membersWidget(role),
-                  ],
-                  actions: [
-                    TextButton.icon(
-                      onPressed: () => _handleDeleteRole(role),
-                      icon: const Icon(
-                        Icons.delete_outline_rounded,
-                        size: 16,
-                        color: Color(0xFFDC2626),
-                      ),
-                      label: const Text(
-                        'Excluir papel',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFFDC2626),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
                   ],
                 );
               }).toList(),
