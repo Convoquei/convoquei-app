@@ -77,6 +77,16 @@ class OrganizationRoleRepository extends BaseRepository {
     );
   }
 
+  Future<void> addRoleMember({
+    required String organizationId,
+    required String roleId,
+    required String memberId,
+  }) async {
+    await apiClient.post(
+      '/v1/organizations/$organizationId/roles/$roleId/members/$memberId',
+    );
+  }
+
   Future<void> removeRoleMember({
     required String organizationId,
     required String roleId,

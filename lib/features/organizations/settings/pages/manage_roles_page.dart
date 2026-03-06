@@ -229,7 +229,6 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
       children: [
         rolesAsync.when(
           data: (paged) {
-
             return Column(
               spacing: 6,
               children: paged.items.map((role) {

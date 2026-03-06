@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'package:convoquei_app/features/auth/providers/auth_providers.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../storage/token_storage.dart';
 
 /// Handles Bearer token injection and automatic token refresh.
@@ -9,11 +12,12 @@ import '../../storage/token_storage.dart';
 class AuthInterceptor extends Interceptor {
   final Dio _dio;
   final TokenStorage _tokenStorage;
+  final Ref _ref;
 
   bool _isRefreshing = false;
   Completer<bool>? _refreshCompleter;
 
-  AuthInterceptor(this._dio, this._tokenStorage);
+  AuthInterceptor(this._dio, this._tokenStorage, this._ref);
 
   // -------------------------------------------------------------------------
   // Request — inject Access Token
@@ -21,10 +25,9 @@ class AuthInterceptor extends Interceptor {
 
   @override
   Future<void> onRequest(
-    RequestOptions options,
-    RequestInterceptorHandler handler,
-  ) async {
-    // Skip auth header when explicitly opted-out or for the refresh endpoint.
+      RequestOptions options,
+      RequestInterceptorHandler handler,
+      ) async {
     if (_shouldSkip(options)) {
       handler.next(options);
       return;
@@ -44,9 +47,9 @@ class AuthInterceptor extends Interceptor {
 
   @override
   Future<void> onError(
-    DioException err,
-    ErrorInterceptorHandler handler,
-  ) async {
+      DioException err,
+      ErrorInterceptorHandler handler,
+      ) async {
     if (err.response?.statusCode != 401 || _shouldSkip(err.requestOptions)) {
       handler.next(err);
       return;
@@ -55,7 +58,6 @@ class AuthInterceptor extends Interceptor {
     final refreshed = await _refresh();
 
     if (refreshed) {
-      // Re-issue the original request with the new token.
       try {
         final newToken = await _tokenStorage.getAccessToken();
         err.requestOptions.headers['Authorization'] = 'Bearer $newToken';
@@ -67,8 +69,9 @@ class AuthInterceptor extends Interceptor {
       return;
     }
 
-    // Refresh failed — clear tokens so the UI can redirect to login.
-    await _tokenStorage.clear();
+
+    await _ref.read(authProvider.notifier).logout();
+
     handler.next(err);
   }
 
@@ -77,11 +80,8 @@ class AuthInterceptor extends Interceptor {
   // -------------------------------------------------------------------------
 
   bool _shouldSkip(RequestOptions options) =>
-      options.extra['skipAuthInterceptor'] == true ||
-      options.path.contains('/auth/refresh');
+      options.extra['skipAuthInterceptor'] == true;
 
-  /// Ensures only one refresh request runs at a time.
-  /// Concurrent callers await the same [Completer].
   Future<bool> _refresh() async {
     if (_isRefreshing) {
       return _refreshCompleter!.future;
@@ -98,7 +98,7 @@ class AuthInterceptor extends Interceptor {
       }
 
       final response = await _dio.post<Map<String, dynamic>>(
-        '/auth/refresh',
+        '/v1/auth/refresh',
         data: {'refreshToken': refreshToken},
         options: Options(extra: {'skipAuthInterceptor': true}),
       );
@@ -116,8 +116,10 @@ class AuthInterceptor extends Interceptor {
 
       _complete(true);
       return true;
-    } catch (_) {
+    } catch (error) {
       _complete(false);
+
+      debugPrint('Error refreshing token: $error');
       return false;
     }
   }

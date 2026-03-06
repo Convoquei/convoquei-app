@@ -16,4 +16,10 @@ enum OrganizationPermissionEnum {
   static OrganizationPermissionEnum fromCode(String code) {
     return _codeMap[code.toUpperCase()] ?? OrganizationPermissionEnum.member;
   }
+
+  static final Map<OrganizationPermissionEnum, String> _reverseCodeMap = {
+    for (final entry in _codeMap.entries) entry.value: entry.key,
+  };
+
+  String toCode() => _reverseCodeMap[this] ?? name.toUpperCase();
 }

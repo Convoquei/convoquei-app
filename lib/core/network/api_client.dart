@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:dio_smart_retry/dio_smart_retry.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../constants/app_constants.dart';
 import 'exceptions/api_exception.dart';
@@ -14,7 +16,7 @@ class ApiClient {
 
   ApiClient._(this._dio);
 
-  factory ApiClient({required TokenStorage tokenStorage, String? baseUrl}) {
+  factory ApiClient({required TokenStorage tokenStorage, required Ref ref, String? baseUrl}) {
     final dio = Dio(
       BaseOptions(
         baseUrl: baseUrl ?? AppConstants.baseUrl,
@@ -28,7 +30,7 @@ class ApiClient {
       ),
     );
 
-    final authInterceptor = AuthInterceptor(dio, tokenStorage);
+    final authInterceptor = AuthInterceptor(dio, tokenStorage, ref);
     dio.interceptors.add(authInterceptor);
 
     dio.interceptors.add(

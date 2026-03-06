@@ -28,7 +28,7 @@ class MultiSelectModal<T> extends ConsumerStatefulWidget {
   final Widget? titleWidget;
   final String? subtitle;
 
-  /// Busca os itens — chamado uma única vez no [initState] com [ref] estável.
+  /// Busca os itens — chamado após o primeiro frame com [ref] estável.
   final Future<List<T>> Function(WidgetRef ref) fetcher;
 
   /// Extrai o id único de cada item.
@@ -93,8 +93,9 @@ class MultiSelectModal<T> extends ConsumerStatefulWidget {
 }
 
 class _MultiSelectModalState<T> extends ConsumerState<MultiSelectModal<T>> {
-  late final Set<String> _selectedIds;
-  late final Future<List<T>> _future;
+  late Set<String> _selectedIds;
+  Future<List<T>>? _future;
+  bool _hasError = false;
   bool _isDirty = false;
   bool _isSaving = false;
 
@@ -102,15 +103,36 @@ class _MultiSelectModalState<T> extends ConsumerState<MultiSelectModal<T>> {
   void initState() {
     super.initState();
     _selectedIds = {...widget.initialSelectedIds};
-    // ref estável em ConsumerState — future criada uma única vez.
-    _future = widget.fetcher(ref);
+
+    // Adia o fetch para após o primeiro frame, evitando modificar
+    // providers do Riverpod durante a fase de build/mount da árvore.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _loadData();
+    });
+  }
+
+  void _loadData() {
+    final future = widget.fetcher(ref);
+    future.then((_) {
+      if (mounted) setState(() => _hasError = false);
+    }).catchError((_) {
+      if (mounted) setState(() => _hasError = true);
+    });
+    setState(() {
+      _hasError = false;
+      _future = future;
+    });
   }
 
   void _toggle(String id) {
     setState(() {
-      _selectedIds.contains(id)
-          ? _selectedIds.remove(id)
-          : _selectedIds.add(id);
+      final updated = {..._selectedIds};
+      if (updated.contains(id)) {
+        updated.remove(id);
+      } else {
+        updated.add(id);
+      }
+      _selectedIds = updated;
       _isDirty = true;
     });
   }
@@ -128,7 +150,6 @@ class _MultiSelectModalState<T> extends ConsumerState<MultiSelectModal<T>> {
       AppModal.hide(context, true);
     } catch (error) {
       debugPrint('Error saving MultiSelectModal: $error');
-
       if (!mounted) return;
       ToastFeedbackService.showToast(
         context,
@@ -207,49 +228,40 @@ class _MultiSelectModalState<T> extends ConsumerState<MultiSelectModal<T>> {
             ),
 
             // Body
-            Flexible(
-              child: FutureBuilder<List<T>>(
-                future: _future,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 48),
-                        child: CupertinoActivityIndicator(),
-                      ),
-                    );
-                  }
+            FutureBuilder<List<T>>(
+              future: _future,
+              builder: (context, snapshot) {
+                // Enquanto _future é null (antes do postFrame) ou carregando
+                if (_future == null ||
+                    snapshot.connectionState == ConnectionState.waiting) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Center(
+                      child: CupertinoActivityIndicator(radius: 10),
+                    ),
+                  );
+                }
 
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 48),
-                        child: Text(
-                          widget.errorMessage,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(color: Colors.red),
-                        ),
-                      ),
-                    );
-                  }
+                if (snapshot.hasError) {
+                  return _ErrorState(onRetry: _loadData);
+                }
 
-                  final items = snapshot.data ?? [];
+                final items = snapshot.data ?? [];
 
-                  if (items.isEmpty) {
-                    return SingleChildScrollView(
-                      child: widget.emptyWidget ??
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 48),
-                            child: Center(
-                              child: Text('Nenhum item disponível.'),
-                            ),
-                          ),
-                    );
-                  }
-
+                if (items.isEmpty) {
                   return SingleChildScrollView(
+                    child: widget.emptyWidget ??
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 48),
+                          child: Center(
+                            child: Text('Nenhum item disponível.'),
+                          ),
+                        ),
+                  );
+                }
+
+                return Flexible(
+                  child: SingleChildScrollView(
                     padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,22 +292,23 @@ class _MultiSelectModalState<T> extends ConsumerState<MultiSelectModal<T>> {
                         }),
                       ],
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
 
-            const Divider(height: 1),
-
-            // Footer
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-              child: ActionButton(
-                label: widget.saveLabel,
-                onPressed: _isDirty && !_isSaving ? _save : null,
-                isLoading: _isSaving,
+            // Footer — oculto no estado de erro
+            if (!_hasError) ...[
+              const Divider(height: 1),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                child: ActionButton(
+                  label: widget.saveLabel,
+                  onPressed: _isDirty && !_isSaving ? _save : null,
+                  isLoading: _isSaving,
+                ),
               ),
-            ),
+            ],
 
             SizedBox(height: bottomPadding),
           ],
@@ -305,22 +318,76 @@ class _MultiSelectModalState<T> extends ConsumerState<MultiSelectModal<T>> {
   }
 }
 
+// ─── Tela de erro com retry ────────────────────────────────────────────────────
 
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.onRetry});
 
+  final VoidCallback onRetry;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFEF2F2),
+              borderRadius: BorderRadius.circular(100),
+            ),
+            child: const Icon(
+              Icons.wifi_off_rounded,
+              size: 32,
+              color: Color(0xFFEF4444),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'Algo deu errado',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF1E293B),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Infelizmente não conseguimos carregar as informações. Verifique sua conexão e tente novamente.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: const Color(0xFF64748B),
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 28),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('Tentar novamente'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1D4ED8),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: const TextStyle(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

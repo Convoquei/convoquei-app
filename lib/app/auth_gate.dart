@@ -22,6 +22,15 @@ class AuthGate extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
 
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      debugPrint('Auth state changed: ${previous?.status} → ${next.status}');
+
+      if (previous?.status == AuthStatus.authenticated &&
+          next.status == AuthStatus.unauthenticated) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+    });
+
     if (authState.status == AuthStatus.unknown) {
       return const Scaffold(
         body: SizedBox.shrink(),

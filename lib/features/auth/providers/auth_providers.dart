@@ -51,6 +51,8 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> _init() async {
     final hasSession = await _repo.hasValidSession();
     if (!hasSession) {
+
+
       state = const AuthState(status: AuthStatus.unauthenticated);
       return;
     }
