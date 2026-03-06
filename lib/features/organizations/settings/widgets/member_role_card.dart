@@ -79,10 +79,15 @@ class MemberRoleCard extends StatelessWidget {
           ),
 
           // ── Botão de ação ────────────────────────────────────────────────
-          //if (actionIcon != null)
-              //ActionButton(label: label)
-
-            //_ActionButton(icon: actionIcon!, onTap: onActionTap),
+          if (actionIcon != null)
+            IconButton(
+              icon: Icon(actionIcon, size: 18),
+              style: IconButton.styleFrom(
+                foregroundColor: const Color(0xFF64748B),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              onPressed: onActionTap,
+            ),
         ],
       ),
     );

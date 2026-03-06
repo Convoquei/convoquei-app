@@ -67,6 +67,25 @@ class OrganizationRoleRepository extends BaseRepository {
 
     return OrganizationRoleModel.fromJson(data);
   }
+
+  Future<void> deleteRole({
+    required String organizationId,
+    required String roleId,
+  }) async {
+    await apiClient.delete(
+      '/v1/organizations/$organizationId/roles/$roleId',
+    );
+  }
+
+  Future<void> removeRoleMember({
+    required String organizationId,
+    required String roleId,
+    required String memberId,
+  }) async {
+    await apiClient.delete(
+      '/v1/organizations/$organizationId/roles/$roleId/members/$memberId',
+    );
+  }
 }
 
 final organizationRoleRepositoryProvider = Provider<OrganizationRoleRepository>(

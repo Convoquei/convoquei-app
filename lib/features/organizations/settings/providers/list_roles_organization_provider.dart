@@ -75,6 +75,15 @@ class ListRolesOrganizationNotifier
     state = AsyncData(current.copyWith(items: updatedItems));
   }
 
+  void removeRole({required String roleId}) {
+    final current = state.value;
+    if (current == null) return;
+
+    final updatedItems =
+        current.items.where((role) => role.id != roleId).toList();
+
+    state = AsyncData(current.copyWith(items: updatedItems));
+  }
 
   Future<void> refresh(String organizationId) async {
     await loadFirstPage(organizationId);

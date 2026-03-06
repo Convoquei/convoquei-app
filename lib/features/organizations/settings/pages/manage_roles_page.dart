@@ -1,3 +1,4 @@
+import 'package:convoquei_app/core/services/user_feedback_service.dart';
 import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/core/widgets/alert_banner.dart';
 import 'package:convoquei_app/core/widgets/base_scrollable_page.dart';
@@ -6,14 +7,17 @@ import 'package:convoquei_app/core/widgets/modals/multi_select_modal.dart';
 import 'package:convoquei_app/core/widgets/selectable_tile.dart';
 import 'package:convoquei_app/core/widgets/tag_label.dart';
 import 'package:convoquei_app/features/organizations/settings/providers/avaliable_permissions_provider.dart';
+import 'package:convoquei_app/features/organizations/settings/providers/delete_role_provider.dart';
 import 'package:convoquei_app/features/organizations/settings/providers/expanded_roles_provider.dart';
 import 'package:convoquei_app/features/organizations/settings/providers/list_members_in_role_provider.dart';
 import 'package:convoquei_app/features/organizations/settings/providers/list_roles_organization_provider.dart';
+import 'package:convoquei_app/features/organizations/settings/providers/remove_role_member_provider.dart';
 import 'package:convoquei_app/features/organizations/settings/providers/update_role_permissions_provider.dart';
 import 'package:convoquei_app/features/organizations/settings/widgets/member_role_card.dart';
 import 'package:convoquei_app/features/organizations/shared/models/OrganizationRolePermissionModel.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_my_member_profile_model.dart';
+import 'package:convoquei_app/features/organizations/shared/models/organization_role_member_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_role_model.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/organization_providers.dart';
 import 'package:convoquei_app/features/organizations/shared/widgets/expanded_card.dart';
@@ -37,32 +41,93 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
         .loadNextPage(widget.organization.id);
   }
 
+  Future<void> _handleDeleteRole(OrganizationRoleModel role) async {
+    final confirmed = await UserFeedbackService.confirm(
+      context,
+      title: 'Excluir papel',
+      message:
+          'Tem certeza que deseja excluir o papel "${role.name}"? Esta ação não pode ser desfeita.',
+      confirmLabel: 'Excluir',
+      destructive: true,
+    );
+
+    if (!confirmed || !mounted) return;
+
+    try {
+      await ref
+          .read(deleteRoleProvider.notifier)
+          .execute(organizationId: widget.organization.id, roleId: role.id);
+    } catch (_) {
+      if (!mounted) return;
+      await UserFeedbackService.error(
+        context,
+        message: 'Não foi possível excluir o papel. Tente novamente.',
+      );
+    }
+  }
+
+  Future<void> _handleRemoveRoleMember(
+    OrganizationRoleModel role,
+    OrganizationRoleMemberModel member,
+  ) async {
+    final confirmed = await UserFeedbackService.confirm(
+      context,
+      title: 'Remover membro',
+      message:
+          'Tem certeza que deseja remover "${member.name}" do papel "${role.name}"?',
+      confirmLabel: 'Remover',
+      destructive: true,
+    );
+
+    if (!confirmed || !mounted) return;
+
+    try {
+      await ref
+          .read(removeRoleMemberProvider.notifier)
+          .execute(
+            organizationId: widget.organization.id,
+            roleId: role.id,
+            memberId: member.id,
+          );
+    } catch (_) {
+      if (!mounted) return;
+      await UserFeedbackService.error(
+        context,
+        message: 'Não foi possível remover o membro. Tente novamente.',
+      );
+    }
+  }
+
   Future<void> _handleOpenModalEditRole(OrganizationRoleModel role) {
     return MultiSelectModal.show<OrganizationRolePermissionModel>(
-        context,
-        titleWidget: HeaderModalTitleSubtitle(
-          title: role.name,
-          subtitle: 'Gerencie as permissões vinculadas a este papel',
-        ),
-        title: 'Gerenciar Papel',
-        fetcher: (ref) => ref.read(
-          avaliablePermissionsProvider(widget.organization.id).future,
-        ),
-        idExtractor: (role) => role.code,
-        itemBuilder: (permission, isSelected, onTap) => SelectableTile(
-          title: permission.title,
-          description: permission.description,
-          isSelected: isSelected,
-          onTap: onTap,
-        ),
-        initialSelectedIds: role.permissions.map((p) => p.code).toSet(),
-        onSave: (selectedIds) async {
-          final container = ProviderScope.containerOf(context);
+      context,
+      titleWidget: HeaderModalTitleSubtitle(
+        title: role.name,
+        subtitle: 'Gerencie as permissões vinculadas a este papel',
+      ),
+      title: 'Gerenciar Papel',
+      fetcher: (ref) =>
+          ref.read(avaliablePermissionsProvider(widget.organization.id).future),
+      idExtractor: (role) => role.code,
+      itemBuilder: (permission, isSelected, onTap) => SelectableTile(
+        title: permission.title,
+        description: permission.description,
+        isSelected: isSelected,
+        onTap: onTap,
+      ),
+      initialSelectedIds: role.permissions.map((p) => p.code).toSet(),
+      onSave: (selectedIds) async {
+        final container = ProviderScope.containerOf(context);
 
-          await container
-              .read(updateRolePermissionsProvider.notifier)
-              .execute(organizationId: widget.organization.id, roleId: role.id, permissions: selectedIds.toList());
-        });
+        await container
+            .read(updateRolePermissionsProvider.notifier)
+            .execute(
+              organizationId: widget.organization.id,
+              roleId: role.id,
+              permissions: selectedIds.toList(),
+            );
+      },
+    );
   }
 
   @override
@@ -80,21 +145,14 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
     final expandedRoles = ref.watch(expandedRolesProvider);
     final isExpanded = expandedRoles.contains(role.id);
 
-    OrganizationMyMemberProfile currentUser = ref
-        .watch(
-      currentUserMembershipOrganizationProvider(widget.organization.id),
-    )
-        .asData!
-        .value;
-
     if (!isExpanded) {
       return const SizedBox.shrink();
     }
 
     final membersAsync = ref.watch(
       roleMembersProvider((
-      organizationId: widget.organization.id,
-      roleId: role.id,
+        organizationId: widget.organization.id,
+        roleId: role.id,
       )),
     );
 
@@ -114,15 +172,13 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
             return MemberRoleCard(
               userName: member.name,
               avatarUrl: member.avatarUrl,
-              badge: member.id == currentUser.id
-                  ? const TagLabel(label: "VOCÊ", color: AppTheme.primaryColor)
-                  : null,
+              actionIcon: Icons.person_remove_outlined,
+              onActionTap: () => _handleRemoveRoleMember(role, member),
             );
           },
         );
       },
-      loading: () =>
-      const Padding(
+      loading: () => const Padding(
         padding: EdgeInsets.symmetric(vertical: 8),
         child: SizedBox(
           width: 16,
@@ -152,7 +208,7 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
           icon: Icons.security_outlined,
           color: AppTheme.primaryColor,
           text:
-          'Os papéis definem o nível de acesso à organização. '
+              'Os papéis definem o nível de acesso à organização. '
               'Atribua as permissões de gestão e expulsão com extrema responsabilidade.',
         ),
 
@@ -180,18 +236,14 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
                   onExpand: () {
                     final roles = {...ref.read(expandedRolesProvider)};
                     roles.add(role.id);
-                    ref
-                        .read(expandedRolesProvider.notifier)
-                        .state = roles;
+                    ref.read(expandedRolesProvider.notifier).state = roles;
                   },
                   descriptionWidget: Wrap(
                     spacing: 6,
                     children: [
                       TagLabel(
                         label:
-                        "${role.permissionCount} ${role.permissionCount == 1
-                            ? 'PERMISSÃO'
-                            : 'PERMISSÕES'}",
+                            "${role.permissionCount} ${role.permissionCount == 1 ? 'PERMISSÃO' : 'PERMISSÕES'}",
                         color: AppTheme.textSecondary,
                         variant: TagLabelVariant.elevated,
                       ),
@@ -216,8 +268,7 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
                           Row(
                             children: [
                               Text(
-                                'PERMISSÕES VINCULADAS (${role
-                                    .permissionCount})',
+                                'PERMISSÕES VINCULADAS (${role.permissionCount})',
                                 style: TextStyle(
                                   fontFamily: 'Inter',
                                   fontSize: 10,
@@ -278,6 +329,24 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
                     ),
                     const SizedBox(height: 8),
                     membersWidget(role),
+                  ],
+                  actions: [
+                    TextButton.icon(
+                      onPressed: () => _handleDeleteRole(role),
+                      icon: const Icon(
+                        Icons.delete_outline_rounded,
+                        size: 16,
+                        color: Color(0xFFDC2626),
+                      ),
+                      label: const Text(
+                        'Excluir papel',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFFDC2626),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                   ],
                 );
               }).toList(),
