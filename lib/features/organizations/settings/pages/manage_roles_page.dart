@@ -49,7 +49,7 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
 
     final role = await CreateRoleModal.show(
       context,
-      (name) => ref
+          (name) => ref
           .read(createRoleProvider.notifier)
           .execute(organizationId: widget.organization.id, name: name),
     );
@@ -64,7 +64,7 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
       context,
       title: 'Excluir papel',
       message:
-          'Tem certeza que deseja excluir o papel "${role.name}"? Esta ação não pode ser desfeita.',
+      'Tem certeza que deseja excluir o papel "${role.name}"? Esta ação não pode ser desfeita.',
       confirmLabel: 'Excluir',
       destructive: true,
     );
@@ -85,14 +85,14 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
   }
 
   Future<void> _handleRemoveRoleMember(
-    OrganizationRoleModel role,
-    OrganizationRoleMemberModel member,
-  ) async {
+      OrganizationRoleModel role,
+      OrganizationRoleMemberModel member,
+      ) async {
     final confirmed = await UserFeedbackService.confirm(
       context,
       title: 'Remover membro',
       message:
-          'Tem certeza que deseja remover "${member.name}" do papel "${role.name}"?',
+      'Tem certeza que deseja remover "${member.name}" do papel "${role.name}"?',
       confirmLabel: 'Remover',
       destructive: true,
     );
@@ -103,10 +103,10 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
       await ref
           .read(removeRoleMemberProvider.notifier)
           .execute(
-            organizationId: widget.organization.id,
-            roleId: role.id,
-            memberId: member.id,
-          );
+        organizationId: widget.organization.id,
+        roleId: role.id,
+        memberId: member.id,
+      );
     } catch (_) {
       if (!mounted) return;
       await UserFeedbackService.error(
@@ -140,10 +140,10 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
         await container
             .read(updateRolePermissionsProvider.notifier)
             .execute(
-              organizationId: widget.organization.id,
-              roleId: role.id,
-              permissions: selectedIds.toList(),
-            );
+          organizationId: widget.organization.id,
+          roleId: role.id,
+          permissions: selectedIds.toList(),
+        );
       },
     );
   }
@@ -159,32 +159,51 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
     });
   }
 
-  Widget membersWidget(OrganizationRoleModel role) {
+  Widget _membersWidget(OrganizationRoleModel role) {
     final expandedRoles = ref.watch(expandedRolesProvider);
     final isExpanded = expandedRoles.contains(role.id);
 
-    if (!isExpanded) {
-      return const SizedBox.shrink();
-    }
+    if (!isExpanded) return const SizedBox.shrink();
 
     final membersAsync = ref.watch(
       roleMembersProvider((
-        organizationId: widget.organization.id,
-        roleId: role.id,
+      organizationId: widget.organization.id,
+      roleId: role.id,
       )),
     );
 
     return membersAsync.when(
       data: (members) {
         if (members.isEmpty) {
-          return const Text("Nenhum membro vinculado");
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.person_off_outlined,
+                  size: 14,
+                  color: AppTheme.textSecondary.withOpacity(0.5),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Nenhum membro vinculado',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 13,
+                    color: AppTheme.textSecondary.withOpacity(0.6),
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          );
         }
 
         return ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: members.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 2),
+          separatorBuilder: (_, __) => const SizedBox(height: 4),
           itemBuilder: (context, index) {
             final member = members[index];
             return MemberRoleCard(
@@ -197,14 +216,107 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
         );
       },
       loading: () => const Padding(
-        padding: EdgeInsets.symmetric(vertical: 8),
-        child: SizedBox(
-          width: 16,
-          height: 16,
-          child: CircularProgressIndicator(strokeWidth: 2),
+        padding: EdgeInsets.symmetric(vertical: 12),
+        child: Center(
+          child: SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
         ),
       ),
-      error: (err, _) => const Text("Erro ao carregar membros"),
+      error: (err, _) => const Text('Erro ao carregar membros'),
+    );
+  }
+
+  /// Constrói o avatar inicial do papel com cor baseada no nome
+  Widget _buildRoleAvatar(String name) {
+    // Gera uma cor consistente baseada no nome
+    final colors = [
+      const Color(0xFF1D4ED8), // primaryColor
+      const Color(0xFF0F766E),
+      const Color(0xFF7C3AED),
+      const Color(0xFFB45309),
+      const Color(0xFF0369A1),
+      const Color(0xFF4338CA),
+    ];
+    final colorIndex = name.codeUnitAt(0) % colors.length;
+    final color = colors[colorIndex];
+
+    return CircleAvatar(
+      radius: 22,
+      backgroundColor: color.withOpacity(0.12),
+      child: Text(
+        name.substring(0, 1).toUpperCase(),
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w700,
+          fontSize: 16,
+          fontFamily: 'Poppins',
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoleCard(OrganizationRoleModel role) {
+    return ExpandedCard(
+      key: ValueKey(role.id),
+      initiallyExpanded: false,
+      leading: _buildRoleAvatar(role.name),
+      onExpand: () {
+        final roles = {...ref.read(expandedRolesProvider)};
+        roles.add(role.id);
+        ref.read(expandedRolesProvider.notifier).state = roles;
+      },
+      descriptionWidget: Wrap(
+        spacing: 6,
+        children: [
+          TagLabel(
+            label:
+            "${role.permissionCount} ${role.permissionCount == 1 ? 'PERMISSÃO' : 'PERMISSÕES'}",
+            color: AppTheme.textSecondary,
+            variant: TagLabelVariant.elevated,
+          ),
+        ],
+      ),
+      title: role.name,
+
+      // ─── Ação de excluir: agora como ícone no trailing do header ───
+      // Passada via actions para ser renderizada pelo ExpandedCard
+      actions: [
+        _DeleteRoleButton(onTap: () => _handleDeleteRole(role)),
+      ],
+
+      children: [
+        // ── Seção: Permissões ──────────────────────────────────────
+        _SectionDivider(
+          label: 'PERMISSÕES VINCULADAS (${role.permissionCount})',
+          trailing: _EditPermissionsButton(
+            onTap: () => _handleOpenModalEditRole(role),
+          ),
+        ),
+        const SizedBox(height: 10),
+        role.permissions.isEmpty
+            ? _EmptyChip(label: 'Nenhuma permissão vinculada')
+            : Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: role.permissions.map((perm) {
+            return TagLabel(
+              label: perm.title.toUpperCase(),
+              color: AppTheme.primaryColor,
+              variant: TagLabelVariant.elevated,
+            );
+          }).toList(),
+        ),
+
+        const SizedBox(height: 16),
+
+        // ── Seção: Membros ─────────────────────────────────────────
+        const _SectionDivider(label: 'MEMBROS VINCULADOS'),
+        const SizedBox(height: 10),
+        _membersWidget(role),
+      ],
     );
   }
 
@@ -221,147 +333,184 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
 
     return BaseScrollablePage(
       useSafeArea: true,
-      searchHint: "Procurar pepéis...",
+      searchHint: 'Procurar papéis...',
       onRequestNextPage: hasNextPage ? _handleRequestNextPage : null,
       icon: Icons.add_moderator_outlined,
       emptyState: emptyState,
       onIconTap: _handleCreateRole,
       children: [
         rolesAsync.when(
-          data: (paged) {
-            return Column(
-              spacing: 6,
-              children: paged.items.map((role) {
-                return ExpandedCard(
-                  key: ValueKey(role.id),
-                  initiallyExpanded: false,
-                  leading: CircleAvatar(
-                    radius: 24,
-                    backgroundColor: const Color(0xFF1E293B),
-                    child: Text(
-                      role.name.substring(0, 1).toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  onExpand: () {
-                    final roles = {...ref.read(expandedRolesProvider)};
-                    roles.add(role.id);
-                    ref.read(expandedRolesProvider.notifier).state = roles;
-                  },
-                  descriptionWidget: Wrap(
-                    spacing: 6,
-                    children: [
-                      TagLabel(
-                        label:
-                            "${role.permissionCount} ${role.permissionCount == 1 ? 'PERMISSÃO' : 'PERMISSÕES'}",
-                        color: AppTheme.textSecondary,
-                        variant: TagLabelVariant.elevated,
-                      ),
-                    ],
-                  ),
-                  title: role.name,
-                  actions: [
-                    TextButton.icon(
-                      onPressed: () => _handleDeleteRole(role),
-                      icon: const Icon(
-                        Icons.delete_outline_rounded,
-                        size: 16,
-                        color: Color(0xFFDC2626),
-                      ),
-                      label: const Text(
-                        'Excluir papel',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFFDC2626),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 12,
-                      ),
-                      decoration: const BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Color(0xFFF1F5F9)),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                'PERMISSÕES VINCULADAS (${role.permissionCount})',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF64748B),
-                                  letterSpacing: 0.8,
-                                ),
-                              ),
-                              // Button [Editar permissões]
-                              const Spacer(),
-                              TextButton(
-                                onPressed: () => _handleOpenModalEditRole(role),
-                                child: const Text("Editar"),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Wrap(
-                            spacing: 6,
-                            runSpacing: 6,
-                            children: role.permissions.map((perm) {
-                              return TagLabel(
-                                label: perm.title.toUpperCase(),
-                                color: AppTheme.primaryColor,
-                                variant: TagLabelVariant.elevated,
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    Row(
-                      children: [
-                        Text(
-                          'MEMBROS VINCULADOS',
-                          style: const TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF64748B),
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-
-                        const SizedBox(width: 12),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    membersWidget(role),
-                  ],
-                );
-              }).toList(),
-            );
-          },
-          error: (err, _) =>
-              Center(child: Text("Erro ao carregar papéis." + err.toString())),
+          data: (paged) => Column(
+            spacing: 8,
+            children: paged.items.map(_buildRoleCard).toList(),
+          ),
+          error: (err, _) => Center(
+            child: Text('Erro ao carregar papéis: $err'),
+          ),
           loading: () => const Center(child: CircularProgressIndicator()),
         ),
       ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Widgets auxiliares extraídos para manter o build limpo
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Botão de excluir papel — ícone com visual destrutivo contido,
+/// evitando que fique "perdido" em meio ao card.
+class _DeleteRoleButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _DeleteRoleButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    const dangerColor = Color(0xFFDC2626);
+
+    return Tooltip(
+      message: 'Excluir papel',
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: dangerColor.withOpacity(0.07),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: dangerColor.withOpacity(0.18),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.delete_outline_rounded, size: 15, color: dangerColor),
+              SizedBox(width: 5),
+              Text(
+                'Excluir',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: dangerColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Botão leve de editar permissões.
+class _EditPermissionsButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _EditPermissionsButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.edit_outlined,
+              size: 13,
+              color: AppTheme.primaryColor,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              'Editar',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Divisor de seção com label uppercase e trailing opcional.
+class _SectionDivider extends StatelessWidget {
+  final String label;
+  final Widget? trailing;
+
+  const _SectionDivider({required this.label, this.trailing});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF94A3B8),
+            letterSpacing: 0.9,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Container(
+            height: 1,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFFE2E8F0),
+                  const Color(0xFFE2E8F0).withOpacity(0),
+                ],
+              ),
+            ),
+          ),
+        ),
+        if (trailing != null) ...[
+          const SizedBox(width: 4),
+          trailing!,
+        ],
+      ],
+    );
+  }
+}
+
+/// Chip/placeholder quando não há itens na lista.
+class _EmptyChip extends StatelessWidget {
+  final String label;
+
+  const _EmptyChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 12,
+          color: Color(0xFF94A3B8),
+          fontStyle: FontStyle.italic,
+        ),
+      ),
     );
   }
 }

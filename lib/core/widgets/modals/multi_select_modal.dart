@@ -115,7 +115,9 @@ class _MultiSelectModalState<T> extends ConsumerState<MultiSelectModal<T>> {
     final future = widget.fetcher(ref);
     future.then((_) {
       if (mounted) setState(() => _hasError = false);
-    }).catchError((_) {
+    }).catchError((error) {
+      debugPrint('Error fetching data for MultiSelectModal: $error');
+
       if (mounted) setState(() => _hasError = true);
     });
     setState(() {

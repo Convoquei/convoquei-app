@@ -2,10 +2,11 @@ import 'package:convoquei_app/core/models/paged_response_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/OrganizationRolePermissionModel.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_role_model.dart';
 import 'package:convoquei_app/features/organizations/shared/repositories/organization_role_repository.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final listRolesOrganizationProvider =
-    AsyncNotifierProvider.autoDispose<
+    AsyncNotifierProvider<
       ListRolesOrganizationNotifier,
       PagedResponseModel<OrganizationRoleModel>
     >(ListRolesOrganizationNotifier.new);
@@ -14,6 +15,10 @@ class ListRolesOrganizationNotifier
     extends AsyncNotifier<PagedResponseModel<OrganizationRoleModel>> {
   @override
   Future<PagedResponseModel<OrganizationRoleModel>> build() async {
+    ref.onDispose(() {
+      debugPrint('ListRolesOrganizationNotifier disposed');
+    });
+
     return PagedResponseModel(
       items: [],
       page: 1,

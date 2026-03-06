@@ -38,8 +38,6 @@ class AuthRepository {
   }
 
   Future<bool> hasValidSession() async {
-    _tokenStorage.clear();
-
     final token = await _tokenStorage.getAccessToken();
 
     _tokenStorage.debugPrintTokens();
