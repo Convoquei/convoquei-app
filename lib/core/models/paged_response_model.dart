@@ -1,3 +1,5 @@
+import 'package:convoquei_app/features/organizations/shared/models/organization_role_model.dart';
+
 class PagedResponseModel<T> {
   final List<T> items;
   final int page;
@@ -17,7 +19,10 @@ class PagedResponseModel<T> {
     required this.hasPreviousPage,
   });
 
-  factory PagedResponseModel.fromJson(Map<String, dynamic> json, T Function(Map<String, dynamic>) fromJsonT) {
+  factory PagedResponseModel.fromJson(
+    Map<String, dynamic> json,
+    T Function(Map<String, dynamic>) fromJsonT,
+  ) {
     return PagedResponseModel<T>(
       items: (json['items'] as List).map((item) => fromJsonT(item)).toList(),
       page: json['page'],
@@ -26,6 +31,26 @@ class PagedResponseModel<T> {
       totalPages: json['totalPages'],
       hasNextPage: json['hasNextPage'],
       hasPreviousPage: json['hasPreviousPage'],
+    );
+  }
+
+  PagedResponseModel<T> copyWith({
+    List<T>? items,
+    int? page,
+    int? size,
+    int? totalItems,
+    int? totalPages,
+    bool? hasNextPage,
+    bool? hasPreviousPage,
+  }) {
+    return PagedResponseModel<T>(
+      items: items ?? this.items,
+      page: page ?? this.page,
+      size: size ?? this.size,
+      totalItems: totalItems ?? this.totalItems,
+      totalPages: totalPages ?? this.totalPages,
+      hasNextPage: hasNextPage ?? this.hasNextPage,
+      hasPreviousPage: hasPreviousPage ?? this.hasPreviousPage,
     );
   }
 }

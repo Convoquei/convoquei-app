@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 
-/// Reusable accordion/expanded card.
-///
-/// Shows a tappable header ([leading] + [title] + [description]) and, when
-/// expanded, reveals [children] followed by an optional row of [actions].
 class ExpandedCard extends StatefulWidget {
   const ExpandedCard({
     super.key,
     required this.leading,
     required this.title,
-    required this.description,
+    this.description,
+    this.descriptionWidget,
     this.children = const [],
     this.actions = const [],
     this.initiallyExpanded = false,
@@ -18,7 +15,13 @@ class ExpandedCard extends StatefulWidget {
 
   final Widget leading;
   final String title;
-  final String description;
+
+  /// Texto exibido abaixo do título. Ignorado se [descriptionWidget] for fornecido.
+  final String? description;
+
+  /// Substitui [description] quando fornecido. Útil para tags, badges, etc.
+  final Widget? descriptionWidget;
+
   final List<Widget> children;
 
   /// Widgets placed in a [Row] at the bottom of the expanded body.
@@ -40,9 +43,7 @@ class _ExpandedCardState extends State<ExpandedCard> {
   void initState() {
     super.initState();
     _expanded = widget.initiallyExpanded;
-    if (_expanded) {
-      _hasExpandedOnce = true;
-    }
+    if (_expanded) _hasExpandedOnce = true;
   }
 
   void _toggle() {
@@ -76,6 +77,7 @@ class _ExpandedCardState extends State<ExpandedCard> {
             leading: widget.leading,
             title: widget.title,
             description: widget.description,
+            descriptionWidget: widget.descriptionWidget,
             expanded: _expanded,
             onTap: _toggle,
           ),
@@ -92,18 +94,22 @@ class _ExpandedCardState extends State<ExpandedCard> {
   }
 }
 
+// ─── Header ───────────────────────────────────────────────────────────────────
+
 class _Header extends StatelessWidget {
   const _Header({
     required this.leading,
     required this.title,
-    required this.description,
+    this.description,
     required this.expanded,
     required this.onTap,
+    this.descriptionWidget,
   });
 
   final Widget leading;
   final String title;
-  final String description;
+  final String? description;
+  final Widget? descriptionWidget;
   final bool expanded;
   final VoidCallback onTap;
 
@@ -132,14 +138,17 @@ class _Header extends StatelessWidget {
                         height: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      description,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFF94A3B8),
-                      ),
-                    ),
+                    if (descriptionWidget != null || description != null) ...[
+                      const SizedBox(height: 4),
+                      descriptionWidget ??
+                          Text(
+                            description!,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF94A3B8),
+                            ),
+                          ),
+                    ],
                   ],
                 ),
               ),
@@ -158,6 +167,8 @@ class _Header extends StatelessWidget {
     );
   }
 }
+
+// ─── Body ─────────────────────────────────────────────────────────────────────
 
 class _Body extends StatelessWidget {
   const _Body({required this.children, required this.actions});

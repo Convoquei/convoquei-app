@@ -1,14 +1,14 @@
 import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
-class HeaderMemberModal extends StatelessWidget {
+class HeaderModalTitleSubtitle extends StatelessWidget {
   final String title;
-  final String userName;
+  final String subtitle;
 
-  const HeaderMemberModal({
+  const HeaderModalTitleSubtitle({
     super.key,
     required this.title,
-    required this.userName,
+    required this.subtitle,
   });
 
   @override
@@ -17,7 +17,7 @@ class HeaderMemberModal extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          userName,
+          subtitle,
           style: Theme.of(
             context,
           ).textTheme.titleMedium?.copyWith(color: AppTheme.textPrimary),

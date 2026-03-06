@@ -10,7 +10,7 @@ import 'package:convoquei_app/features/organizations/members/providers/delete_gr
 import 'package:convoquei_app/features/organizations/members/providers/delete_group_provider.dart';
 import 'package:convoquei_app/features/organizations/members/providers/group_participants_paged_provider.dart';
 import 'package:convoquei_app/features/organizations/members/providers/list_all_groups_query_provider.dart';
-import 'package:convoquei_app/features/organizations/members/widgets/create_group_modal.dart';
+import 'package:convoquei_app/features/organizations/members/widgets/modals/create_group_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/no_groups_empty_state.dart';
 import 'package:convoquei_app/features/organizations/shared/widgets/expanded_card.dart';
 import 'package:flutter/material.dart';

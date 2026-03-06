@@ -38,7 +38,7 @@ class _WideHeader extends StatelessWidget {
         children: [
           Row(
             children: [
-              UserAvatar(user: user, radius: 18),
+              UserAvatar(name: user.name, avatarUrl: user.avatarUrl ?? "", radius: 18),
               const SizedBox(width: 12),
 
               Column(
@@ -143,7 +143,7 @@ class _NarrowHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: Row(
         children: [
-          UserAvatar(user: user, radius: 26),
+          UserAvatar(name: user.name, avatarUrl: user.avatarUrl ?? "", radius: 26),
           const SizedBox(width: 10),
           Expanded(
             child: Column(

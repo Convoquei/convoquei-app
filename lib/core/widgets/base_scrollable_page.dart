@@ -1,5 +1,6 @@
 import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/core/widgets/app_search_input.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class BaseScrollablePage extends StatefulWidget {
@@ -8,25 +9,79 @@ class BaseScrollablePage extends StatefulWidget {
     required this.children,
     required this.useSafeArea,
     this.searchHint = 'Procurar...',
-    this.onAddTap,
+    this.onIconTap,
+    this.icon = Icons.add,
     this.onSearchChanged,
+    this.onRequestNextPage,
   });
 
   final List<Widget> children;
-
   final String searchHint;
-
-  final VoidCallback? onAddTap;
-
+  final VoidCallback? onIconTap;
+  final IconData icon;
   final ValueChanged<String>? onSearchChanged;
-
   final bool useSafeArea;
+
+  final AsyncCallback? onRequestNextPage;
 
   @override
   State<BaseScrollablePage> createState() => _BaseScrollablePageState();
 }
 
 class _BaseScrollablePageState extends State<BaseScrollablePage> {
+  ScrollController? _scrollController;
+
+  // Lock: só dispara novo fetch após a Future anterior completar.
+  bool _isFetching = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.onRequestNextPage != null) {
+      _scrollController = ScrollController()..addListener(_onScroll);
+    }
+  }
+
+  @override
+  void didUpdateWidget(BaseScrollablePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.onRequestNextPage != null && _scrollController == null) {
+      _scrollController = ScrollController()..addListener(_onScroll);
+    }
+
+    if (widget.onRequestNextPage == null && _scrollController != null) {
+      _scrollController!.removeListener(_onScroll);
+      _scrollController!.dispose();
+      _scrollController = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController?.removeListener(_onScroll);
+    _scrollController?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _onScroll() async {
+    if (_isFetching || _scrollController == null) return;
+    if (!_scrollController!.hasClients) return;
+
+    final nearBottom =
+        _scrollController!.position.pixels >=
+            _scrollController!.position.maxScrollExtent - 200;
+
+    if (!nearBottom) return;
+
+    _isFetching = true;
+    try {
+      await widget.onRequestNextPage?.call();
+    } finally {
+      if (mounted) _isFetching = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final scaffold = Scaffold(
@@ -34,15 +89,15 @@ class _BaseScrollablePageState extends State<BaseScrollablePage> {
         children: [
           _SearchBar(
             hint: widget.searchHint,
-            onAddTap: widget.onAddTap,
+            onIconTap: widget.onIconTap,
+            addIcon: widget.icon,
             onChanged: widget.onSearchChanged,
           ),
           Expanded(
             child: SingleChildScrollView(
+              controller: _scrollController,
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
-              child: Column(
-                children: widget.children,
-              ),
+              child: Column(children: widget.children),
             ),
           ),
         ],
@@ -53,15 +108,19 @@ class _BaseScrollablePageState extends State<BaseScrollablePage> {
   }
 }
 
+// ─── Search bar ───────────────────────────────────────────────────────────────
+
 class _SearchBar extends StatelessWidget {
   const _SearchBar({
     required this.hint,
-    this.onAddTap,
+    this.onIconTap,
+    this.addIcon = Icons.add,
     this.onChanged,
   });
 
   final String hint;
-  final VoidCallback? onAddTap;
+  final VoidCallback? onIconTap;
+  final IconData addIcon;
   final ValueChanged<String>? onChanged;
 
   @override
@@ -71,14 +130,11 @@ class _SearchBar extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: AppSearchInput(
-              hint: hint,
-              onChanged: onChanged,
-            ),
+            child: AppSearchInput(hint: hint, onChanged: onChanged),
           ),
-          if (onAddTap != null) ...[
+          if (onIconTap != null) ...[
             const SizedBox(width: 12),
-            _AddButton(onTap: onAddTap!),
+            _AddButton(onTap: onIconTap!, icon: addIcon),
           ],
         ],
       ),
@@ -87,22 +143,23 @@ class _SearchBar extends StatelessWidget {
 }
 
 class _AddButton extends StatelessWidget {
-  const _AddButton({required this.onTap});
+  const _AddButton({required this.onTap, this.icon = Icons.add});
 
   final VoidCallback onTap;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: AppTheme.primaryColor,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(6),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: const SizedBox(
+        borderRadius: BorderRadius.circular(6),
+        child: SizedBox(
           height: 40,
           width: 40,
-          child: Icon(Icons.add, color: Colors.white),
+          child: Icon(icon, color: Colors.white),
         ),
       ),
     );
