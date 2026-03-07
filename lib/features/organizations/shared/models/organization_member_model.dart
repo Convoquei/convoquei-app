@@ -1,4 +1,5 @@
 import 'package:convoquei_app/features/organizations/shared/models/enums/organization_permission.dart';
+import 'package:convoquei_app/features/organizations/shared/models/organization_member_function_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_member_group_model.dart';
 
 class OrganizationMemberModel {
@@ -10,6 +11,7 @@ class OrganizationMemberModel {
   final DateTime? leftAt;
   final List<OrganizationPermissionEnum> permissions;
   final List<OrganizationMemberGroupModel> groups;
+  final List<OrganizationMemberFunctionModel> functions;
 
   const OrganizationMemberModel({
     required this.id,
@@ -20,10 +22,12 @@ class OrganizationMemberModel {
     this.leftAt,
     required this.permissions,
     this.groups = const [],
+    this.functions = const [],
   });
 
   OrganizationMemberModel copyWith({
     List<OrganizationMemberGroupModel>? groups,
+    List<OrganizationMemberFunctionModel>? functions,
   }) {
     return OrganizationMemberModel(
       id: id,
@@ -34,6 +38,7 @@ class OrganizationMemberModel {
       leftAt: leftAt,
       permissions: permissions,
       groups: groups ?? this.groups,
+      functions: functions ?? this.functions,
     );
   }
 
@@ -58,6 +63,9 @@ class OrganizationMemberModel {
           .toList(),
       groups: (json['groups'] as List<dynamic>? ?? [])
           .map((g) => OrganizationMemberGroupModel.fromJson(g as Map<String, dynamic>))
+          .toList(),
+      functions: (json['functions'] as List<dynamic>? ?? [])
+          .map((f) => OrganizationMemberFunctionModel.fromJson(f as Map<String, dynamic>))
           .toList(),
     );
   }

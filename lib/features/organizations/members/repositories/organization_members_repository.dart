@@ -48,6 +48,19 @@ class OrganizationMembersRepository extends BaseRepository {
     return OrganizationMemberModel.fromJson(data);
   }
 
+  Future<OrganizationMemberModel> updateMemberFunctions(
+    String organizationId,
+    String memberId,
+    List<String> functionIds,
+  ) async {
+    final data = await apiClient.put(
+      '/v1/organizations/$organizationId/members/$memberId/functions',
+      data: {'functionIds': functionIds},
+    );
+
+    return OrganizationMemberModel.fromJson(data);
+  }
+
   Future<OrganizationInviteModel> inviteMemberByEmail(
     String organizationId,
     String email,

@@ -85,6 +85,7 @@ class _ManageMemberModalState extends BaseModalState<ManageMemberModal> {
 
     final bool canKickMembers = widget.currentUserProfile.hasPermission(OrganizationPermissionEnum.kickMembers) && !isSelf && !isOwner;
     final bool canManageGroups = widget.currentUserProfile.hasPermission(OrganizationPermissionEnum.manageGroups);
+    final bool canManageFunctions = widget.currentUserProfile.hasPermission(OrganizationPermissionEnum.manageFunctions);
     final bool canEditRoles = widget.currentUserProfile.hasPermission(OrganizationPermissionEnum.owner) && !isOwner;
 
     final List<Widget> actions = [
@@ -95,6 +96,17 @@ class _ManageMemberModalState extends BaseModalState<ManageMemberModal> {
           icon: Icons.groups_rounded,
           onTap: () {
             _handleManageMember(ManageMemberActionEnum.manageGroups);
+          },
+        ),
+      if (canManageFunctions)
+        ActionTile(
+          title: 'Gerenciar Funções',
+          description: 'Definir a função do membro na organização',
+          icon: Icons.music_note_rounded,
+          iconBgColor: const Color(0xFFFFF7ED),
+          iconColor: const Color(0xFFEA580C),
+          onTap: () {
+            _handleManageMember(ManageMemberActionEnum.manageFunctions);
           },
         ),
       if (canEditRoles)

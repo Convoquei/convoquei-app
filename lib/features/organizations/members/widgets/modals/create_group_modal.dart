@@ -1,153 +1,10 @@
 import 'package:convoquei_app/core/network/exceptions/api_exception.dart';
 import 'package:convoquei_app/core/widgets/action_button.dart';
 import 'package:convoquei_app/core/widgets/base_modal_stateful_widget.dart';
+import 'package:convoquei_app/core/widgets/emoji_picker_widget.dart';
 import 'package:convoquei_app/features/organizations/members/providers/create_group_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-// ---------------------------------------------------------------------------
-// Emoji categories
-// ---------------------------------------------------------------------------
-
-const _emojiCategories = <String, List<String>>{
-  'Pessoas': [
-    '👤', '👥', '🧑', '👦', '👧', '👨', '👩', '🧒', '👶', '🧓',
-    '👴', '👵', '🧑‍🤝‍🧑', '👫', '👬', '👭', '🙋', '🙋‍♂️', '🙋‍♀️', '🙌',
-    '🤝', '👋', '💪', '🦾', '🧑‍💼', '👨‍💼', '👩‍💼', '🧑‍🎤', '👨‍🎤', '👩‍🎤',
-    '🧑‍🎨', '👨‍🎨', '👩‍🎨', '🧑‍🏫', '👨‍🏫', '👩‍🏫', '🧑‍🔧', '👨‍🔧', '👩‍🔧', '🧑‍💻',
-    '👨‍💻', '👩‍💻', '🧑‍⚕️', '👨‍⚕️', '👩‍⚕️', '🧑‍✈️', '👨‍✈️', '👩‍✈️', '🧑‍🍳', '👨‍🍳',
-    '👩‍🍳', '🧑‍🚒', '👮', '👮‍♂️', '👮‍♀️', '💂', '🕵️', '👷', '🤴', '👸',
-    '🧙', '🧚', '🧛', '🧜', '🧝', '🦸', '🦹', '🤶', '🎅', '🙏',
-    '🤲', '👐', '🫶', '🤜', '🤛', '✊', '👊', '🫂', '🧑‍🤝‍🧑', '👨‍👩‍👧',
-    '👨‍👩‍👦', '👨‍👩‍👧‍👦', '👁️', '👀', '🫀', '🧠', '🦷', '👣', '🫁', '❤️‍🔥',
-  ],
-  'Expressões': [
-    '😀', '😁', '😂', '🤣', '😃', '😄', '😅', '😆', '😊', '🙂',
-    '🥰', '😍', '🤩', '😘', '😗', '😙', '😚', '😋', '😛', '😜',
-    '🤗', '🤭', '🫡', '🫢', '🤫', '🤔', '🤐', '😐', '😑', '😶',
-    '😏', '😒', '🙄', '😬', '😮', '😯', '😲', '😳', '🥺', '😦',
-    '😧', '😨', '😰', '😢', '😭', '😱', '😖', '😣', '😞', '😓',
-    '😩', '😫', '🥱', '😤', '😡', '🤯', '😇', '🥳', '🤠', '🤡',
-    '🫠', '🤑', '😎', '🥸', '🧐', '🤓', '😴', '💀', '👻', '😈',
-  ],
-  'Instrumentos Musicais': [
-    '🎸', '🎹', '🥁', '🎺', '🎻', '🎷', '🪗', '🪘', '🎵', '🎶',
-    '🎼', '🎤', '🎧', '🎙️', '🔔', '🔕', '🪕', '🪈', '🎚️', '🎛️',
-    '📻', '🔊', '🔉', '🔈', '📯', '🪗', '🥁', '🎵', '🎶', '🎼',
-  ],
-  'Música & Som': [
-    '🎵', '🎶', '🎼', '🎤', '🎧', '🎙️', '🎚️', '🎛️', '📻', '🔊',
-    '🔉', '🔈', '🔔', '📢', '📣', '🎸', '🎹', '🥁', '🎺', '🎻',
-    '🎷', '🪗', '🪘', '🪕', '🪈', '🎭', '🎬', '🎞️', '📽️', '🎊',
-    '🎉', '🎈', '🪅', '🎆', '🎇', '✨', '🌟', '⭐', '🌠', '💫',
-    '🎼', '🎵', '🎶', '🎤', '🎧', '🪗', '🪘', '🎷', '🎺', '🥁',
-  ],
-  'Igreja & Fé': [
-    '✝️', '🙏', '📖', '⛪', '🕊️', '✨', '🌟', '💒', '📿', '🪔',
-    '🕯️', '⭐', '🌠', '💫', '🌙', '☀️', '🌅', '🌄', '🌈', '☁️',
-    '⚡', '🔥', '💧', '🌊', '🕍', '🛕', '🕌', '⛩️', '🛐', '☮️',
-    '✡️', '☯️', '☪️', '🕎', '🔯', '🪬', '🧿', '📜', '📗', '📕',
-    '📙', '🎺', '🕊️', '🫶', '❤️', '💛', '💙', '💜', '🤍', '🌿',
-    '🍀', '🌱', '🌸', '🌻', '🌺', '🪷', '🌾', '🫧', '💦', '🌬️',
-  ],
-  'Tecnologia': [
-    '💻', '🖥️', '🖨️', '⌨️', '🖱️', '🖲️', '💾', '💿', '📀', '📱',
-    '☎️', '📞', '📟', '📠', '📡', '📺', '📷', '📸', '📹', '🎥',
-    '📽️', '🎞️', '📞', '🔋', '🔌', '💡', '🔦', '🕯️', '🖥️', '⌚',
-    '📡', '🛰️', '🚀', '🤖', '🦾', '🦿', '🧬', '🔬', '🔭', '⚗️',
-    '🧪', '🧫', '🧲', '⚙️', '🛠️', '🔧', '🔩', '🗜️', '⛓️', '🧰',
-    '🪛', '🪚', '🔑', '🗝️', '🔐', '🔒', '🔓', '🪤', '🧮', '📲',
-    '💬', '📧', '📨', '📩', '📤', '📥', '📦', '📫', '📪', '📬',
-    '📭', '📮', '🗳️', '✏️', '✒️', '🖊️', '🖋️', '📝', '💼', '📁',
-    '📂', '🗂️', '📋', '📊', '📈', '📉', '🗒️', '🗓️', '📆', '📅',
-  ],
-  'Objetos & Organização': [
-    '📋', '📌', '📍', '📎', '🖇️', '🗂️', '📁', '📂', '🗓️', '📅',
-    '📆', '📣', '📢', '🔔', '🔑', '🗝️', '⚙️', '🛠️', '💡', '🔍',
-    '🔎', '📊', '📈', '📉', '🏆', '🥇', '🎯', '🚀', '💎', '👑',
-    '🎁', '🎀', '🎊', '🎉', '🎈', '🎗️', '🏅', '🥈', '🥉', '🎖️',
-    '🪙', '💰', '💵', '💳', '🏧', '💹', '📊', '📋', '📝', '✅',
-    '☑️', '🔲', '🔳', '▪️', '▫️', '◾', '◽', '◼️', '◻️', '🟥',
-    '🟧', '🟨', '🟩', '🟦', '🟪', '⬛', '⬜', '🔶', '🔷', '🔸',
-    '🔹', '🔺', '🔻', '💠', '🔘', '🔲', '🔳', '📌', '🗺️', '🧭',
-  ],
-  'Natureza': [
-    '🌱', '🌿', '🍀', '🌸', '🌻', '🌊', '⭐', '🌙', '☀️', '🔥',
-    '💧', '🌈', '🍃', '🌺', '🌴', '🌳', '🌲', '🌵', '🎋', '🎍',
-    '🌾', '🍁', '🍂', '🍄', '🌰', '🌷', '🌹', '🥀', '🪷', '💐',
-    '🌼', '🌞', '🌝', '🌛', '🌜', '🌚', '🌕', '🌖', '🌗', '🌘',
-    '🌑', '🌒', '🌓', '🌔', '🌙', '🌟', '⭐', '🌠', '💫', '✨',
-    '⚡', '🌤️', '⛅', '🌥️', '☁️', '🌦️', '🌧️', '⛈️', '🌩️', '🌨️',
-    '❄️', '☃️', '⛄', '🌬️', '💨', '🌪️', '🌫️', '🌊', '🌀', '🌈',
-    '🌂', '☂️', '☔', '⛱️', '⚡', '❄️', '🔥', '💧', '🌊', '🌍',
-    '🌎', '🌏', '🗺️', '🏔️', '⛰️', '🌋', '🗻', '🏕️', '🏖️', '🏜️',
-    '🏝️', '🏞️', '🌅', '🌄', '🌠', '🎆', '🎇', '🌃', '🏙️', '🌆',
-    '🌇', '🌉', '🌌', '🌁', '🐾', '🦁', '🐯', '🦊', '🐺', '🦝',
-    '🐮', '🐷', '🐸', '🐵', '🙈', '🙉', '🙊', '🦅', '🦆', '🦉',
-    '🦚', '🦜', '🕊️', '🦢', '🦩', '🐝', '🦋', '🐠', '🐟', '🐬',
-    '🐳', '🐋', '🦈', '🌸', '🌺', '🌻', '🌼', '🌷', '🌹', '🍀',
-  ],
-  'Símbolos': [
-    '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '❤️‍🔥',
-    '💔', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️',
-    '✝️', '☯️', '✡️', '🔯', '☪️', '🕎', '☮️', '♾️', '💯', '✅',
-    '❎', '🆗', '🆙', '🆒', '🆕', '🆓', '🔛', '🔜', '🔚', '🔝',
-    '🔙', '⬆️', '⬇️', '⬅️', '➡️', '↗️', '↘️', '↙️', '↖️', '↕️',
-    '↔️', '🔄', '🔃', '🔀', '🔁', '🔂', '▶️', '⏩', '⏭️', '⏯️',
-    '◀️', '⏪', '⏮️', '⏫', '⏬', '⏸️', '⏹️', '⏺️', '🎦', '🔅',
-    '🔆', '📶', '🛜', '📳', '📴', '📵', '📡', '🔞', '🔕', '🔇',
-    '🔈', '🔉', '🔊', '📢', '📣', '🔔', '🔕', '🎵', '🎶', '💤',
-    '🔱', '⚜️', '🏵️', '🎗️', '🎫', '🎟️', '🏷️', '💮', '🔰', '♻️',
-    '✳️', '❇️', '🆚', '🉐', '💠', '🌀', '⭕', '❌', '❓', '❗',
-    '‼️', '⁉️', '🔣', '🔤', '🔡', '🔠', '🆎', '🆑', '🆘', '🆔',
-    '⚡', '🔥', '💧', '🌊', '💨', '❄️', '🌈', '⭐', '✨', '💫',
-    '♠️', '♥️', '♦️', '♣️', '♟️', '🃏', '🀄', '🎲', '🧩', '🎮',
-  ],
-  'Eventos & Celebrações': [
-    '🎉', '🎊', '🎈', '🎁', '🎀', '🎗️', '🎟️', '🎫', '🏆', '🥇',
-    '🥈', '🥉', '🎖️', '🏅', '🎯', '🎪', '🎭', '🎬', '🎥', '📽️',
-    '🎞️', '🎆', '🎇', '✨', '🌟', '⭐', '🌠', '💫', '🎂', '🍰',
-    '🧁', '🍭', '🍬', '🍫', '🍷', '🥂', '🍾', '🎺', '🥁', '🎸',
-    '🎵', '🎶', '🎤', '🎧', '🎙️', '🪔', '🕯️', '🔦', '💡', '🌅',
-    '🌄', '🌃', '🏙️', '🌆', '🌇', '🌉', '🎠', '🎡', '🎢', '🎪',
-  ],
-  'Transporte & Lugares': [
-    '✈️', '🚀', '🛸', '🚁', '🛩️', '⛵', '🚢', '🛳️', '🚂', '🚃',
-    '🚄', '🚅', '🚆', '🚇', '🚈', '🚉', '🚊', '🚝', '🚞', '🚋',
-    '🚌', '🚍', '🚎', '🚐', '🚑', '🚒', '🚓', '🚔', '🚕', '🚖',
-    '🏠', '🏡', '🏢', '🏣', '🏤', '🏥', '🏦', '🏧', '🏨', '🏩',
-    '🏪', '🏫', '🏬', '🏭', '🏯', '🏰', '⛪', '💒', '🕌', '🛕',
-    '🗼', '🗽', '🗺️', '🌍', '🌎', '🌏', '🌐', '🏔️', '⛰️', '🌋',
-  ],
-  'Comida & Bebida': [
-    '🍕', '🍔', '🌮', '🌯', '🥙', '🥪', '🥨', '🧀', '🥚', '🍳',
-    '🥞', '🧇', '🥓', '🥩', '🍗', '🍖', '🌭', '🍟', '🍝', '🍜',
-    '🍲', '🍛', '🍣', '🍱', '🥟', '🦪', '🍤', '🍙', '🍚', '🍘',
-    '🍥', '🥮', '🍡', '🧁', '🍰', '🎂', '🍮', '🍭', '🍬', '🍫',
-    '🍿', '🍩', '🍪', '🌰', '🥜', '🍯', '🧃', '🥤', '☕', '🍵',
-    '🧋', '🍺', '🍻', '🥂', '🍷', '🍸', '🍹', '🍾', '🧊', '💧',
-  ],
-  'Esportes & Atividades': [
-    '⚽', '🏀', '🏈', '⚾', '🥎', '🏐', '🏉', '🎾', '🏸', '🏒',
-    '🥅', '⛳', '🏹', '🎣', '🤿', '🥊', '🥋', '🎽', '🛹', '🛼',
-    '🛷', '⛸️', '🥌', '🎿', '⛷️', '🏂', '🪂', '🏋️', '🤼', '🤸',
-    '⛹️', '🤺', '🤾', '🏌️', '🏇', '🧘', '🏄', '🏊', '🤽', '🚣',
-    '🧗', '🚵', '🚴', '🏆', '🥇', '🥈', '🥉', '🏅', '🎖️', '🎗️',
-    '🎯', '🎱', '🎳', '🏏', '🏑', '🏓', '🏸', '🥏', '🪁', '🎮',
-  ],
-  'Outros': [
-    '🌐', '📍', '🔮', '🧿', '🪬', '🧲', '⚗️', '🔭', '🔬', '🧬',
-    '🧪', '🧫', '🧯', '🪣', '🧴', '🧷', '🧹', '🧺', '🧻', '🪣',
-    '🧼', '🫧', '🪥', '🧽', '🪤', '🪜', '🧰', '🪛', '🔑', '🗝️',
-    '🔐', '🔒', '🔓', '🔨', '⛏️', '⚒️', '🛠️', '🗡️', '⚔️', '🛡️',
-    '🪃', '🪖', '🦺', '📦', '🎒', '🧳', '👜', '👝', '🌂', '☂️',
-    '🪆', '🪅', '🎭', '🖼️', '🎨', '🧵', '🪡', '🧶', '👓', '🕶️',
-    '🥽', '🦯', '🌡️', '🧭', '🕰️', '⌛', '⏳', '📡', '🔋', '🔌',
-    '💡', '🔦', '🕯️', '🪔', '🧱', '🪞', '🪟', '🛋️', '🪑', '🚪',
-    '🗑️', '🛒', '🎀', '🎁', '🎊', '🎉', '🎈', '🎏', '🎐', '🎑',
-    '🧧', '🎋', '🎍', '🎎', '🎃', '🎄', '🎆', '🎇', '🧨', '✨',
-  ],
-};
 
 // ---------------------------------------------------------------------------
 // Modal
@@ -183,7 +40,7 @@ class _CreateGroupModalState extends BaseModalState<CreateGroupModal>
   void initState() {
     super.initState();
     _tabController = TabController(
-      length: _emojiCategories.length,
+      length: emojiCategories.length,
       vsync: this,
     );
   }
@@ -193,6 +50,17 @@ class _CreateGroupModalState extends BaseModalState<CreateGroupModal>
     _nameController.dispose();
     _tabController.dispose();
     super.dispose();
+  }
+
+  Widget _buildSectionLabel(String text) {
+    return Text(
+      text.toUpperCase(),
+      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+        color: const Color(0xFF94A3B8),
+        fontWeight: FontWeight.bold,
+        letterSpacing: 0.8,
+      ),
+    );
   }
 
   Future<void> _submit(WidgetRef ref) async {
@@ -229,7 +97,7 @@ class _CreateGroupModalState extends BaseModalState<CreateGroupModal>
               children: [
                 // ── Preview ──────────────────────────────────────────────
                 Center(
-                  child: _EmojiPreview(
+                  child: EmojiPreview(
                     emoji: _selectedEmoji,
                     name: _nameController.text.isEmpty
                         ? 'Nome do grupo'
@@ -239,7 +107,7 @@ class _CreateGroupModalState extends BaseModalState<CreateGroupModal>
                 const SizedBox(height: 20),
 
                 // ── Nome ─────────────────────────────────────────────────
-                _SectionLabel('Nome do grupo'),
+                _buildSectionLabel('Nome do grupo'),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _nameController,
@@ -279,9 +147,9 @@ class _CreateGroupModalState extends BaseModalState<CreateGroupModal>
                 const SizedBox(height: 20),
 
                 // ── Emoji picker ─────────────────────────────────────────
-                _SectionLabel('Emoji'),
+                _buildSectionLabel('Emoji'),
                 const SizedBox(height: 8),
-                _EmojiPicker(
+                EmojiPicker(
                   tabController: _tabController,
                   selected: _selectedEmoji,
                   onSelect: (e) => setState(() => _selectedEmoji = e),
@@ -308,166 +176,5 @@ class _CreateGroupModalState extends BaseModalState<CreateGroupModal>
         },
       ),
     ];
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Emoji Preview
-// ---------------------------------------------------------------------------
-
-class _EmojiPreview extends StatelessWidget {
-  const _EmojiPreview({required this.emoji, required this.name});
-
-  final String emoji;
-  final String name;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          alignment: Alignment.center,
-          child: Text(emoji, style: const TextStyle(fontSize: 36)),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          name,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            color: const Color(0xFF1E293B),
-            fontWeight: FontWeight.w600,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Section label
-// ---------------------------------------------------------------------------
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text.toUpperCase(),
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-        color: const Color(0xFF94A3B8),
-        fontWeight: FontWeight.bold,
-        letterSpacing: 0.8,
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Emoji Picker
-// ---------------------------------------------------------------------------
-
-class _EmojiPicker extends StatelessWidget {
-  const _EmojiPicker({
-    required this.tabController,
-    required this.selected,
-    required this.onSelect,
-  });
-
-  final TabController tabController;
-  final String selected;
-  final ValueChanged<String> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    final categories = _emojiCategories.entries.toList();
-    final primary = Theme.of(context).colorScheme.primary;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Tabs
-          TabBar(
-            controller: tabController,
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            labelColor: primary,
-            unselectedLabelColor: const Color(0xFF94A3B8),
-            indicatorColor: primary,
-            indicatorSize: TabBarIndicatorSize.label,
-            labelStyle: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-            tabs: categories
-                .map((e) => Tab(text: e.key))
-                .toList(),
-            dividerColor: const Color(0xFFE2E8F0),
-          ),
-          // Grid — fixed height so the modal doesn't overflow
-          SizedBox(
-            height: 180,
-            child: TabBarView(
-              controller: tabController,
-              children: categories.map((entry) {
-                final emojis = entry.value;
-                return GridView.builder(
-                  padding: const EdgeInsets.all(12),
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 7,
-                    mainAxisSpacing: 4,
-                    crossAxisSpacing: 4,
-                  ),
-                  itemCount: emojis.length,
-                  itemBuilder: (_, i) {
-                    final e = emojis[i];
-                    final isSelected = e == selected;
-                    return GestureDetector(
-                      onTap: () => onSelect(e),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 120),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? primary.withValues(alpha: 0.12)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: isSelected
-                                ? primary.withValues(alpha: 0.4)
-                                : Colors.transparent,
-                          ),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          e,
-                          style: TextStyle(
-                            fontSize: isSelected ? 22 : 20,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              }).toList(),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

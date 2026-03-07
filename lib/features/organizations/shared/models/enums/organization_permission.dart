@@ -3,7 +3,8 @@ enum OrganizationPermissionEnum {
   member,
   inviteMembers,
   kickMembers,
-  manageGroups;
+  manageGroups,
+  manageFunctions;
 
   static const Map<String, OrganizationPermissionEnum> _codeMap = {
     'OWNER': owner,
@@ -11,6 +12,7 @@ enum OrganizationPermissionEnum {
     'INVITE_ORGANIZATION_MEMBERS': inviteMembers,
     'KICK_ORGANIZATION_MEMBER': kickMembers,
     'MANAGE_GROUPS': manageGroups,
+    'MANAGE_FUNCTIONS': manageFunctions,
   };
 
   static OrganizationPermissionEnum fromCode(String code) {

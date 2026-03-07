@@ -9,6 +9,7 @@ import 'package:convoquei_app/features/organizations/members/providers/kick_memb
 import 'package:convoquei_app/features/organizations/members/widgets/modals/create_group_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/group_list.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/modals/invite_member_by_email_modal.dart';
+import 'package:convoquei_app/features/organizations/members/widgets/modals/manage_functions_member_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/modals/manage_groups_member_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/modals/manage_member_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/modals/manage_roles_member_modal.dart';
@@ -96,6 +97,16 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
             ManageGroupsMemberModal.show(context, member, organizationId);
+          });
+          break;
+        }
+      case ManageMemberActionEnum.manageFunctions:
+        {
+          final organizationId = ref.read(selectedOrganizationProvider)?.id;
+          if (organizationId == null) break;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            ManageFunctionsMemberModal.show(context, member, organizationId);
           });
           break;
         }

@@ -2,6 +2,7 @@ import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/features/home/widgets/action_tile.dart';
 import 'package:convoquei_app/features/organizations/members/pages/org_members_page.dart'
     show OrgMembersTab;
+import 'package:convoquei_app/features/organizations/settings/pages/manage_functions_page.dart';
 import 'package:convoquei_app/features/organizations/settings/pages/manage_roles_page.dart';
 import 'package:convoquei_app/features/organizations/settings/widgets/organization_header_card.dart';
 import 'package:convoquei_app/features/organizations/settings/widgets/section_buttons_organization_settings.dart';
@@ -41,6 +42,9 @@ class OrgSettingsPage extends ConsumerWidget {
     );
     bool canPermissionManageGroups = currentUser.hasPermission(
       OrganizationPermissionEnum.manageGroups,
+    );
+    bool canPermissionManageFunctions = currentUser.hasPermission(
+      OrganizationPermissionEnum.manageFunctions,
     );
 
     return SingleChildScrollView(
@@ -111,6 +115,24 @@ class OrgSettingsPage extends ConsumerWidget {
                     // teal
                     onTap: () =>
                         onNavigateToMembersTab?.call(OrgMembersTab.grupos),
+                  ),
+                  ActionTile(
+                    title: 'Gerenciar Funções',
+                    description:
+                        'Crie e gerencie as funções dos membros da organização',
+                    icon: Icons.music_note_outlined,
+                    iconColor: const Color(0xFFEA580C),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          settings: const RouteSettings(name: 'Gerenciar Funções'),
+                          builder: (context) => ManageFunctionsPage(
+                            organization: organization,
+                          ),
+                        ),
+                      );
+                    },
+                    visible: canPermissionManageFunctions,
                   ),
                 ],
               ),

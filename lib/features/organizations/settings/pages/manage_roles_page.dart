@@ -510,6 +510,7 @@ class _EmptyChip extends StatelessWidget {
           color: Color(0xFF94A3B8),
           fontStyle: FontStyle.italic,
         ),
+
       ),
     );
   }
