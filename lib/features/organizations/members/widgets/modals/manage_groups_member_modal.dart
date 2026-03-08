@@ -5,9 +5,7 @@ import 'package:convoquei_app/features/organizations/members/models/requests/fin
 import 'package:convoquei_app/features/organizations/members/providers/list_all_members_query_provider.dart';
 import 'package:convoquei_app/features/organizations/members/providers/update_member_groups_provider.dart';
 import 'package:convoquei_app/features/organizations/members/repositories/organization_groups_repository.dart';
-import 'package:convoquei_app/features/organizations/members/widgets/modals/create_group_modal.dart';
 import 'package:convoquei_app/core/widgets/header_modal_title_subtitle.dart';
-import 'package:convoquei_app/features/organizations/members/widgets/no_groups_empty_state.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_member_group_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_member_model.dart';
 import 'package:flutter/material.dart';
@@ -19,8 +17,9 @@ class ManageGroupsMemberModal {
   static Future<void> show(
       BuildContext context,
       OrganizationMemberModel member,
-      String organizationId,
-      ) {
+      String organizationId, {
+      VoidCallback? onNavigateToSettings,
+      }) {
     return MultiSelectModal.show<OrganizationGroupModel>(
       context,
       titleWidget: HeaderModalTitleSubtitle(
@@ -44,9 +43,22 @@ class ManageGroupsMemberModal {
         isSelected: isSelected,
         onTap: onTap,
       ),
-      emptyWidget: Builder(
-        builder: (context) => NoGroupsEmptyState(
-          onCreateGroup: () => CreateGroupModal.show(context, organizationId),
+      settingsWidget: Builder(
+        builder: (ctx) => Center(
+          child: TextButton.icon(
+            onPressed: onNavigateToSettings == null
+                ? null
+                : () {
+                    Navigator.of(ctx).pop();
+                    onNavigateToSettings();
+                  },
+            icon: const Icon(Icons.settings_outlined, size: 14),
+            label: const Text('Configurar grupos'),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF64748B),
+              textStyle: const TextStyle(fontSize: 13),
+            ),
+          ),
         ),
       ),
       onSave: (selectedIds) async {

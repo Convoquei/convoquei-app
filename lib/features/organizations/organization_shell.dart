@@ -38,7 +38,10 @@ class _OrganizationShellState extends ConsumerState<OrganizationShell> {
     0 => const OrgHomePage(),
     1 => const OrgEventsPage(),
     2 => const OrgScalesPage(),
-    3 => OrgMembersPage(initialTab: _membersInitialTab ?? OrgMembersTab.membros),
+    3 => OrgMembersPage(
+        initialTab: _membersInitialTab ?? OrgMembersTab.membros,
+        onOpenSettingsPage: _openSettingsPage,
+      ),
     _ => const SizedBox.shrink(),
   };
 
@@ -69,6 +72,19 @@ class _OrganizationShellState extends ConsumerState<OrganizationShell> {
         builder: (_) => OrgSettingsShell(
           organization: widget.organization,
           onNavigateToMembersTab: _navigateToMembersTab,
+        ),
+      ),
+    );
+  }
+
+  void _openSettingsPage({required String title, required Widget page}) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => OrgSettingsShell(
+          organization: widget.organization,
+          onNavigateToMembersTab: _navigateToMembersTab,
+          initialPage: page,
+          initialTitle: title,
         ),
       ),
     );

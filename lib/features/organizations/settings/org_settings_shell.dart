@@ -8,11 +8,15 @@ import 'package:flutter/material.dart';
 class OrgSettingsShell extends StatefulWidget {
   final OrganizationModel organization;
   final void Function(OrgMembersTab)? onNavigateToMembersTab;
+  final Widget? initialPage;
+  final String? initialTitle;
 
   const OrgSettingsShell({
     super.key,
     required this.organization,
     this.onNavigateToMembersTab,
+    this.initialPage,
+    this.initialTitle,
   });
 
   @override
@@ -27,6 +31,7 @@ class _OrgSettingsShellState extends State<OrgSettingsShell> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialTitle != null) _currentTitle = widget.initialTitle!;
     _titleObserver = _TitleObserver((title) {
       if (mounted) setState(() => _currentTitle = title);
     });
@@ -60,13 +65,22 @@ class _OrgSettingsShellState extends State<OrgSettingsShell> {
         body: Navigator(
           key: _navKey,
           observers: [_titleObserver],
-          onGenerateRoute: (settings) => MaterialPageRoute(
-            settings: settings,
-            builder: (_) => OrgSettingsPage(
-              organization: widget.organization,
-              onNavigateToMembersTab: widget.onNavigateToMembersTab,
-            ),
-          ),
+          onGenerateRoute: (settings) {
+            final initialPage = widget.initialPage;
+            if (initialPage != null) {
+              return MaterialPageRoute(
+                settings: RouteSettings(name: widget.initialTitle),
+                builder: (_) => initialPage,
+              );
+            }
+            return MaterialPageRoute(
+              settings: settings,
+              builder: (_) => OrgSettingsPage(
+                organization: widget.organization,
+                onNavigateToMembersTab: widget.onNavigateToMembersTab,
+              ),
+            );
+          },
         ),
       ),
     );

@@ -14,8 +14,9 @@ class ManageRolesMemberModal {
   static Future<void> show(
     BuildContext context,
     OrganizationMemberModel member,
-    String organizationId,
-  ) {
+    String organizationId, {
+    VoidCallback? onNavigateToSettings,
+  }) {
     return MultiSelectModal.show<OrganizationRoleModel>(
       context,
       titleWidget: HeaderModalTitleSubtitle(
@@ -38,6 +39,24 @@ class ManageRolesMemberModal {
       },
       idExtractor: (role) => role.id,
       initialSelectedIds: const {},
+      settingsWidget: Builder(
+        builder: (ctx) => Center(
+          child: TextButton.icon(
+            onPressed: onNavigateToSettings == null
+                ? null
+                : () {
+                    Navigator.of(ctx).pop();
+                    onNavigateToSettings();
+                  },
+            icon: const Icon(Icons.settings_outlined, size: 14),
+            label: const Text('Configurar papéis'),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF64748B),
+              textStyle: const TextStyle(fontSize: 13),
+            ),
+          ),
+        ),
+      ),
       itemBuilder: (role, isSelected, onTap) => _RoleTile(
         role: role,
         isSelected: isSelected,

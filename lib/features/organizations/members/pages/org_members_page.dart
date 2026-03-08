@@ -14,6 +14,8 @@ import 'package:convoquei_app/features/organizations/members/widgets/modals/mana
 import 'package:convoquei_app/features/organizations/members/widgets/modals/manage_member_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/modals/manage_roles_member_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/member_list.dart';
+import 'package:convoquei_app/features/organizations/settings/pages/manage_functions_page.dart';
+import 'package:convoquei_app/features/organizations/settings/pages/manage_roles_page.dart';
 import 'package:convoquei_app/features/organizations/shared/models/enums/organization_permission.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_member_model.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/organization_providers.dart';
@@ -27,8 +29,13 @@ enum OrgMembersTab { membros, grupos }
 
 class OrgMembersPage extends ConsumerStatefulWidget {
   final OrgMembersTab initialTab;
+  final void Function({required String title, required Widget page})? onOpenSettingsPage;
 
-  const OrgMembersPage({super.key, this.initialTab = OrgMembersTab.membros});
+  const OrgMembersPage({
+    super.key,
+    this.initialTab = OrgMembersTab.membros,
+    this.onOpenSettingsPage,
+  });
 
   @override
   ConsumerState<OrgMembersPage> createState() => _OrgMembersPageState();
@@ -96,7 +103,14 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
           if (organizationId == null) break;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
-            ManageGroupsMemberModal.show(context, member, organizationId);
+            ManageGroupsMemberModal.show(
+              context,
+              member,
+              organizationId,
+              onNavigateToSettings: () {
+                setState(() => _tab = OrgMembersTab.grupos);
+              },
+            );
           });
           break;
         }
@@ -106,7 +120,19 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
           if (organizationId == null) break;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
-            ManageFunctionsMemberModal.show(context, member, organizationId);
+            ManageFunctionsMemberModal.show(
+              context,
+              member,
+              organizationId,
+              onNavigateToSettings: () {
+                final org = ref.read(selectedOrganizationProvider);
+                if (org == null || !mounted) return;
+                widget.onOpenSettingsPage?.call(
+                  title: 'Gerenciar Funções',
+                  page: ManageFunctionsPage(organization: org),
+                );
+              },
+            );
           });
           break;
         }
@@ -116,7 +142,19 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
           if (organizationId == null) break;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
-            ManageRolesMemberModal.show(context, member, organizationId);
+            ManageRolesMemberModal.show(
+              context,
+              member,
+              organizationId,
+              onNavigateToSettings: () {
+                final org = ref.read(selectedOrganizationProvider);
+                if (org == null || !mounted) return;
+                widget.onOpenSettingsPage?.call(
+                  title: 'Gerenciar Papéis',
+                  page: ManageRolesPage(organization: org),
+                );
+              },
+            );
           });
           break;
         }

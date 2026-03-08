@@ -5,7 +5,6 @@ import 'package:convoquei_app/features/organizations/members/models/requests/fin
 import 'package:convoquei_app/features/organizations/members/providers/list_all_members_query_provider.dart';
 import 'package:convoquei_app/features/organizations/members/providers/update_member_functions_provider.dart';
 import 'package:convoquei_app/features/organizations/members/repositories/organization_functions_repository.dart';
-import 'package:convoquei_app/features/organizations/members/widgets/modals/create_function_modal.dart';
 import 'package:convoquei_app/core/widgets/header_modal_title_subtitle.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_member_function_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_member_model.dart';
@@ -18,8 +17,9 @@ class ManageFunctionsMemberModal {
   static Future<void> show(
     BuildContext context,
     OrganizationMemberModel member,
-    String organizationId,
-  ) {
+    String organizationId, {
+    VoidCallback? onNavigateToSettings,
+  }) {
     return MultiSelectModal.show<OrganizationFunctionModel>(
       context,
       titleWidget: HeaderModalTitleSubtitle(
@@ -43,10 +43,22 @@ class ManageFunctionsMemberModal {
         isSelected: isSelected,
         onTap: onTap,
       ),
-      emptyWidget: Builder(
-        builder: (context) => _NoFunctionsEmptyState(
-          onCreateFunction: () =>
-              CreateFunctionModal.show(context, organizationId),
+      settingsWidget: Builder(
+        builder: (ctx) => Center(
+          child: TextButton.icon(
+            onPressed: onNavigateToSettings == null
+                ? null
+                : () {
+                    Navigator.of(ctx).pop();
+                    onNavigateToSettings();
+                  },
+            icon: const Icon(Icons.settings_outlined, size: 14),
+            label: const Text('Configurar funções'),
+            style: TextButton.styleFrom(
+              foregroundColor: AppTheme.textSecondary,
+              textStyle: const TextStyle(fontSize: 13),
+            ),
+          ),
         ),
       ),
       onSave: (selectedIds) async {
@@ -162,66 +174,4 @@ class _FunctionTile extends StatelessWidget {
   }
 }
 
-class _NoFunctionsEmptyState extends StatelessWidget {
-  const _NoFunctionsEmptyState({this.onCreateFunction});
 
-  final VoidCallback? onCreateFunction;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            alignment: Alignment.center,
-            child: const Text('🎵', style: TextStyle(fontSize: 36)),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Nenhuma função criada ainda',
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: const Color(0xFF1E293B),
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Crie funções para identificar a atividade de cada membro.',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: const Color(0xFF64748B),
-              height: 1.5,
-            ),
-          ),
-          if (onCreateFunction != null) ...[
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: onCreateFunction,
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: const Text('Criar primeira função'),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}

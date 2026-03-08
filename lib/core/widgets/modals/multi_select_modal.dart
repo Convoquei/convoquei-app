@@ -19,6 +19,7 @@ class MultiSelectModal<T> extends ConsumerStatefulWidget {
     this.initialSelectedIds = const {},
     this.saveLabel = 'Salvar alterações',
     this.emptyWidget,
+    this.settingsWidget,
     this.errorMessage = 'Erro ao carregar itens.',
     this.saveErrorMessage = 'Erro ao salvar alterações.',
     this.saveSuccessMessage = 'Alterações salvas com sucesso!',
@@ -44,6 +45,7 @@ class MultiSelectModal<T> extends ConsumerStatefulWidget {
 
   final String saveLabel;
   final Widget? emptyWidget;
+  final Widget? settingsWidget;
   final String errorMessage;
   final String saveErrorMessage;
   final String saveSuccessMessage;
@@ -63,6 +65,7 @@ class MultiSelectModal<T> extends ConsumerStatefulWidget {
         Set<String> initialSelectedIds = const {},
         String saveLabel = 'Salvar alterações',
         Widget? emptyWidget,
+        Widget? settingsWidget,
         String errorMessage = 'Erro ao carregar itens.',
         String saveErrorMessage = 'Erro ao salvar alterações.',
         String saveSuccessMessage = 'Alterações salvas com sucesso!',
@@ -80,6 +83,7 @@ class MultiSelectModal<T> extends ConsumerStatefulWidget {
         onSave: onSave,
         saveLabel: saveLabel,
         emptyWidget: emptyWidget,
+        settingsWidget: settingsWidget,
         errorMessage: errorMessage,
         saveErrorMessage: saveErrorMessage,
         saveSuccessMessage: saveSuccessMessage,
@@ -300,6 +304,11 @@ class _MultiSelectModalState<T> extends ConsumerState<MultiSelectModal<T>> {
             ),
 
             // Footer — oculto no estado de erro
+            if (!_hasError && widget.settingsWidget != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+                child: widget.settingsWidget!,
+              ),
             if (!_hasError) ...[
               const Divider(height: 1),
               Padding(
