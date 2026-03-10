@@ -1,4 +1,5 @@
 import 'package:convoquei_app/core/theme/app_theme.dart';
+import 'package:convoquei_app/core/widgets/action_button.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_assignment_mode.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_availability_status.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_status.dart';
@@ -7,12 +8,12 @@ import 'package:convoquei_app/features/organizations/events/models/orgnaization_
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class EventCard extends StatelessWidget {
+class EventCard extends StatefulWidget {
   final OrganizationEventMembershipModel event;
-  final VoidCallback? onAvailable;
-  final VoidCallback? onUnavailable;
-  final VoidCallback? onRemoveAvailability;
-  final VoidCallback? onRemoveUnavailability;
+  final Future<void> Function()? onAvailable;
+  final Future<void> Function()? onUnavailable;
+  final Future<void> Function()? onRemoveAvailability;
+  final Future<void> Function()? onRemoveUnavailability;
   final VoidCallback? onTap;
 
   const EventCard({
@@ -25,9 +26,20 @@ class EventCard extends StatelessWidget {
     this.onTap,
   });
 
-  Color get _accentColor => switch (event.membershipStatus) {
+  @override
+  State<EventCard> createState() => _EventCardState();
+}
+
+class _EventCardState extends State<EventCard> {
+  bool _isLoadingAvailable = false;
+  bool _isLoadingUnavailable = false;
+  bool _isLoadingUndo = false;
+
+  bool get _isAnyLoading => _isLoadingAvailable || _isLoadingUnavailable || _isLoadingUndo;
+
+  Color get _accentColor => switch (widget.event.membershipStatus) {
     OrganizationEventMembershipStatus.assigned => AppTheme.primaryColor,
-    OrganizationEventMembershipStatus.pending => switch (event.membershipAvailabilityStatus) {
+    OrganizationEventMembershipStatus.pending => switch (widget.event.membershipAvailabilityStatus) {
       OrganizationEventMembershipAvailabilityStatus.available => const Color(0xFF059669),
       OrganizationEventMembershipAvailabilityStatus.unavailable => const Color(0xFFDC2626),
       OrganizationEventMembershipAvailabilityStatus.notAnswered || null => AppTheme.secondaryColor,
@@ -40,18 +52,18 @@ class EventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isCanceled = event.status == OrganizationEventStatus.canceled;
+    final bool isCanceled = widget.event.status == OrganizationEventStatus.canceled;
     final bool showUrgent =
         !isCanceled &&
-            event.availabilityLockEpochSeconds <= 86400 &&
-            event.availabilityLockEpochSeconds > 0;
-    final bool showEventBadge = event.status == OrganizationEventStatus.inProgress ||
-        event.status == OrganizationEventStatus.completed;
+            widget.event.availabilityLockEpochSeconds <= 86400 &&
+            widget.event.availabilityLockEpochSeconds > 0;
+    final bool showEventBadge = widget.event.status == OrganizationEventStatus.inProgress ||
+        widget.event.status == OrganizationEventStatus.completed;
 
     return Opacity(
       opacity: isCanceled ? 0.5 : 1.0,
       child: GestureDetector(
-        onTap: onTap,
+        onTap: widget.onTap,
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -81,12 +93,12 @@ class EventCard extends StatelessWidget {
                           Row(
                             children: [
                               if (showUrgent) ...[
-                                _UrgentBadge(event: event,),
+                                _UrgentBadge(event: widget.event,),
                                 const SizedBox(width: 6),
                               ],
 
                               if (showEventBadge)
-                                _EventStatusBadge(event.status),
+                                _EventStatusBadge(widget.event.status),
                             ],
                           ),
                           const SizedBox(height: 8),
@@ -96,7 +108,7 @@ class EventCard extends StatelessWidget {
                           children: [
                             Expanded(
                               child: Text(
-                                event.name,
+                                widget.event.name,
                                 style: Theme.of(context)
                                     .textTheme
                                     .titleSmall
@@ -118,7 +130,7 @@ class EventCard extends StatelessWidget {
                                     color: const Color(0xFFE2E8F0)),
                               ),
                               child: Text(
-                                DateFormat('HH:mm', 'pt_BR').format(event.startTime),
+                                DateFormat('HH:mm', 'pt_BR').format(widget.event.startTime),
                                 style: Theme.of(context)
                                     .textTheme
                                     .labelSmall
@@ -137,7 +149,7 @@ class EventCard extends StatelessWidget {
                             const Icon(Icons.location_on_rounded,
                                 size: 12, color: Color(0xFF94A3B8)),
                             const SizedBox(width: 4),
-                            Text(event.location,
+                            Text(widget.event.location,
                                 style:
                                 Theme.of(context).textTheme.bodySmall),
                           ],
@@ -160,12 +172,12 @@ class EventCard extends StatelessWidget {
 
   Widget _buildFooter(BuildContext context) {
     // Qualquer status que não seja PENDING tem prioridade
-    if (event.membershipStatus != OrganizationEventMembershipStatus.pending || !event.allowAssignment) {
+    if (widget.event.membershipStatus != OrganizationEventMembershipStatus.pending || !widget.event.allowAssignment) {
       return _buildStatusFooter(context);
     }
 
     // PENDING: footer depende da availability
-    return switch (event.membershipAvailabilityStatus) {
+    return switch (widget.event.membershipAvailabilityStatus) {
       OrganizationEventMembershipAvailabilityStatus.notAnswered => _buildAvailabilityButtons(context),
       OrganizationEventMembershipAvailabilityStatus.available => _buildAvailableConfirmed(context),
       OrganizationEventMembershipAvailabilityStatus.unavailable => _buildUnavailableConfirmed(context),
@@ -189,64 +201,44 @@ class EventCard extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: GestureDetector(
-                onTap: onAvailable,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFECFDF5),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFD1FAE5)),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.check_rounded,
-                          size: 14, color: Color(0xFF059669)),
-                      SizedBox(width: 6),
-                      Text(
-                        'Disponível',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF059669),
-                          fontFamily: 'Inter',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              child: ActionButton(
+                label: 'Disponível',
+                icon: Icons.check_rounded,
+                outlined: true,
+                schema: ActionButtonSchema.success,
+                size: ActionButtonSize.sm,
+                isLoading: _isLoadingAvailable,
+                onPressed: (widget.onAvailable == null || (_isAnyLoading && !_isLoadingAvailable))
+                    ? null
+                    : () async {
+                        setState(() => _isLoadingAvailable = true);
+                        try {
+                          await widget.onAvailable!();
+                        } finally {
+                          if (mounted) setState(() => _isLoadingAvailable = false);
+                        }
+                      },
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: GestureDetector(
-                onTap: onUnavailable,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFEF2F2),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFFEE2E2)),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.close_rounded,
-                          size: 14, color: Color(0xFFDC2626)),
-                      SizedBox(width: 6),
-                      Text(
-                        'Indisponível',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFFDC2626),
-                          fontFamily: 'Inter',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              child: ActionButton(
+                label: 'Indisponível',
+                icon: Icons.close_rounded,
+                outlined: true,
+                schema: ActionButtonSchema.danger,
+                size: ActionButtonSize.sm,
+                isLoading: _isLoadingUnavailable,
+                onPressed: (widget.onUnavailable == null || (_isAnyLoading && !_isLoadingUnavailable))
+                    ? null
+                    : () async {
+                        setState(() => _isLoadingUnavailable = true);
+                        try {
+                          await widget.onUnavailable!();
+                        } finally {
+                          if (mounted) setState(() => _isLoadingUnavailable = false);
+                        }
+                      },
               ),
             ),
           ],
@@ -292,25 +284,23 @@ class EventCard extends StatelessWidget {
             ],
           ),
         ),
-        GestureDetector(
-          onTap: onRemoveAvailability,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: const Text(
-              'Desfazer',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF64748B),
-                fontFamily: 'Inter',
-              ),
-            ),
-          ),
+        ActionButton(
+          label: 'Desfazer',
+          outlined: true,
+          schema: ActionButtonSchema.ghost,
+          size: ActionButtonSize.xs,
+          isLoading: _isLoadingUndo,
+          fullWidth: false,
+          onPressed: (widget.onRemoveAvailability == null || _isAnyLoading)
+              ? null
+              : () async {
+                  setState(() => _isLoadingUndo = true);
+                  try {
+                    await widget.onRemoveAvailability!();
+                  } finally {
+                    if (mounted) setState(() => _isLoadingUndo = false);
+                  }
+                },
         ),
       ],
     );
@@ -353,25 +343,23 @@ class EventCard extends StatelessWidget {
             ],
           ),
         ),
-        GestureDetector(
-          onTap: onRemoveUnavailability,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFEF2F2),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFFEE2E2)),
-            ),
-            child: const Text(
-              'Desfazer',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFFDC2626),
-                fontFamily: 'Inter',
-              ),
-            ),
-          ),
+        ActionButton(
+          label: 'Desfazer',
+          outlined: true,
+          schema: ActionButtonSchema.ghost,
+          size: ActionButtonSize.xs,
+          isLoading: _isLoadingUndo,
+          fullWidth: false,
+          onPressed: (widget.onRemoveUnavailability == null || _isAnyLoading)
+              ? null
+              : () async {
+                  setState(() => _isLoadingUndo = true);
+                  try {
+                    await widget.onRemoveUnavailability!();
+                  } finally {
+                    if (mounted) setState(() => _isLoadingUndo = false);
+                  }
+                },
         ),
       ],
     );
@@ -379,7 +367,7 @@ class EventCard extends StatelessWidget {
 
   Widget _buildStatusFooter(BuildContext context) {
 
-    if (event.status == OrganizationEventStatus.canceled) {
+    if (widget.event.status == OrganizationEventStatus.canceled) {
       return _InfoFooter(
         bgColor: const Color(0xFFFEF2F2),
         borderColor: const Color(0xFFFEE2E2),
@@ -390,7 +378,7 @@ class EventCard extends StatelessWidget {
       );
     }
 
-    if (!event.allowAssignment) {
+    if (!widget.event.allowAssignment) {
       return _InfoFooter(
         bgColor: const Color(0xFFF8FAFC),
         borderColor: const Color(0xFFE2E8F0),
@@ -402,7 +390,7 @@ class EventCard extends StatelessWidget {
       );
     }
 
-    return switch (event.membershipStatus) {
+    return switch (widget.event.membershipStatus) {
       OrganizationEventMembershipStatus.assigned => Row(
         children: [
           Container(
@@ -453,7 +441,7 @@ class EventCard extends StatelessWidget {
                     size: 12, color: Color(0xFF64748B)),
                 const SizedBox(width: 4),
                 Text(
-                  '${event.participantsCount} membros',
+                  '${widget.event.participantsCount} membros',
                   style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,

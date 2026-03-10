@@ -5,6 +5,7 @@ import 'package:convoquei_app/core/widgets/timeline_group.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_status.dart';
 import 'package:convoquei_app/features/organizations/events/models/events_filter_model.dart';
 import 'package:convoquei_app/features/organizations/events/models/orgnaization_event_membership_model.dart';
+import 'package:convoquei_app/features/organizations/events/providers/answer_availability_provider.dart';
 import 'package:convoquei_app/features/organizations/events/providers/find_all_events_membership_provider.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/empty_event_state.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/event_card.dart';
@@ -150,6 +151,27 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
         .reset(widget.organizationId, _filter);
   }
 
+  // ── Disponibilidade ──────────────────────────────────────────────
+  Future<void> _handleAvailability(String eventId, bool available) async {
+    final updated = await ref
+        .read(answerAvailabilityProvider.notifier)
+        .answer(organizationId: widget.organizationId, eventId: eventId, available: available);
+
+    if (updated != null) {
+      ref.read(eventMembershipProvider.notifier).updateItem(updated);
+    }
+  }
+
+  Future<void> _handleRemoveAvailability(String eventId) async {
+    final updated = await ref
+        .read(answerAvailabilityProvider.notifier)
+        .remove(organizationId: widget.organizationId, eventId: eventId);
+
+    if (updated != null) {
+      ref.read(eventMembershipProvider.notifier).updateItem(updated);
+    }
+  }
+
   // ── Agrupamento ──────────────────────────────────────────────────
   Map<DateTime, List<OrganizationEventMembershipModel>> _groupByDate(
       List<OrganizationEventMembershipModel> items,
@@ -291,7 +313,14 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
                           ...events.map(
                                 (membership) => Column(
                               children: [
-                                EventCard(event: membership),
+                                EventCard(
+                                  key: ValueKey(membership.id),
+                                  event: membership,
+                                  onAvailable: () => _handleAvailability(membership.id, true),
+                                  onUnavailable: () => _handleAvailability(membership.id, false),
+                                  onRemoveAvailability: () => _handleRemoveAvailability(membership.id),
+                                  onRemoveUnavailability: () => _handleRemoveAvailability(membership.id),
+                                ),
                                 const SizedBox(height: 12),
                               ],
                             ),

@@ -3,7 +3,6 @@ import 'package:convoquei_app/core/network/base_repository.dart';
 import 'package:convoquei_app/core/providers/providers.dart';
 import 'package:convoquei_app/features/organizations/events/models/orgnaization_event_membership_model.dart';
 import 'package:convoquei_app/features/organizations/events/models/requests/find_all_events_organization_membership_request.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class OrganizationEventsRepository extends BaseRepository {
@@ -23,6 +22,34 @@ class OrganizationEventsRepository extends BaseRepository {
     return PagedResponseModel<OrganizationEventMembershipModel>.fromJson(
       data,
       (json) => OrganizationEventMembershipModel.fromJson(json),
+    );
+  }
+
+  Future<OrganizationEventMembershipModel> answerAvailability({
+    required String organizationId,
+    required String eventId,
+    required bool available,
+  }) async {
+    final data = await apiClient.patch(
+      '/v1/organizations/$organizationId/events/$eventId/availability',
+      data: {'available': available},
+    );
+
+    return OrganizationEventMembershipModel.fromJson(
+      data as Map<String, dynamic>,
+    );
+  }
+
+  Future<OrganizationEventMembershipModel> removeAvailability({
+    required String organizationId,
+    required String eventId,
+  }) async {
+    final data = await apiClient.delete(
+      '/v1/organizations/$organizationId/events/$eventId/availability',
+    );
+
+    return OrganizationEventMembershipModel.fromJson(
+      data as Map<String, dynamic>,
     );
   }
 }

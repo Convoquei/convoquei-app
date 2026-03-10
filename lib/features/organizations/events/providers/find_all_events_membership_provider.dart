@@ -69,4 +69,13 @@ class EventMembershipNotifier extends _$EventMembershipNotifier {
     state = const StateListPaged();
     loadNextPage(organizationId, filter);
   }
+
+  /// Substitui um item da lista pelo resultado atualizado da API.
+  void updateItem(OrganizationEventMembershipModel updated) {
+    state = state.copyWith(
+      items: state.items
+          .map((item) => item.id == updated.id ? updated : item)
+          .toList(),
+    );
+  }
 }
