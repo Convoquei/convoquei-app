@@ -12,8 +12,7 @@ class EventCard extends StatefulWidget {
   final OrganizationEventMembershipModel event;
   final Future<void> Function()? onAvailable;
   final Future<void> Function()? onUnavailable;
-  final Future<void> Function()? onRemoveAvailability;
-  final Future<void> Function()? onRemoveUnavailability;
+  final Future<void> Function()? onLeaveSchedule;
   final VoidCallback? onTap;
 
   const EventCard({
@@ -21,8 +20,7 @@ class EventCard extends StatefulWidget {
     required this.event,
     this.onAvailable,
     this.onUnavailable,
-    this.onRemoveAvailability,
-    this.onRemoveUnavailability,
+    this.onLeaveSchedule,
     this.onTap,
   });
 
@@ -33,9 +31,9 @@ class EventCard extends StatefulWidget {
 class _EventCardState extends State<EventCard> {
   bool _isLoadingAvailable = false;
   bool _isLoadingUnavailable = false;
-  bool _isLoadingUndo = false;
+  bool _isLoadingLeave = false;
 
-  bool get _isAnyLoading => _isLoadingAvailable || _isLoadingUnavailable || _isLoadingUndo;
+  bool get _isAnyLoading => _isLoadingAvailable || _isLoadingUnavailable || _isLoadingLeave;
 
   Color get _accentColor => switch (widget.event.membershipStatus) {
     OrganizationEventMembershipStatus.assigned => AppTheme.primaryColor,
@@ -57,8 +55,7 @@ class _EventCardState extends State<EventCard> {
         !isCanceled &&
             widget.event.availabilityLockEpochSeconds <= 86400 &&
             widget.event.availabilityLockEpochSeconds > 0;
-    final bool showEventBadge = widget.event.status == OrganizationEventStatus.inProgress ||
-        widget.event.status == OrganizationEventStatus.completed;
+    final bool showEventBadge = widget.event.status == OrganizationEventStatus.inProgress;
 
     return Opacity(
       opacity: isCanceled ? 0.5 : 1.0,
@@ -130,7 +127,7 @@ class _EventCardState extends State<EventCard> {
                                     color: const Color(0xFFE2E8F0)),
                               ),
                               child: Text(
-                                DateFormat('HH:mm', 'pt_BR').format(widget.event.startTime),
+                                '${DateFormat('HH:mm', 'pt_BR').format(widget.event.startTime)} – ${DateFormat('HH:mm', 'pt_BR').format(widget.event.endTime)}',
                                 style: Theme.of(context)
                                     .textTheme
                                     .labelSmall
@@ -172,7 +169,7 @@ class _EventCardState extends State<EventCard> {
 
   Widget _buildFooter(BuildContext context) {
     // Qualquer status que não seja PENDING tem prioridade
-    if (widget.event.membershipStatus != OrganizationEventMembershipStatus.pending || !widget.event.allowAssignment) {
+    if (widget.event.status == OrganizationEventStatus.completed || widget.event.status == OrganizationEventStatus.canceled || widget.event.membershipStatus != OrganizationEventMembershipStatus.pending || !widget.event.allowAssignment) {
       return _buildStatusFooter(context);
     }
 
@@ -226,7 +223,7 @@ class _EventCardState extends State<EventCard> {
                 label: 'Indisponível',
                 icon: Icons.close_rounded,
                 outlined: true,
-                schema: ActionButtonSchema.danger,
+                schema: ActionButtonSchema.ghost,
                 size: ActionButtonSize.sm,
                 isLoading: _isLoadingUnavailable,
                 onPressed: (widget.onUnavailable == null || (_isAnyLoading && !_isLoadingUnavailable))
@@ -285,20 +282,21 @@ class _EventCardState extends State<EventCard> {
           ),
         ),
         ActionButton(
-          label: 'Desfazer',
+          label: 'Indisponível',
+          icon: Icons.close_rounded,
           outlined: true,
-          schema: ActionButtonSchema.ghost,
+          schema: ActionButtonSchema.danger,
           size: ActionButtonSize.xs,
-          isLoading: _isLoadingUndo,
+          isLoading: _isLoadingUnavailable,
           fullWidth: false,
-          onPressed: (widget.onRemoveAvailability == null || _isAnyLoading)
+          onPressed: (widget.onUnavailable == null || _isAnyLoading)
               ? null
               : () async {
-                  setState(() => _isLoadingUndo = true);
+                  setState(() => _isLoadingUnavailable = true);
                   try {
-                    await widget.onRemoveAvailability!();
+                    await widget.onUnavailable!();
                   } finally {
-                    if (mounted) setState(() => _isLoadingUndo = false);
+                    if (mounted) setState(() => _isLoadingUnavailable = false);
                   }
                 },
         ),
@@ -334,7 +332,7 @@ class _EventCardState extends State<EventCard> {
                 ),
               ),
               Text(
-                'Toque em desfazer para alterar',
+                'Toque para ficar disponível',
                 style: Theme.of(context)
                     .textTheme
                     .bodySmall
@@ -344,20 +342,21 @@ class _EventCardState extends State<EventCard> {
           ),
         ),
         ActionButton(
-          label: 'Desfazer',
+          label: 'Disponível',
+          icon: Icons.check_rounded,
           outlined: true,
-          schema: ActionButtonSchema.ghost,
+          schema: ActionButtonSchema.success,
           size: ActionButtonSize.xs,
-          isLoading: _isLoadingUndo,
+          isLoading: _isLoadingAvailable,
           fullWidth: false,
-          onPressed: (widget.onRemoveUnavailability == null || _isAnyLoading)
+          onPressed: (widget.onAvailable == null || _isAnyLoading)
               ? null
               : () async {
-                  setState(() => _isLoadingUndo = true);
+                  setState(() => _isLoadingAvailable = true);
                   try {
-                    await widget.onRemoveUnavailability!();
+                    await widget.onAvailable!();
                   } finally {
-                    if (mounted) setState(() => _isLoadingUndo = false);
+                    if (mounted) setState(() => _isLoadingAvailable = false);
                   }
                 },
         ),
@@ -378,14 +377,38 @@ class _EventCardState extends State<EventCard> {
       );
     }
 
+    if (widget.event.status == OrganizationEventStatus.completed) {
+      final formattedDate = DateFormat("d 'de' MMMM 'às' HH:mm", 'pt_BR').format(widget.event.endTime);
+      return _InfoFooter(
+        bgColor: const Color(0xFFF8FAFC),
+        borderColor: const Color(0xFFE2E8F0),
+        icon: Icons.check_circle_outline_rounded,
+        iconColor: const Color(0xFF64748B),
+        label: 'Evento Concluído',
+        sublabel: 'Finalizado em $formattedDate',
+        labelColor: AppTheme.textSecondary,
+      );
+    }
+
     if (!widget.event.allowAssignment) {
+      if (widget.event.membershipStatus == OrganizationEventMembershipStatus.assigned) {
+        return _InfoFooter(
+          bgColor: const Color(0xFFECFDF5),
+          borderColor: const Color(0xFFD1FAE5),
+          icon: Icons.check_rounded,
+          iconColor: const Color(0xFF059669),
+          label: 'Você está escalado',
+          sublabel: 'Este evento está fechado para novas escalas.',
+        );
+      }
+
       return _InfoFooter(
         bgColor: const Color(0xFFF8FAFC),
         borderColor: const Color(0xFFE2E8F0),
         icon: Icons.lock_outline_rounded,
         iconColor: const Color(0xFF94A3B8),
-        label: 'Escala Trancada',
-        sublabel: 'Este evento não permite escalação.',
+        label: 'Não escalado',
+        sublabel: 'Este evento está fechado para novas escalas.',
         labelColor: AppTheme.textSecondary,
       );
     }
@@ -417,41 +440,54 @@ class _EventCardState extends State<EventCard> {
                     fontSize: 11,
                   ),
                 ),
-                // if (role != null)
-                //   Text(
-                //     'Função: $role',
-                //     style: Theme.of(context)
-                //         .textTheme
-                //         .bodySmall
-                //         ?.copyWith(fontSize: 10),
-                //   ),
               ],
             ),
           ),
-          Container(
-            padding:
-            const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.people_rounded,
-                    size: 12, color: Color(0xFF64748B)),
-                const SizedBox(width: 4),
-                Text(
-                  '${widget.event.participantsCount} membros',
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF64748B),
-                    fontFamily: 'Inter',
+          if (widget.event.membershipAvailabilityStatus ==
+              OrganizationEventMembershipAvailabilityStatus.available)
+            ActionButton(
+              label: 'Sair da escala',
+              icon: Icons.logout_rounded,
+              outlined: true,
+              schema: ActionButtonSchema.ghost,
+              size: ActionButtonSize.xs,
+              isLoading: _isLoadingLeave,
+              fullWidth: false,
+              onPressed: (widget.onLeaveSchedule == null || _isAnyLoading)
+                  ? null
+                  : () async {
+                      setState(() => _isLoadingLeave = true);
+                      try {
+                        await widget.onLeaveSchedule!();
+                      } finally {
+                        if (mounted) setState(() => _isLoadingLeave = false);
+                      }
+                    },
+            )
+          else
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.people_rounded,
+                      size: 12, color: Color(0xFF64748B)),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${widget.event.participantsCount} membros',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF64748B),
+                      fontFamily: 'Inter',
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
         ],
       ),
       OrganizationEventMembershipStatus.awaitingAssignment => _InfoFooter(
@@ -627,7 +663,6 @@ class _EventStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, bg, fg) = switch (status) {
-      OrganizationEventStatus.completed => ('Concluído', const Color(0xFFF8FAFC), const Color(0xFF64748B)),
       OrganizationEventStatus.inProgress => ('Em andamento', const Color(0xFFECFDF5), const Color(0xFF059669)),
       _ => ('', Colors.transparent, Colors.transparent),
     };

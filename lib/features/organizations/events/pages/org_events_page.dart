@@ -162,15 +162,6 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
     }
   }
 
-  Future<void> _handleRemoveAvailability(String eventId) async {
-    final updated = await ref
-        .read(answerAvailabilityProvider.notifier)
-        .remove(organizationId: widget.organizationId, eventId: eventId);
-
-    if (updated != null) {
-      ref.read(eventMembershipProvider.notifier).updateItem(updated);
-    }
-  }
 
   // ── Agrupamento ──────────────────────────────────────────────────
   Map<DateTime, List<OrganizationEventMembershipModel>> _groupByDate(
@@ -318,8 +309,7 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
                                   event: membership,
                                   onAvailable: () => _handleAvailability(membership.id, true),
                                   onUnavailable: () => _handleAvailability(membership.id, false),
-                                  onRemoveAvailability: () => _handleRemoveAvailability(membership.id),
-                                  onRemoveUnavailability: () => _handleRemoveAvailability(membership.id),
+                                  onLeaveSchedule: () => _handleAvailability(membership.id, false),
                                 ),
                                 const SizedBox(height: 12),
                               ],
