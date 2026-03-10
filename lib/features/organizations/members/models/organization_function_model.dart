@@ -29,7 +29,7 @@ class OrganizationFunctionModel {
       name: json['name'] as String,
       emoji: json['emoji'] as String,
       memberCount: json['memberCount'] as int,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: DateTime.parse(json['createdAt'] as String).toLocal(),
     );
   }
 }

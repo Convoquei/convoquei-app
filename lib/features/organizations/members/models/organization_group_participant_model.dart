@@ -21,7 +21,7 @@ class OrganizationGroupParticipantModel {
       memberId: json['memberId'] as String,
       memberName: json['memberName'] as String,
       memberAvatarUrl: json['memberAvatarUrl'] as String,
-      joinedAt: DateTime.parse(json['joinedAt'] as String),
+      joinedAt: DateTime.parse(json['joinedAt'] as String).toLocal(),
     );
   }
 }

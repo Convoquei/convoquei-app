@@ -36,7 +36,7 @@ class _OrganizationShellState extends ConsumerState<OrganizationShell> {
 
   Widget _pageForIndex(int index) => switch (index) {
     0 => const OrgHomePage(),
-    1 => const OrgEventsPage(),
+    1 => OrgEventsPage(organizationId: widget.organization.id),
     2 => const OrgScalesPage(),
     3 => OrgMembersPage(
         initialTab: _membersInitialTab ?? OrgMembersTab.membros,

@@ -1,450 +1,310 @@
-import 'package:convoquei_app/core/theme/app_theme.dart';
+import 'package:convoquei_app/core/utils/date_locale_pt.dart';
+import 'package:convoquei_app/core/widgets/action_button.dart';
 import 'package:convoquei_app/core/widgets/custom_calendar.dart';
 import 'package:convoquei_app/core/widgets/timeline_group.dart';
+import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_status.dart';
+import 'package:convoquei_app/features/organizations/events/models/events_filter_model.dart';
+import 'package:convoquei_app/features/organizations/events/models/orgnaization_event_membership_model.dart';
+import 'package:convoquei_app/features/organizations/events/providers/find_all_events_membership_provider.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/empty_event_state.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/event_card.dart';
 import 'package:convoquei_app/features/organizations/home/widgets/team_toggle_widget.dart';
+import 'package:convoquei_app/features/organizations/shared/models/organization_my_member_profile_model.dart';
+import 'package:convoquei_app/features/organizations/shared/providers/organization_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 enum OrgEventsTab { all, mySchedules, pending }
 
 class OrgEventsPage extends ConsumerStatefulWidget {
-  const OrgEventsPage({super.key});
+  const OrgEventsPage({
+    super.key,
+    required this.organizationId,
+    this.onCreateEvent,
+  });
+
+  final String organizationId;
+  final VoidCallback? onCreateEvent;
 
   @override
   ConsumerState<OrgEventsPage> createState() => _OrgEventsPageState();
 }
 
 class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
-  late OrgEventsTab selectedTab = OrgEventsTab.all;
+  OrgEventsTab _selectedTab = OrgEventsTab.all;
+  EventsFilter _filter      = const EventsFilter();
 
-  void _handleTabChange(OrgEventsTab newTab) {
-    setState(() {
-      selectedTab = newTab;
-    });
+  // O que o pai sabe sobre o calendário — apenas o suficiente para labels e filtro
+  DateTime? _selectedDay;
+  DateTime? _rangeStart;
+  DateTime? _rangeEnd;
+
+  static const _weekdayNames = DateLocalePt.weekdayNames;
+  static const _monthNames   = DateLocalePt.monthNames;
+
+  String get _dateLabel {
+    if (_selectedDay != null) {
+      final d       = _selectedDay!;
+      final weekday = _weekdayNames[d.weekday - 1].toLowerCase();
+      return '$weekday, ${d.day} de ${_monthNames[d.month - 1]} de ${d.year}';
+    }
+    return 'esse período';
   }
 
+  // ================================================================
+  // _buildFilter — fonte única de verdade para o filtro de datas
+  //
+  // Regra:
+  //   • Dia selecionado  → filtra apenas aquele dia
+  //   • Sem seleção      → filtra o range visível no calendário
+  // ================================================================
+  EventsFilter _buildFilter({
+    DateTime? selectedDay,
+    DateTime? rangeStart,
+    DateTime? rangeEnd,
+    OrgEventsTab? tab,
+  }) {
+    final resolvedTab = tab ?? _selectedTab;
+
+    final List<OrganizationEventMembershipStatus>? status = switch (resolvedTab) {
+      OrgEventsTab.all         => null,
+      OrgEventsTab.mySchedules => [OrganizationEventMembershipStatus.assigned],
+      OrgEventsTab.pending     => [
+        OrganizationEventMembershipStatus.pending,
+        OrganizationEventMembershipStatus.awaitingAssignment,
+        OrganizationEventMembershipStatus.awaitingDraw,
+      ],
+    };
+
+    if (selectedDay != null) {
+      return EventsFilter(
+        startAfter:  startOfDay(selectedDay),
+        startBefore: endOfDay(selectedDay),
+        status:      status,
+      );
+    }
+
+    if (rangeStart != null && rangeEnd != null) {
+      return EventsFilter(
+        startAfter:  startOfDay(rangeStart),
+        startBefore: endOfDay(rangeEnd),
+        status:      status,
+      );
+    }
+
+    return EventsFilter(status: status);
+  }
+
+  void _applyFilter(EventsFilter newFilter) {
+    setState(() => _filter = newFilter);
+    ref
+        .read(eventMembershipProvider.notifier)
+        .reset(widget.organizationId, newFilter);
+  }
+
+  // ── Callbacks do calendário ──────────────────────────────────────
+
+  void _handleDaySelected(DateTime selected, DateTime? deselected) {
+    final isDeselecting = selected == deselected;
+    final nextSelected  = isDeselecting ? null : selected;
+
+    setState(() => _selectedDay = nextSelected);
+
+    _applyFilter(_buildFilter(
+      selectedDay: nextSelected,
+      rangeStart:  _rangeStart,
+      rangeEnd:    _rangeEnd,
+    ));
+  }
+
+  /// Chamado pelo calendário sempre que o range visível muda.
+  /// Se há dia selecionado, apenas guarda o range para uso futuro.
+  void _handleRangeChanged(DateTime start, DateTime end) {
+    setState(() {
+      _rangeStart  = start;
+      _rangeEnd    = end;
+      _selectedDay = null; // range novo = sem seleção
+    });
+
+    _applyFilter(_buildFilter(rangeStart: start, rangeEnd: end));
+  }
+
+  // ── Handler das tabs ─────────────────────────────────────────────
+  void _handleTabChange(OrgEventsTab newTab) {
+    if (newTab == _selectedTab) return;
+
+    setState(() => _selectedTab = newTab);
+
+    _applyFilter(_buildFilter(
+      selectedDay: _selectedDay,
+      rangeStart:  _rangeStart,
+      rangeEnd:    _rangeEnd,
+      tab:         newTab,
+    ));
+  }
+
+  void _handleRetry() {
+    ref
+        .read(eventMembershipProvider.notifier)
+        .reset(widget.organizationId, _filter);
+  }
+
+  // ── Agrupamento ──────────────────────────────────────────────────
+  Map<DateTime, List<OrganizationEventMembershipModel>> _groupByDate(
+      List<OrganizationEventMembershipModel> items,
+      ) {
+    final map = <DateTime, List<OrganizationEventMembershipModel>>{};
+    for (final item in items) {
+      final date = DateTime(
+        item.startTime.year,
+        item.startTime.month,
+        item.startTime.day,
+      );
+      map.putIfAbsent(date, () => []).add(item);
+    }
+    return map;
+  }
+
+  // ── Build ────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    final bool hasEvents = true;
+    final eventsState = ref.watch(eventMembershipProvider);
+    OrganizationMyMemberProfile currentUser = ref.watch(currentUserMembershipOrganizationProvider(widget.organizationId)).asData!.value;
+    final grouped = _groupByDate(eventsState.items);
+
+    final hasListContent = !eventsState.isInitialLoading &&
+        eventsState.error == null &&
+        !eventsState.isEmpty;
 
     return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+      body: CustomScrollView(
+        physics: hasListContent
+            ? const AlwaysScrollableScrollPhysics()
+            : const NeverScrollableScrollPhysics(),
+        slivers: [
+          // ── Calendário + Tabs ──────────────────────────────────
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CustomCalendar(
+                    events: {
+                      ...grouped.map(
+                            (date, events) => MapEntry(
+                          DateTime(date.year, date.month, date.day),
+                          events.map((e) => e.id).toList(),
+                        ),
+                      ),
+                    },
+                    onDaySelected:  _handleDaySelected,
+                    onRangeChanged: _handleRangeChanged,
+                  ),
+                  const SizedBox(height: 20),
+                  ToggleTabs(
+                    selected: _selectedTab,
+                    onChanged: _handleTabChange,
+                    values: OrgEventsTab.values,
+                    labelBuilder: (tab) => switch (tab) {
+                      OrgEventsTab.all         => 'Todos eventos',
+                      OrgEventsTab.mySchedules => 'Minhas Escalas',
+                      OrgEventsTab.pending     => 'Pendentes',
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+          ),
+
+          // ── Conteúdo principal ─────────────────────────────────
+          if (eventsState.isInitialLoading)
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (eventsState.error != null)
+            SliverFillRemaining(
+              hasScrollBody: false,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CustomCalendar(
-                      events: {
-                        DateTime(2026, 04, 11): ['casamento'],
-                      },
-                      onDaySelected: (selected, deselected) {
-                        debugPrint(
-                          'Selecionado: $selected | Deselecionado: $deselected',
-                        );
-                      },
-                      onPageChanged: (firstDay) {
-                        debugPrint('Período alterado, primeiro dia: $firstDay');
-                      },
-                      onRangeChanged: (first, last) {
-                        debugPrint('Visível de $first até $last');
-                      },
+                    const Icon(Icons.cloud_off_rounded, size: 48, color: Colors.grey),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Não foi possível carregar os eventos',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                     ),
-                    const SizedBox(height: 20),
-                    ToggleTabs(
-                      selected: selectedTab,
-                      onChanged: (tab) => _handleTabChange(tab),
-                      values: OrgEventsTab.values,
-                      labelBuilder: (tab) => switch (tab) {
-                        OrgEventsTab.all => 'Todos eventos',
-                        OrgEventsTab.mySchedules => 'Minhas Escalas',
-                        OrgEventsTab.pending => 'Pendentes',
-                      },
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Verifique sua conexão e tente novamente.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
-                    const SizedBox(height: 20),
-                    if (hasEvents)
-                      Column(
+                    const SizedBox(height: 24),
+                    ActionButton(
+                      label: 'Tentar novamente',
+                      icon: Icons.refresh_rounded,
+                      outlined: true,
+                      fullWidth: false,
+                      onPressed: _handleRetry,
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else if (eventsState.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: EmptyEventsState(
+                  tab: _selectedTab,
+                  dateLabel: _dateLabel,
+                  membership: currentUser,
+                ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                      final entry  = grouped.entries.elementAt(index);
+                      final date   = entry.key;
+                      final events = entry.value;
+
+                      return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const TimelineGroup(title: "DOMINGO, 8 DE MARÇO", children: []),
+                          TimelineGroup(
+                            title: DateFormat(
+                              "d 'de' MMMM 'de' yyyy",
+                              'pt_BR',
+                            ).format(date),
+                            children: [],
+                          ),
                           const SizedBox(height: 8),
-
-                          // Escalado com alerta urgente
-                          EventCard(
-                            title: 'Culto de Domingo | EBD',
-                            time: '18:30',
-                            location: 'Templo Principal',
-                            eventStatus: EventStatus.inProgress,
-                            participantStatus: ParticipantStatus.assigned,
-                            availabilityStatus: AvailabilityStatus.available,
-                            role: 'Vocal',
-                            memberCount: 12,
-                            hasUrgentAlert: true,
-                            onTap: () {},
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Pendente - não respondeu
-                          EventCard(
-                            title: 'Ensaio de Naipe (Vocal)',
-                            time: '20:00',
-                            location: 'Sala de Música 2',
-                            eventStatus: EventStatus.scheduled,
-                            participantStatus: ParticipantStatus.pending,
-                            availabilityStatus: AvailabilityStatus.notAnswered,
-                            onAvailable: () {},
-                            onUnavailable: () {},
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Pendente - marcou disponível
-                          EventCard(
-                            title: 'Reunião de Liderança',
-                            time: '21:30',
-                            location: 'Online (Google Meet)',
-                            eventStatus: EventStatus.scheduled,
-                            participantStatus: ParticipantStatus.pending,
-                            availabilityStatus: AvailabilityStatus.available,
-                            onRemoveAvailability: () {},
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Pendente - marcou indisponível
-                          EventCard(
-                            title: 'Treinamento de Obreiros',
-                            time: '19:00',
-                            location: 'Sala 3',
-                            eventStatus: EventStatus.scheduled,
-                            participantStatus: ParticipantStatus.pending,
-                            availabilityStatus: AvailabilityStatus.unavailable,
-                            onRemoveUnavailability: () {},
-                          ),
-                          const SizedBox(height: 20),
-
-                          const TimelineGroup(title: "SEGUNDA-FEIRA, 9 DE MARÇO", children: []),
-                          const SizedBox(height: 8),
-
-                          // Aguardando escalação
-                          EventCard(
-                            title: 'Ensaio Geral do Coral',
-                            time: '19:00',
-                            location: 'Salão Principal',
-                            eventStatus: EventStatus.scheduled,
-                            participantStatus: ParticipantStatus.awaitingAssignment,
-                            memberCount: 24,
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Aguardando sorteio
-                          EventCard(
-                            title: 'Reunião de Célula',
-                            time: '20:30',
-                            location: 'Casa do Pr. João',
-                            eventStatus: EventStatus.scheduled,
-                            participantStatus: ParticipantStatus.awaitingDraw,
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Escala fechada
-                          EventCard(
-                            title: 'Conferência de Pastores',
-                            time: '09:00',
-                            location: 'Auditório Central',
-                            eventStatus: EventStatus.scheduled,
-                            participantStatus: ParticipantStatus.notAssigned,
-                          ),
-                          const SizedBox(height: 20),
-
-                          const TimelineGroup(title: "QUARTA-FEIRA, 11 DE MARÇO", children: []),
-                          const SizedBox(height: 8),
-
-                          // Escalado com urgência
-                          EventCard(
-                            title: 'Culto de Quarta',
-                            time: '19:30',
-                            location: 'Templo Principal',
-                            eventStatus: EventStatus.scheduled,
-                            participantStatus: ParticipantStatus.assigned,
-                            availabilityStatus: AvailabilityStatus.available,
-                            role: 'Guitarra',
-                            memberCount: 8,
-                            hasUrgentAlert: true,
-                            onTap: () {},
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Concluído
-                          EventCard(
-                            title: 'Treinamento de Obreiros',
-                            time: '21:00',
-                            location: 'Sala 3',
-                            eventStatus: EventStatus.completed,
-                            participantStatus: ParticipantStatus.assigned,
-                            role: 'Participante',
-                            memberCount: 15,
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Cancelado
-                          EventCard(
-                            title: 'Confraternização da Equipe',
-                            time: '18:00',
-                            location: 'Pátio da Igreja',
-                            eventStatus: EventStatus.canceled,
-                            participantStatus: ParticipantStatus.assigned,
-                            role: 'Organização',
+                          ...events.map(
+                                (membership) => Column(
+                              children: [
+                                EventCard(event: membership),
+                                const SizedBox(height: 12),
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 20),
                         ],
-                      )
-                    else
-                      SizedBox(
-                        height: constraints.maxHeight - 300,
-                        // espaço restante aproximado
-                        child: EmptyEventsState(
-                          eventsContext: EmptyEventsContext.range,
-                          tab: selectedTab,
-                          startDate: DateTime(2026, 4, 11),
-                          endDate: DateTime(2026, 4, 30),
-                        ),
-                      ),
-                  ],
+                      );
+                    },
+                    childCount: grouped.length,
+                  ),
                 ),
               ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _EventCard extends StatelessWidget {
-  const _EventCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
         ],
-      ),
-      clipBehavior: Clip.hardEdge,
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(width: 6, color: AppTheme.primaryColor),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 14, 14, 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Badge urgente
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFEF2F2),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFFEE2E2)),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.warning_rounded,
-                            size: 13,
-                            color: Color(0xFFDC2626),
-                          ),
-                          SizedBox(width: 5),
-                          Text(
-                            'A escala encerra em 2h',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFFDC2626),
-                              fontFamily: 'Inter',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    // Título + horário
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Culto de Domingo | EBD',
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFFE2E8F0)),
-                          ),
-                          child: Text(
-                            '18:30',
-                            style: Theme.of(context).textTheme.labelSmall
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF334155),
-                                ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-
-                    // Local
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.location_on_rounded,
-                          size: 13,
-                          color: Color(0xFF94A3B8),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Templo Principal',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                    const SizedBox(height: 12),
-
-                    // Status + avatares
-                    Row(
-                      children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFECFDF5),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: const Color(0xFFD1FAE5)),
-                          ),
-                          child: const Icon(
-                            Icons.check_rounded,
-                            size: 16,
-                            color: Color(0xFF059669),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Você está escalado',
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.textPrimary,
-                                    fontSize: 12,
-                                  ),
-                            ),
-                            Text(
-                              'Função: Vocal',
-                              style: Theme.of(
-                                context,
-                              ).textTheme.bodySmall?.copyWith(fontSize: 10),
-                            ),
-                          ],
-                        ),
-                        const Spacer(),
-
-                        // Avatares
-                        SizedBox(
-                          width: 80,
-                          height: 28,
-                          child: Stack(
-                            children: [
-                              _avatar('https://i.pravatar.cc/100?img=33', 0),
-                              _avatar('https://i.pravatar.cc/100?img=12', 20),
-                              _avatarCount('+4', 40),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _avatar(String url, double left) {
-    return Positioned(
-      left: left,
-      child: Container(
-        width: 28,
-        height: 28,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.white, width: 2),
-          image: DecorationImage(image: NetworkImage(url), fit: BoxFit.cover),
-        ),
-      ),
-    );
-  }
-
-  Widget _avatarCount(String label, double left) {
-    return Positioned(
-      left: left,
-      child: Container(
-        width: 28,
-        height: 28,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: const Color(0xFFF1F5F9),
-          border: Border.all(color: Colors.white, width: 2),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF475569),
-              fontFamily: 'Inter',
-            ),
-          ),
-        ),
       ),
     );
   }

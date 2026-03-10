@@ -1,66 +1,43 @@
 import 'package:convoquei_app/core/theme/app_theme.dart';
-import 'package:convoquei_app/core/widgets/action_button.dart';
 import 'package:convoquei_app/features/organizations/events/pages/org_events_page.dart' show OrgEventsTab;
+import 'package:convoquei_app/features/organizations/shared/models/enums/organization_permission.dart';
+import 'package:convoquei_app/features/organizations/shared/models/organization_my_member_profile_model.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-enum EmptyEventsContext { single, range }
-
 class EmptyEventsState extends StatelessWidget {
-  final EmptyEventsContext eventsContext;
   final OrgEventsTab tab;
-  final DateTime startDate;
-  final DateTime? endDate;
+  final String dateLabel;
+  final OrganizationMyMemberProfile membership;
+  final VoidCallback? onCreateEvent;
 
   const EmptyEventsState({
     super.key,
-    required this.eventsContext,
     required this.tab,
-    required this.startDate,
-    this.endDate,
+    required this.dateLabel,
+    required this.membership,
+    this.onCreateEvent,
   });
 
-  String get _dateLabel {
-    if (eventsContext == EmptyEventsContext.single) {
-      return _formatFull(startDate);
-    }
-    return '${_formatShort(startDate)} até ${endDate != null ? _formatShort(endDate!) : '...'}';
-  }
-
   String get _tabLabel => switch (tab) {
-    OrgEventsTab.all => null,
+    OrgEventsTab.all         => null,
     OrgEventsTab.mySchedules => 'que você está escalado',
-    OrgEventsTab.pending => 'que estão pendentes de resposta',
+    OrgEventsTab.pending     => 'que estão pendentes de resposta',
   } ??
       '';
 
   String get _message {
     if (tab == OrgEventsTab.all) {
-      return eventsContext == EmptyEventsContext.single
-          ? 'Nenhum evento em $_dateLabel'
-          : 'Nenhum evento entre $_dateLabel';
+      return 'Nenhum evento encontrado para $dateLabel';
     }
-    return eventsContext == EmptyEventsContext.single
-        ? 'Nenhum evento em $_dateLabel\n$_tabLabel'
-        : 'Nenhum evento entre $_dateLabel\n$_tabLabel';
+    return 'Nenhum evento encontrado para $dateLabel\n$_tabLabel';
   }
-
-  String _formatFull(DateTime date) {
-    const weekdays = [
-      'Segunda-feira', 'Terça-feira', 'Quarta-feira',
-      'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo',
-    ];
-    const months = [
-      'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-      'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
-    ];
-    return '${weekdays[date.weekday - 1]}, ${date.day} de ${months[date.month - 1]} de ${date.year}';
-  }
-
-  String _formatShort(DateTime date) =>
-      '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final canManage = membership.hasPermission(OrganizationPermissionEnum.manageEvents);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -83,16 +60,36 @@ class EmptyEventsState extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               'Nenhum evento encontrado',
-              style: Theme.of(context).textTheme.titleMedium,
+              style: textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
               _message,
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 28)
+            const SizedBox(height: 16),
+            if (canManage)
+              Text.rich(
+                TextSpan(
+                  style: textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                  children: [
+                    TextSpan(
+                      text: 'Clique aqui para criar um novo evento',
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.textPrimary,
+                        decoration: TextDecoration.underline,
+                        decorationColor: AppTheme.textPrimary,
+                      ),
+                      recognizer: TapGestureRecognizer()..onTap = onCreateEvent,
+                    ),
+                  ],
+                ),
+                textAlign: TextAlign.center,
+              )
+            else
+              const SizedBox(height: 12),
           ],
         ),
       ),

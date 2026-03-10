@@ -15,6 +15,10 @@ class StateListPaged<T> {
   final bool isLoadingMore;
   final Object? error;
 
+  bool get isEmpty => !isInitialLoading && items.isEmpty && error == null;
+
+  bool get hasError => error != null;
+
   StateListPaged<T> copyWith({
     List<T>? items,
     int? page,
@@ -22,6 +26,7 @@ class StateListPaged<T> {
     bool? isInitialLoading,
     bool? isLoadingMore,
     Object? error,
+    bool clearError = false,
   }) {
     return StateListPaged<T>(
       items: items ?? this.items,
@@ -29,9 +34,9 @@ class StateListPaged<T> {
       hasNextPage: hasNextPage ?? this.hasNextPage,
       isInitialLoading: isInitialLoading ?? this.isInitialLoading,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
-      error: error ?? this.error,
+      error: clearError ? null : (error ?? this.error),
     );
   }
 
-  StateListPaged<T> reset() => StateListPaged<T>();
+  StateListPaged<T> reset() => const StateListPaged();
 }

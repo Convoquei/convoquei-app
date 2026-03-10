@@ -6,6 +6,8 @@ class AppConstants {
 
   static const bool _isProduction = bool.fromEnvironment('dart.vm.product');
 
+  static const String _localIp = String.fromEnvironment('LOCAL_IP', defaultValue: '10.0.2.2');
+
   static String get baseUrl {
     if (_isProduction) {
       return 'https://api.convoquei.com.br';
@@ -15,11 +17,7 @@ class AppConstants {
       return 'http://localhost:8080/api';
     }
 
-    if (Platform.isAndroid) {
-      return 'http://10.0.2.2:8080/api';
-    }
-
-    return 'http://127.0.0.1:8080/api';
+    return 'http://$_localIp:8080/api';
   }
 
   // --- Timeouts ---

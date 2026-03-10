@@ -1,28 +1,14 @@
 import 'package:convoquei_app/core/theme/app_theme.dart';
+import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_assignment_mode.dart';
+import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_availability_status.dart';
+import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_status.dart';
+import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_status.dart';
+import 'package:convoquei_app/features/organizations/events/models/orgnaization_event_membership_model.dart';
 import 'package:flutter/material.dart';
-
-enum EventStatus { scheduled, inProgress, completed, canceled }
-
-enum ParticipantStatus {
-  pending,
-  awaitingAssignment,
-  awaitingDraw,
-  assigned,
-  notAssigned,
-}
-
-enum AvailabilityStatus { notAnswered, available, unavailable }
+import 'package:intl/intl.dart';
 
 class EventCard extends StatelessWidget {
-  final String title;
-  final String time;
-  final String location;
-  final EventStatus eventStatus;
-  final ParticipantStatus participantStatus;
-  final AvailabilityStatus availabilityStatus;
-  final String? role;
-  final int? memberCount;
-  final bool hasUrgentAlert;
+  final OrganizationEventMembershipModel event;
   final VoidCallback? onAvailable;
   final VoidCallback? onUnavailable;
   final VoidCallback? onRemoveAvailability;
@@ -31,15 +17,7 @@ class EventCard extends StatelessWidget {
 
   const EventCard({
     super.key,
-    required this.title,
-    required this.time,
-    required this.location,
-    required this.eventStatus,
-    required this.participantStatus,
-    this.availabilityStatus = AvailabilityStatus.notAnswered,
-    this.role,
-    this.memberCount,
-    this.hasUrgentAlert = false,
+    required this.event,
     this.onAvailable,
     this.onUnavailable,
     this.onRemoveAvailability,
@@ -47,25 +25,28 @@ class EventCard extends StatelessWidget {
     this.onTap,
   });
 
-  Color get _accentColor => switch (participantStatus) {
-    ParticipantStatus.assigned => AppTheme.primaryColor,
-    ParticipantStatus.pending => switch (availabilityStatus) {
-      AvailabilityStatus.available => const Color(0xFF059669),
-      AvailabilityStatus.unavailable => const Color(0xFFDC2626),
-      AvailabilityStatus.notAnswered => AppTheme.secondaryColor,
+  Color get _accentColor => switch (event.membershipStatus) {
+    OrganizationEventMembershipStatus.assigned => AppTheme.primaryColor,
+    OrganizationEventMembershipStatus.pending => switch (event.membershipAvailabilityStatus) {
+      OrganizationEventMembershipAvailabilityStatus.available => const Color(0xFF059669),
+      OrganizationEventMembershipAvailabilityStatus.unavailable => const Color(0xFFDC2626),
+      OrganizationEventMembershipAvailabilityStatus.notAnswered || null => AppTheme.secondaryColor,
     },
-    ParticipantStatus.notAssigned => const Color(0xFFCBD5E1),
-    ParticipantStatus.awaitingAssignment ||
-    ParticipantStatus.awaitingDraw =>
-    const Color(0xFF8B5CF6),
+    OrganizationEventMembershipStatus.notAssigned || null => const Color(0xFFCBD5E1),
+    OrganizationEventMembershipStatus.awaitingAssignment ||
+    OrganizationEventMembershipStatus.awaitingDraw =>
+    const Color(0xFF8B5CF6)
   };
 
   @override
   Widget build(BuildContext context) {
-    final bool isCanceled = eventStatus == EventStatus.canceled;
-    final bool showUrgent = hasUrgentAlert && !isCanceled;
-    final bool showStatusBadge =
-        eventStatus == EventStatus.completed || isCanceled;
+    final bool isCanceled = event.status == OrganizationEventStatus.canceled;
+    final bool showUrgent =
+        !isCanceled &&
+            event.availabilityLockEpochSeconds <= 86400 &&
+            event.availabilityLockEpochSeconds > 0;
+    final bool showEventBadge = event.status == OrganizationEventStatus.inProgress ||
+        event.status == OrganizationEventStatus.completed;
 
     return Opacity(
       opacity: isCanceled ? 0.5 : 1.0,
@@ -96,15 +77,16 @@ class EventCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (showUrgent || showStatusBadge) ...[
+                        if (showUrgent || showEventBadge) ...[
                           Row(
                             children: [
                               if (showUrgent) ...[
-                                _UrgentBadge(),
+                                _UrgentBadge(event: event,),
                                 const SizedBox(width: 6),
                               ],
-                              if (showStatusBadge)
-                                _EventStatusBadge(eventStatus),
+
+                              if (showEventBadge)
+                                _EventStatusBadge(event.status),
                             ],
                           ),
                           const SizedBox(height: 8),
@@ -114,7 +96,7 @@ class EventCard extends StatelessWidget {
                           children: [
                             Expanded(
                               child: Text(
-                                title,
+                                event.name,
                                 style: Theme.of(context)
                                     .textTheme
                                     .titleSmall
@@ -136,7 +118,7 @@ class EventCard extends StatelessWidget {
                                     color: const Color(0xFFE2E8F0)),
                               ),
                               child: Text(
-                                time,
+                                DateFormat('HH:mm', 'pt_BR').format(event.startTime),
                                 style: Theme.of(context)
                                     .textTheme
                                     .labelSmall
@@ -155,7 +137,7 @@ class EventCard extends StatelessWidget {
                             const Icon(Icons.location_on_rounded,
                                 size: 12, color: Color(0xFF94A3B8)),
                             const SizedBox(width: 4),
-                            Text(location,
+                            Text(event.location,
                                 style:
                                 Theme.of(context).textTheme.bodySmall),
                           ],
@@ -178,15 +160,16 @@ class EventCard extends StatelessWidget {
 
   Widget _buildFooter(BuildContext context) {
     // Qualquer status que não seja PENDING tem prioridade
-    if (participantStatus != ParticipantStatus.pending) {
+    if (event.membershipStatus != OrganizationEventMembershipStatus.pending || !event.allowAssignment) {
       return _buildStatusFooter(context);
     }
 
     // PENDING: footer depende da availability
-    return switch (availabilityStatus) {
-      AvailabilityStatus.notAnswered => _buildAvailabilityButtons(context),
-      AvailabilityStatus.available => _buildAvailableConfirmed(context),
-      AvailabilityStatus.unavailable => _buildUnavailableConfirmed(context),
+    return switch (event.membershipAvailabilityStatus) {
+      OrganizationEventMembershipAvailabilityStatus.notAnswered => _buildAvailabilityButtons(context),
+      OrganizationEventMembershipAvailabilityStatus.available => _buildAvailableConfirmed(context),
+      OrganizationEventMembershipAvailabilityStatus.unavailable => _buildUnavailableConfirmed(context),
+      null => SizedBox.shrink(),
     };
   }
 
@@ -300,7 +283,7 @@ class EventCard extends StatelessWidget {
                 ),
               ),
               Text(
-                'Aguardando escalação pelo admin',
+                'Aguardando escalação',
                 style: Theme.of(context)
                     .textTheme
                     .bodySmall
@@ -395,8 +378,32 @@ class EventCard extends StatelessWidget {
   }
 
   Widget _buildStatusFooter(BuildContext context) {
-    return switch (participantStatus) {
-      ParticipantStatus.assigned => Row(
+
+    if (event.status == OrganizationEventStatus.canceled) {
+      return _InfoFooter(
+        bgColor: const Color(0xFFFEF2F2),
+        borderColor: const Color(0xFFFEE2E2),
+        icon: Icons.close_rounded,
+        iconColor: const Color(0xFFDC2626),
+        label: 'Evento Cancelado',
+        sublabel: 'Este evento foi cancelado pelo admin.',
+      );
+    }
+
+    if (!event.allowAssignment) {
+      return _InfoFooter(
+        bgColor: const Color(0xFFF8FAFC),
+        borderColor: const Color(0xFFE2E8F0),
+        icon: Icons.lock_outline_rounded,
+        iconColor: const Color(0xFF94A3B8),
+        label: 'Escala Trancada',
+        sublabel: 'Este evento não permite escalação.',
+        labelColor: AppTheme.textSecondary,
+      );
+    }
+
+    return switch (event.membershipStatus) {
+      OrganizationEventMembershipStatus.assigned => Row(
         children: [
           Container(
             width: 28,
@@ -422,45 +429,44 @@ class EventCard extends StatelessWidget {
                     fontSize: 11,
                   ),
                 ),
-                if (role != null)
-                  Text(
-                    'Função: $role',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(fontSize: 10),
-                  ),
+                // if (role != null)
+                //   Text(
+                //     'Função: $role',
+                //     style: Theme.of(context)
+                //         .textTheme
+                //         .bodySmall
+                //         ?.copyWith(fontSize: 10),
+                //   ),
               ],
             ),
           ),
-          if (memberCount != null)
-            Container(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.people_rounded,
-                      size: 12, color: Color(0xFF64748B)),
-                  const SizedBox(width: 4),
-                  Text(
-                    '$memberCount membros',
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF64748B),
-                      fontFamily: 'Inter',
-                    ),
-                  ),
-                ],
-              ),
+          Container(
+            padding:
+            const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(8),
             ),
+            child: Row(
+              children: [
+                const Icon(Icons.people_rounded,
+                    size: 12, color: Color(0xFF64748B)),
+                const SizedBox(width: 4),
+                Text(
+                  '${event.participantsCount} membros',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF64748B),
+                    fontFamily: 'Inter',
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
-      ParticipantStatus.awaitingAssignment => _InfoFooter(
+      OrganizationEventMembershipStatus.awaitingAssignment => _InfoFooter(
         bgColor: const Color(0xFFF5F3FF),
         borderColor: const Color(0xFFEDE9FE),
         icon: Icons.hourglass_top_rounded,
@@ -468,7 +474,7 @@ class EventCard extends StatelessWidget {
         label: 'Aguardando escalação',
         sublabel: 'Você será escalado em breve',
       ),
-      ParticipantStatus.awaitingDraw => _InfoFooter(
+      OrganizationEventMembershipStatus.awaitingDraw => _InfoFooter(
         bgColor: const Color(0xFFF5F3FF),
         borderColor: const Color(0xFFEDE9FE),
         icon: Icons.casino_rounded,
@@ -476,16 +482,16 @@ class EventCard extends StatelessWidget {
         label: 'Aguardando sorteio',
         sublabel: 'Escalação será definida por sorteio',
       ),
-      ParticipantStatus.notAssigned => _InfoFooter(
+      OrganizationEventMembershipStatus.notAssigned || null => _InfoFooter(
         bgColor: const Color(0xFFF8FAFC),
         borderColor: const Color(0xFFE2E8F0),
-        icon: Icons.lock_outline_rounded,
+        icon: Icons.close_rounded,
         iconColor: const Color(0xFF94A3B8),
-        label: 'Escala Fechada',
+        label: 'Não escalado',
         sublabel: 'Você não está nesta escala.',
         labelColor: AppTheme.textSecondary,
       ),
-      ParticipantStatus.pending => const SizedBox.shrink(),
+      OrganizationEventMembershipStatus.pending => const SizedBox.shrink(),
     };
   }
 }
@@ -550,8 +556,54 @@ class _InfoFooter extends StatelessWidget {
 }
 
 class _UrgentBadge extends StatelessWidget {
+  final OrganizationEventMembershipModel event;
+
+  const _UrgentBadge({required this.event});
+
+  String formatRemaining(Duration duration) {
+    if (duration.inDays > 0) {
+      return Intl.plural(
+        duration.inDays,
+        one: '1 dia',
+        other: '${duration.inDays} dias',
+      );
+    }
+
+    if (duration.inHours > 0) {
+      return Intl.plural(
+        duration.inHours,
+        one: '1 hora',
+        other: '${duration.inHours} horas',
+      );
+    }
+
+    if (duration.inMinutes > 0) {
+      return Intl.plural(
+        duration.inMinutes,
+        one: '1 minuto',
+        other: '${duration.inMinutes} minutos',
+      );
+    }
+
+    return 'menos de 1 minuto';
+  }
+
+  String _buildEventText() {
+    if (event.availabilityLockEpochSeconds <= 0) {
+      return 'A escala está fechada';
+    }
+
+    if (event.assignmentMode == OrganizationEventAssignmentMode.automatic)
+      return 'A escala será fechada em ${formatRemaining(event.durationBeforeStartEvent)}';
+    else if (event.assignmentMode == OrganizationEventAssignmentMode.manual)
+      return 'A disponibilidade sera bloqueada em ${formatRemaining(event.durationBeforeStartEvent)}';
+
+    return 'A escala será fechada em ${formatRemaining(event.durationBeforeStartEvent)}';
+  }
+
   @override
   Widget build(BuildContext context) {
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
@@ -559,14 +611,14 @@ class _UrgentBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: const Color(0xFFFEE2E2)),
       ),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.warning_amber_rounded,
               size: 12, color: Color(0xFFDC2626)),
           SizedBox(width: 4),
           Text(
-            'A escala encerra em 2h',
+            _buildEventText(),
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w600,
@@ -581,16 +633,14 @@ class _UrgentBadge extends StatelessWidget {
 }
 
 class _EventStatusBadge extends StatelessWidget {
-  final EventStatus status;
+  final OrganizationEventStatus status;
   const _EventStatusBadge(this.status);
 
   @override
   Widget build(BuildContext context) {
     final (label, bg, fg) = switch (status) {
-      EventStatus.completed =>
-      ('Concluído', const Color(0xFFF8FAFC), const Color(0xFF64748B)),
-      EventStatus.canceled =>
-      ('Cancelado', const Color(0xFFFEF2F2), const Color(0xFFDC2626)),
+      OrganizationEventStatus.completed => ('Concluído', const Color(0xFFF8FAFC), const Color(0xFF64748B)),
+      OrganizationEventStatus.inProgress => ('Em andamento', const Color(0xFFECFDF5), const Color(0xFF059669)),
       _ => ('', Colors.transparent, Colors.transparent),
     };
 

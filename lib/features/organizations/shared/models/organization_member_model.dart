@@ -50,9 +50,9 @@ class OrganizationMemberModel {
       name: json['userName'] as String,
       avatarUrl: json['userAvatarUrl'] as String,
       status: json['status'] as String,
-      joinedAt: DateTime.parse(json['joinedAt'] as String),
+      joinedAt: DateTime.parse(json['joinedAt'] as String).toLocal(),
       leftAt: json['leftAt'] != null
-          ? DateTime.parse(json['leftAt'] as String)
+          ? DateTime.parse(json['leftAt'] as String).toLocal()
           : null,
       permissions: rawPerms
           .map(

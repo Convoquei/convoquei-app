@@ -30,7 +30,7 @@ class OrganizationModel {
         orElse: () => OrganizationStatusEnum.active,
       ),
       totalMembers: json['totalMembers'] as int,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: DateTime.parse(json['createdAt'] as String).toLocal(),
     );
   }
 }

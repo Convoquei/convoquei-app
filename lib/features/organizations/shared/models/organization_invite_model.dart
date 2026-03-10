@@ -21,8 +21,8 @@ class OrganizationInviteModel {
       email: json['email'] as String,
       organization: json['organization'] as String,
       invitedBy: json['invitedBy'] as String,
-      invitedAt: DateTime.parse(json['invitedAt'] as String),
-      expiresAt: DateTime.parse(json['expiresAt'] as String),
+      invitedAt: DateTime.parse(json['invitedAt'] as String).toLocal(),
+      expiresAt: DateTime.parse(json['expiresAt'] as String).toLocal(),
     );
   }
 }
