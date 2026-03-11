@@ -1,10 +1,12 @@
 import 'package:convoquei_app/core/models/paged_response_model.dart';
 import 'package:convoquei_app/core/network/base_repository.dart';
-import 'package:convoquei_app/core/providers/providers.dart';
+import 'package:convoquei_app/core/providers/providers.dart' show apiClientProvider;
 import 'package:convoquei_app/features/organizations/members/models/requests/find_all_organization_members_request.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_invite_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_member_model.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'organization_members_repository.g.dart';
 
 class OrganizationMembersRepository extends BaseRepository {
   OrganizationMembersRepository({required super.apiClient});
@@ -74,8 +76,7 @@ class OrganizationMembersRepository extends BaseRepository {
   }
 }
 
-final organizationMembersRepositoryProvider =
-    Provider<OrganizationMembersRepository>((ref) {
-      final apiClient = ref.watch(apiClientProvider);
-      return OrganizationMembersRepository(apiClient: apiClient);
-    });
+@riverpod
+OrganizationMembersRepository organizationMembersRepository(Ref ref) {
+  return OrganizationMembersRepository(apiClient: ref.watch(apiClientProvider));
+}

@@ -1,12 +1,29 @@
 import 'package:convoquei_app/core/models/paged_response_model.dart';
 import 'package:convoquei_app/core/network/base_repository.dart';
-import 'package:convoquei_app/core/providers/providers.dart';
+import 'package:convoquei_app/core/providers/providers.dart' show apiClientProvider;
 import 'package:convoquei_app/features/organizations/events/models/orgnaization_event_membership_model.dart';
+import 'package:convoquei_app/features/organizations/events/models/requests/create_organization_event_request.dart';
 import 'package:convoquei_app/features/organizations/events/models/requests/find_all_events_organization_membership_request.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'organization_events_repository.g.dart';
 
 class OrganizationEventsRepository extends BaseRepository {
   OrganizationEventsRepository({required super.apiClient});
+
+  Future<OrganizationEventMembershipModel> createEvent({
+    required String organizationId,
+    required CreateOrganizationEventRequest request,
+  }) async {
+    final data = await apiClient.post(
+      '/v1/organizations/$organizationId/events',
+      data: request.toJson(),
+    );
+
+    return OrganizationEventMembershipModel.fromJson(
+      data as Map<String, dynamic>,
+    );
+  }
 
   Future<PagedResponseModel<OrganizationEventMembershipModel>> findAllEvents({
     required String organizationId,
@@ -54,7 +71,7 @@ class OrganizationEventsRepository extends BaseRepository {
   }
 }
 
-final organizationEventsRepositoryProvider = Provider<OrganizationEventsRepository>((ref) {
-  final apiClient = ref.watch(apiClientProvider);
-  return OrganizationEventsRepository(apiClient: apiClient);
-});
+@riverpod
+OrganizationEventsRepository organizationEventsRepository(Ref ref) {
+  return OrganizationEventsRepository(apiClient: ref.watch(apiClientProvider));
+}

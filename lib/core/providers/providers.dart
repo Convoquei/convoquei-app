@@ -1,22 +1,21 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../constants/app_constants.dart';
 import '../network/api_client.dart';
 import '../storage/token_storage.dart';
 
-final tokenStorageProvider = Provider<TokenStorage>(
-  (ref) => TokenStorage(),
-);
+part 'providers.g.dart';
 
-final apiClientProvider = Provider<ApiClient>(
-      (ref) => ApiClient(
-    tokenStorage: ref.watch(tokenStorageProvider),
-    ref: ref,
-    baseUrl: AppConstants.baseUrl,
-  ),
-);
+@Riverpod(keepAlive: true)
+TokenStorage tokenStorage(Ref ref) => TokenStorage();
 
-final navigatorKeyProvider = Provider<GlobalKey<NavigatorState>>(
-      (ref) => GlobalKey<NavigatorState>(),
-);
+@Riverpod(keepAlive: true)
+ApiClient apiClient(Ref ref) => ApiClient(
+      tokenStorage: ref.watch(tokenStorageProvider),
+      ref: ref,
+      baseUrl: AppConstants.baseUrl,
+    );
+
+@Riverpod(keepAlive: true)
+GlobalKey<NavigatorState> navigatorKey(Ref ref) => GlobalKey<NavigatorState>();

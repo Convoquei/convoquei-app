@@ -11,6 +11,8 @@ enum OrganizationEventStatus {
     'CANCELED': canceled,
   };
 
+  String toCode() => _codeMap.entries.firstWhere((e) => e.value == this).key;
+
   static OrganizationEventStatus fromCode(String code) {
     return _codeMap[code.toUpperCase()] ?? OrganizationEventStatus.scheduled;
   }

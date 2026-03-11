@@ -1,119 +1,70 @@
-import 'package:convoquei_app/features/organizations/members/pages/org_members_page.dart'
-    show OrgMembersTab;
-import 'package:convoquei_app/features/organizations/settings/pages/org_settings_page.dart';
+import 'package:convoquei_app/app/router.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_model.dart';
 import 'package:convoquei_app/features/organizations/shared/widgets/organization_shell_app_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-class OrgSettingsShell extends StatefulWidget {
+/// Shell for organization settings screens.
+///
+/// Displays the [OrganizationShellAppBar] with the current route title and
+/// renders the active page via [child] (provided by GoRouter's [ShellRoute]).
+class OrgSettingsShell extends StatelessWidget {
   final OrganizationModel organization;
-  final void Function(OrgMembersTab)? onNavigateToMembersTab;
-  final Widget? initialPage;
-  final String? initialTitle;
+
+  /// The active page provided by GoRouter's [ShellRoute].
+  final Widget child;
 
   const OrgSettingsShell({
     super.key,
     required this.organization,
-    this.onNavigateToMembersTab,
-    this.initialPage,
-    this.initialTitle,
+    required this.child,
   });
 
-  @override
-  State<OrgSettingsShell> createState() => _OrgSettingsShellState();
-}
-
-class _OrgSettingsShellState extends State<OrgSettingsShell> {
-  final GlobalKey<NavigatorState> _navKey = GlobalKey<NavigatorState>();
-  String _currentTitle = 'Configurações';
-  late final _TitleObserver _titleObserver;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.initialTitle != null) _currentTitle = widget.initialTitle!;
-    _titleObserver = _TitleObserver((title) {
-      if (mounted) setState(() => _currentTitle = title);
-    });
-  }
-
-  bool _popInner() {
-    final nav = _navKey.currentState;
-    if (nav != null && nav.canPop()) {
-      nav.pop();
-      return true;
+  String _titleFromLocation(String location) {
+    final id = organization.id;
+    if (location == AppPaths.orgSettingsRoles(id)) return 'Gerenciar Papéis';
+    if (location == AppPaths.orgSettingsFunctions(id)) {
+      return 'Gerenciar Funções';
     }
-    return false;
+    return 'Configurações';
   }
 
   @override
   Widget build(BuildContext context) {
+    final location = GoRouterState.of(context).matchedLocation;
+    final title = _titleFromLocation(location);
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
-        if (!_popInner()) Navigator.of(context).pop();
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.goNamed(
+            AppRoutes.orgHome,
+            pathParameters: {'orgId': organization.id},
+          );
+        }
       },
       child: Scaffold(
         appBar: OrganizationShellAppBar(
-          organization: widget.organization,
-          currentPage: _currentTitle,
+          organization: organization,
+          currentPage: title,
           onBackTap: () {
-            if (!_popInner()) Navigator.of(context).pop();
-          },
-        ),
-        body: Navigator(
-          key: _navKey,
-          observers: [_titleObserver],
-          onGenerateRoute: (settings) {
-            final initialPage = widget.initialPage;
-            if (initialPage != null) {
-              return MaterialPageRoute(
-                settings: RouteSettings(name: widget.initialTitle),
-                builder: (_) => initialPage,
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.goNamed(
+                AppRoutes.orgHome,
+                pathParameters: {'orgId': organization.id},
               );
             }
-            return MaterialPageRoute(
-              settings: settings,
-              builder: (_) => OrgSettingsPage(
-                organization: widget.organization,
-                onNavigateToMembersTab: widget.onNavigateToMembersTab,
-              ),
-            );
           },
         ),
+        body: child,
       ),
     );
   }
 }
 
-class _TitleObserver extends NavigatorObserver {
-  final void Function(String) onTitleChanged;
-
-  _TitleObserver(this.onTitleChanged);
-
-  String _titleOf(Route<dynamic> route) {
-    final name = route.settings.name;
-    if (name == null || name == '/') return 'Configurações';
-    return name;
-  }
-
-  void _notify(String title) {
-    WidgetsBinding.instance.addPostFrameCallback((_) => onTitleChanged(title));
-  }
-
-  @override
-  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    _notify(_titleOf(route));
-  }
-
-  @override
-  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    if (previousRoute != null) _notify(_titleOf(previousRoute));
-  }
-
-  @override
-  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
-    if (newRoute != null) _notify(_titleOf(newRoute));
-  }
-}

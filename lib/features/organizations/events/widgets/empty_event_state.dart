@@ -1,5 +1,5 @@
 import 'package:convoquei_app/core/theme/app_theme.dart';
-import 'package:convoquei_app/features/organizations/events/pages/org_events_page.dart' show OrgEventsTab;
+import 'package:convoquei_app/features/organizations/events/models/enums/org_events_tab.dart';
 import 'package:convoquei_app/features/organizations/shared/models/enums/organization_permission.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_my_member_profile_model.dart';
 import 'package:flutter/gestures.dart';
@@ -7,31 +7,21 @@ import 'package:flutter/material.dart';
 
 class EmptyEventsState extends StatelessWidget {
   final OrgEventsTab tab;
-  final String dateLabel;
   final OrganizationMyMemberProfile membership;
   final VoidCallback? onCreateEvent;
 
   const EmptyEventsState({
     super.key,
     required this.tab,
-    required this.dateLabel,
     required this.membership,
     this.onCreateEvent,
   });
 
-  String get _tabLabel => switch (tab) {
-    OrgEventsTab.all         => null,
-    OrgEventsTab.mySchedules => 'que você está escalado',
-    OrgEventsTab.pending     => 'que estão pendentes de resposta',
-  } ??
-      '';
-
-  String get _message {
-    if (tab == OrgEventsTab.all) {
-      return 'Nenhum evento encontrado para $dateLabel';
-    }
-    return 'Nenhum evento encontrado para $dateLabel\n$_tabLabel';
-  }
+  String get _message => switch (tab) {
+    OrgEventsTab.all         => 'Nenhum evento próximo encontrado',
+    OrgEventsTab.pending     => 'Nenhum evento aguardando sua resposta',
+    OrgEventsTab.mySchedules => 'Você não está escalado em nenhum evento',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -59,14 +49,8 @@ class EmptyEventsState extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              'Nenhum evento encontrado',
-              style: textTheme.titleMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
               _message,
-              style: textTheme.bodyMedium,
+              style: textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),

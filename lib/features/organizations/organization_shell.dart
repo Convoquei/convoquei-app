@@ -1,173 +1,191 @@
-﻿import 'package:convoquei_app/core/constants/app_breakpoints.dart';
+﻿import 'package:convoquei_app/app/router.dart';
+import 'package:convoquei_app/core/constants/app_breakpoints.dart';
 import 'package:convoquei_app/core/theme/app_theme.dart';
-import 'package:convoquei_app/features/organizations/shared/models/organization_my_member_profile_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_model.dart';
-import 'package:convoquei_app/features/organizations/events/pages/org_events_page.dart';
-import 'package:convoquei_app/features/organizations/home/pages/org_home_page.dart';
-import 'package:convoquei_app/features/organizations/members/pages/org_members_page.dart';
-import 'package:convoquei_app/features/organizations/members/pages/org_members_page.dart' show OrgMembersTab;
 import 'package:convoquei_app/features/organizations/organization_tab.dart';
-import 'package:convoquei_app/features/organizations/scales/pages/org_scales_page.dart';
-import 'package:convoquei_app/features/organizations/settings/org_settings_shell.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/organization_providers.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/selected_organization_provider.dart';
 import 'package:convoquei_app/features/organizations/shared/widgets/organization_shell_app_bar.dart';
 import 'package:convoquei_app/features/organizations/shared/widgets/organization_side_rail.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class OrganizationShell extends ConsumerStatefulWidget {
   final OrganizationModel organization;
 
-  const OrganizationShell({super.key, required this.organization});
+  /// The active tab page provided by GoRouter's [ShellRoute].
+  final Widget child;
+
+  /// Key of the nested [Navigator] created by GoRouter's [ShellRoute].
+  /// Used to call [NavigatorState.maybePop] so that [PopScope] widgets
+  /// inside child pages (e.g. [WizardPage]) are properly respected.
+  final GlobalKey<NavigatorState> shellNavigatorKey;
+
+  const OrganizationShell({
+    super.key,
+    required this.shellNavigatorKey,
+    required this.organization,
+    required this.child,
+  });
 
   @override
   ConsumerState<OrganizationShell> createState() => _OrganizationShellState();
 }
 
 class _OrganizationShellState extends ConsumerState<OrganizationShell> {
-  int _currentIndex = 0;
-  OrgMembersTab? _membersInitialTab;
+  static const _tabRouteNames = [
+    AppRoutes.orgHome,
+    AppRoutes.orgEvents,
+    AppRoutes.orgScales,
+    AppRoutes.orgTeam,
+  ];
 
-  final List<GlobalKey<NavigatorState>> _navigatorKeys = List.generate(
-    kOrgTabs.length,
-    (_) => GlobalKey<NavigatorState>(),
-  );
+  String _orgId() => widget.organization.id;
 
-  Widget _pageForIndex(int index) => switch (index) {
-    0 => const OrgHomePage(),
-    1 => OrgEventsPage(organizationId: widget.organization.id),
-    2 => const OrgScalesPage(),
-    3 => OrgMembersPage(
-        initialTab: _membersInitialTab ?? OrgMembersTab.membros,
-        onOpenSettingsPage: _openSettingsPage,
-      ),
-    _ => const SizedBox.shrink(),
-  };
+  // ── Location helpers ────────────────────────────────────────────────────
 
-  bool _handlePopInvoked() {
-    final nav = _navigatorKeys[_currentIndex].currentState;
-    if (nav != null && nav.canPop()) {
-      nav.pop();
-      return true;
-    }
-    if (_currentIndex != 0) {
-      setState(() => _currentIndex = 0);
-      return true;
-    }
-    return false;
+  bool _isSettingsLocation(String path) =>
+      path.startsWith(AppPaths.orgSettings(_orgId()));
+
+  bool _showTabBar(String path) =>
+      !_isSettingsLocation(path);
+
+  int _tabIndexForPath(String path) {
+    final id = _orgId();
+    if (path.startsWith(AppPaths.orgEvents(id))) return 1;
+    if (path.startsWith(AppPaths.orgScales(id))) return 2;
+    if (path.startsWith(AppPaths.orgTeam(id))) return 3;
+    return 0;
   }
 
-  void _navigateToMembersTab(OrgMembersTab tab) {
-    Navigator.of(context).pop(); // fecha settings
-    setState(() {
-      _membersInitialTab = tab;
-      _currentIndex = 3;
-    });
+  String _titleForPath(String path) {
+    final id = _orgId();
+    if (path.startsWith(AppPaths.orgSettingsRoles(id))) return 'Gerenciar Papéis';
+    if (path.startsWith(AppPaths.orgSettingsFunctions(id))) return 'Gerenciar Funções';
+    if (path.startsWith(AppPaths.orgSettings(id))) return 'Configurações';
+    if (path.startsWith(AppPaths.orgCreateEvent(id))) return 'Novo Evento';
+    if (path.startsWith(AppPaths.orgEvents(id))) return kOrgTabs[1].label;
+    if (path.startsWith(AppPaths.orgScales(id))) return kOrgTabs[2].label;
+    if (path.startsWith(AppPaths.orgTeam(id))) return kOrgTabs[3].label;
+    return kOrgTabs[0].label;
+  }
+
+  // ── Navigation actions ──────────────────────────────────────────────────
+
+  void _onTabChanged(int index) {
+    final path = GoRouterState.of(context).uri.path;
+    // When on a sub-page (tab bar hidden, e.g. Create Event), push the tab so
+    // that pressing back returns to the sub-page instead of exiting the org.
+    if (!_showTabBar(path)) {
+      context.pushNamed(
+        _tabRouteNames[index],
+        pathParameters: {'orgId': _orgId()},
+      );
+    } else {
+      context.goNamed(
+        _tabRouteNames[index],
+        pathParameters: {'orgId': _orgId()},
+      );
+    }
   }
 
   void _openSettings() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => OrgSettingsShell(
-          organization: widget.organization,
-          onNavigateToMembersTab: _navigateToMembersTab,
-        ),
-      ),
-    );
-  }
-
-  void _openSettingsPage({required String title, required Widget page}) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => OrgSettingsShell(
-          organization: widget.organization,
-          onNavigateToMembersTab: _navigateToMembersTab,
-          initialPage: page,
-          initialTitle: title,
-        ),
-      ),
+    // Push so the current page (any tab or sub-page) stays in the stack and
+    // the user returns to it when pressing back from Settings.
+    context.pushNamed(
+      AppRoutes.orgSettings,
+      pathParameters: {'orgId': _orgId()},
     );
   }
 
   void _exitOrganization() {
-    ref.invalidate(currentUserMembershipOrganizationProvider(widget.organization.id));
+    ref.invalidate(currentUserMembershipOrganizationProvider(_orgId()));
     ref.read(selectedOrganizationProvider.notifier).clear();
-    Navigator.of(context).pop();
+    context.goNamed(AppRoutes.home);
   }
 
-  Widget _buildIndexedContent() {
-    return Navigator(
-      key: _navigatorKeys[_currentIndex],
-      onGenerateRoute: (_) =>
-          MaterialPageRoute(builder: (_) => _pageForIndex(_currentIndex)),
-    );
+  void _handleBack(String path) {
+    // Delegate to the shell navigator first so that PopScope widgets inside
+    // child pages (e.g. WizardPage) can intercept and handle the back action
+    // (stepping through wizard steps) before we do any shell-level navigation.
+    final shellNav = widget.shellNavigatorKey.currentState;
+    if (shellNav != null && shellNav.canPop()) {
+      shellNav.maybePop();
+      return;
+    }
+
+    // Shell navigator has nothing to pop — handle at the shell level.
+    if (_isSettingsLocation(path)) {
+      // Settings root – go back to the home tab
+      context.goNamed(AppRoutes.orgHome, pathParameters: {'orgId': _orgId()});
+    } else {
+      _exitOrganization();
+    }
   }
 
-  Widget _buildWideLayout({required OrganizationMyMemberProfile? member}) {
+  // ── Layouts ─────────────────────────────────────────────────────────────
+
+  Widget _buildWideLayout() {
     return Scaffold(
       body: Row(
         children: [
           OrganizationSideRail(
             organization: widget.organization,
-            currentIndex: _currentIndex,
-            onTabChanged: (i) => setState(() {
-              _membersInitialTab = null;
-              _currentIndex = i;
-            }),
+            currentIndex: _tabIndexForPath(
+              GoRouterState.of(context).uri.path,
+            ),
+            onTabChanged: _onTabChanged,
             onSettingsTap: _openSettings,
             onExitTap: _exitOrganization,
           ),
-          Expanded(child: _buildIndexedContent()),
+          Expanded(child: widget.child),
         ],
       ),
     );
   }
 
-  Widget _buildNarrowLayout({required OrganizationMyMemberProfile? member}) {
+  Widget _buildNarrowLayout(String path) {
+    final showTabBar = _showTabBar(path);
+    final tabIndex = _tabIndexForPath(path);
+
     return Scaffold(
       appBar: OrganizationShellAppBar(
         organization: widget.organization,
-        currentPage: kOrgTabs[_currentIndex].label,
-        onBackTap: _exitOrganization,
-        onSettingsTap: _openSettings,
+        currentPage: _titleForPath(path),
+        onBackTap: () => _handleBack(path),
+        onSettingsTap: showTabBar ? _openSettings : null,
       ),
-      body: _buildIndexedContent(),
-      bottomNavigationBar: _OrgNavigationBar(
-        currentIndex: _currentIndex,
-        onTabChanged: (i) => setState(() {
-          _membersInitialTab = null;
-          _currentIndex = i;
-        }),
-      ),
+      body: widget.child,
+      bottomNavigationBar: showTabBar
+          ? _OrgNavigationBar(
+              currentIndex: tabIndex,
+              onTabChanged: _onTabChanged,
+            )
+          : null,
     );
   }
 
+  // ── Build ────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
-    // Watch the current member. Errors (e.g. 403 – kicked) trigger an exit.
     ref.listen(
-      currentUserMembershipOrganizationProvider(widget.organization.id),
-      (_, next) => next.whenOrNull(
-        error: (_, __) => _exitOrganization(),
-      ),
+      currentUserMembershipOrganizationProvider(_orgId()),
+      (_, next) => next.whenOrNull(error: (_, __) => _exitOrganization()),
     );
 
-    final memberAsync =
-        ref.watch(currentUserMembershipOrganizationProvider(widget.organization.id));
-
-    // Resolve the member (null while loading or on error).
-    final OrganizationMyMemberProfile? member = memberAsync.asData?.value;
+    final path = GoRouterState.of(context).uri.path;
 
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
-        if (!_handlePopInvoked()) _exitOrganization();
+        _handleBack(path);
       },
       child: AppBreakpoints.isWide(context)
-          ? _buildWideLayout(member: member)
-          : _buildNarrowLayout(member: member),
+          ? _buildWideLayout()
+          : _buildNarrowLayout(path),
     );
   }
 }

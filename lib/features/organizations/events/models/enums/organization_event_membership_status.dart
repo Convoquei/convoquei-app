@@ -3,7 +3,8 @@ enum OrganizationEventMembershipStatus {
   awaitingAssignment,
   awaitingDraw,
   assigned,
-  notAssigned;
+  notAssigned,
+  expired;
 
   static const Map<String, OrganizationEventMembershipStatus> _codeMap = {
     'PENDING': pending,
@@ -11,6 +12,7 @@ enum OrganizationEventMembershipStatus {
     'AWAITING_DRAW': awaitingDraw,
     'ASSIGNED': assigned,
     'NOT_ASSIGNED': notAssigned,
+    'EXPIRED': expired,
   };
 
   String toCode() => _codeMap.entries.firstWhere((entry) => entry.value == this).key;

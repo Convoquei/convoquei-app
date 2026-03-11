@@ -1,16 +1,23 @@
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_status.dart';
+import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_status.dart';
 
 class EventsFilter {
   final String? name;
   final DateTime? startAfter;
   final DateTime? startBefore;
-  final List<OrganizationEventMembershipStatus>? status;
+
+  /// Status de escala do participante.
+  final List<OrganizationEventMembershipStatus>? membershipStatus;
+
+  /// Status do evento (scheduled, inProgress, completed, canceled).
+  final List<OrganizationEventStatus>? eventStatus;
 
   const EventsFilter({
     this.name,
     this.startAfter,
     this.startBefore,
-    this.status,
+    this.membershipStatus,
+    this.eventStatus,
   });
 
   @override
@@ -19,11 +26,17 @@ class EventsFilter {
       other.name == name &&
       other.startAfter == startAfter &&
       other.startBefore == startBefore &&
-      _listEquals(other.status, status);
+      _listEquals(other.membershipStatus, membershipStatus) &&
+      _listEquals(other.eventStatus, eventStatus);
 
   @override
-  int get hashCode =>
-      Object.hash(name, startAfter, startBefore, Object.hashAll(status ?? []));
+  int get hashCode => Object.hash(
+        name,
+        startAfter,
+        startBefore,
+        Object.hashAll(membershipStatus ?? []),
+        Object.hashAll(eventStatus ?? []),
+      );
 
   static bool _listEquals(List? a, List? b) {
     if (a == null && b == null) return true;

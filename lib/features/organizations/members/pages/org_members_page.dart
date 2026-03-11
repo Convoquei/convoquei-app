@@ -1,3 +1,4 @@
+import 'package:convoquei_app/app/router.dart';
 import 'package:convoquei_app/core/network/exceptions/api_exception.dart';
 import 'package:convoquei_app/core/services/toast_feedback_service.dart';
 import 'package:convoquei_app/core/services/user_feedback_service.dart';
@@ -14,8 +15,6 @@ import 'package:convoquei_app/features/organizations/members/widgets/modals/mana
 import 'package:convoquei_app/features/organizations/members/widgets/modals/manage_member_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/modals/manage_roles_member_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/member_list.dart';
-import 'package:convoquei_app/features/organizations/settings/pages/manage_functions_page.dart';
-import 'package:convoquei_app/features/organizations/settings/pages/manage_roles_page.dart';
 import 'package:convoquei_app/features/organizations/shared/models/enums/organization_permission.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_member_model.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/organization_providers.dart';
@@ -23,18 +22,17 @@ import 'package:convoquei_app/features/organizations/home/widgets/team_toggle_wi
 import 'package:convoquei_app/features/organizations/shared/providers/selected_organization_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:async';
 
 enum OrgMembersTab { membros, grupos }
 
 class OrgMembersPage extends ConsumerStatefulWidget {
   final OrgMembersTab initialTab;
-  final void Function({required String title, required Widget page})? onOpenSettingsPage;
 
   const OrgMembersPage({
     super.key,
     this.initialTab = OrgMembersTab.membros,
-    this.onOpenSettingsPage,
   });
 
   @override
@@ -127,9 +125,9 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
               onNavigateToSettings: () {
                 final org = ref.read(selectedOrganizationProvider);
                 if (org == null || !mounted) return;
-                widget.onOpenSettingsPage?.call(
-                  title: 'Gerenciar Funções',
-                  page: ManageFunctionsPage(organization: org),
+                context.goNamed(
+                  AppRoutes.orgSettingsFunctions,
+                  pathParameters: {'orgId': org.id},
                 );
               },
             );
@@ -149,9 +147,9 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
               onNavigateToSettings: () {
                 final org = ref.read(selectedOrganizationProvider);
                 if (org == null || !mounted) return;
-                widget.onOpenSettingsPage?.call(
-                  title: 'Gerenciar Papéis',
-                  page: ManageRolesPage(organization: org),
+                context.goNamed(
+                  AppRoutes.orgSettingsRoles,
+                  pathParameters: {'orgId': org.id},
                 );
               },
             );

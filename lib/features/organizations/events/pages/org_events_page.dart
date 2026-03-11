@@ -1,32 +1,38 @@
+﻿import 'dart:async';
+
+import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/core/utils/date_locale_pt.dart';
-import 'package:convoquei_app/core/widgets/action_button.dart';
-import 'package:convoquei_app/core/widgets/custom_calendar.dart';
-import 'package:convoquei_app/core/widgets/timeline_group.dart';
+import 'package:convoquei_app/core/widgets/app_search_input.dart';
+import 'package:convoquei_app/core/widgets/date_range_filter_section.dart';
+import 'package:convoquei_app/core/widgets/error_retry_state.dart';
+import 'package:convoquei_app/core/widgets/filter_button.dart';
+import 'package:convoquei_app/features/organizations/events/models/enums/org_events_tab.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_status.dart';
+import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_status.dart';
 import 'package:convoquei_app/features/organizations/events/models/events_filter_model.dart';
 import 'package:convoquei_app/features/organizations/events/models/orgnaization_event_membership_model.dart';
 import 'package:convoquei_app/features/organizations/events/providers/answer_availability_provider.dart';
 import 'package:convoquei_app/features/organizations/events/providers/find_all_events_membership_provider.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/empty_event_state.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/event_card.dart';
-import 'package:convoquei_app/features/organizations/home/widgets/team_toggle_widget.dart';
-import 'package:convoquei_app/features/organizations/shared/models/organization_my_member_profile_model.dart';
+import 'package:convoquei_app/features/organizations/events/widgets/event_status_filter_section.dart';
+import 'package:convoquei_app/features/organizations/events/widgets/events_tabs.dart';
+import 'package:convoquei_app/features/organizations/events/widgets/membership_status_filter_section.dart';
+import 'package:convoquei_app/features/organizations/events/widgets/month_divider.dart';
+import 'package:convoquei_app/features/organizations/shared/models/enums/organization_permission.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/organization_providers.dart';
+import 'package:convoquei_app/app/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-
-enum OrgEventsTab { all, mySchedules, pending }
+import 'package:go_router/go_router.dart';
 
 class OrgEventsPage extends ConsumerStatefulWidget {
   const OrgEventsPage({
     super.key,
     required this.organizationId,
-    this.onCreateEvent,
   });
 
   final String organizationId;
-  final VoidCallback? onCreateEvent;
 
   @override
   ConsumerState<OrgEventsPage> createState() => _OrgEventsPageState();
@@ -34,67 +40,65 @@ class OrgEventsPage extends ConsumerStatefulWidget {
 
 class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
   OrgEventsTab _selectedTab = OrgEventsTab.all;
-  EventsFilter _filter      = const EventsFilter();
 
-  // O que o pai sabe sobre o calendário — apenas o suficiente para labels e filtro
-  DateTime? _selectedDay;
-  DateTime? _rangeStart;
-  DateTime? _rangeEnd;
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
 
-  static const _weekdayNames = DateLocalePt.weekdayNames;
-  static const _monthNames   = DateLocalePt.monthNames;
+  List<OrganizationEventMembershipStatus>? _customStatus;
+  List<OrganizationEventStatus>? _customEventStatus;
+  DateTime? _customStartDate;
+  DateTime? _customEndDate;
 
-  String get _dateLabel {
-    if (_selectedDay != null) {
-      final d       = _selectedDay!;
-      final weekday = _weekdayNames[d.weekday - 1].toLowerCase();
-      return '$weekday, ${d.day} de ${_monthNames[d.month - 1]} de ${d.year}';
-    }
-    return 'esse período';
+  List<OrganizationEventMembershipStatus>? _pendingStatus;
+  List<OrganizationEventStatus>? _pendingEventStatus;
+  DateTime? _pendingStartDate;
+  DateTime? _pendingEndDate;
+
+  Timer? _debounce;
+
+  EventsFilter _filter = EventsFilter(startAfter: startOfDay(DateTime.now()));
+
+  bool get _hasActiveFilters {
+    const defaultEventStatus = {
+      OrganizationEventStatus.scheduled,
+      OrganizationEventStatus.inProgress,
+    };
+    final current = _customEventStatus != null
+        ? {..._customEventStatus!}
+        : defaultEventStatus;
+    final eventFilterActive = current.length != defaultEventStatus.length ||
+        !current.containsAll(defaultEventStatus);
+    return (_customStatus != null && _customStatus!.isNotEmpty) ||
+        eventFilterActive ||
+        _customStartDate != null ||
+        _customEndDate != null;
   }
 
-  // ================================================================
-  // _buildFilter — fonte única de verdade para o filtro de datas
-  //
-  // Regra:
-  //   • Dia selecionado  → filtra apenas aquele dia
-  //   • Sem seleção      → filtra o range visível no calendário
-  // ================================================================
-  EventsFilter _buildFilter({
-    DateTime? selectedDay,
-    DateTime? rangeStart,
-    DateTime? rangeEnd,
-    OrgEventsTab? tab,
-  }) {
-    final resolvedTab = tab ?? _selectedTab;
+  List<OrganizationEventMembershipStatus>? _statusForTab(OrgEventsTab tab) =>
+      switch (tab) {
+        OrgEventsTab.all         => null,
+        OrgEventsTab.pending     => [
+          OrganizationEventMembershipStatus.pending,
+          OrganizationEventMembershipStatus.awaitingAssignment,
+          OrganizationEventMembershipStatus.awaitingDraw,
+        ],
+        OrgEventsTab.mySchedules => [OrganizationEventMembershipStatus.assigned],
+      };
 
-    final List<OrganizationEventMembershipStatus>? status = switch (resolvedTab) {
-      OrgEventsTab.all         => null,
-      OrgEventsTab.mySchedules => [OrganizationEventMembershipStatus.assigned],
-      OrgEventsTab.pending     => [
-        OrganizationEventMembershipStatus.pending,
-        OrganizationEventMembershipStatus.awaitingAssignment,
-        OrganizationEventMembershipStatus.awaitingDraw,
-      ],
-    };
+  EventsFilter _buildFilter({OrgEventsTab? tab, String? name}) {
+    final resolvedMembershipStatus =
+        _customStatus ?? _statusForTab(tab ?? _selectedTab);
+    final resolvedEventStatus = _customEventStatus ??
+        [OrganizationEventStatus.scheduled, OrganizationEventStatus.inProgress];
+    final resolvedName = (name ?? _searchQuery).trim();
 
-    if (selectedDay != null) {
-      return EventsFilter(
-        startAfter:  startOfDay(selectedDay),
-        startBefore: endOfDay(selectedDay),
-        status:      status,
-      );
-    }
-
-    if (rangeStart != null && rangeEnd != null) {
-      return EventsFilter(
-        startAfter:  startOfDay(rangeStart),
-        startBefore: endOfDay(rangeEnd),
-        status:      status,
-      );
-    }
-
-    return EventsFilter(status: status);
+    return EventsFilter(
+      startAfter:      _customStartDate ?? startOfDay(DateTime.now()),
+      startBefore:     _customEndDate,
+      name:            resolvedName.isEmpty ? null : resolvedName,
+      membershipStatus: resolvedMembershipStatus,
+      eventStatus:     resolvedEventStatus,
+    );
   }
 
   void _applyFilter(EventsFilter newFilter) {
@@ -104,45 +108,53 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
         .reset(widget.organizationId, newFilter);
   }
 
-  // ── Callbacks do calendário ──────────────────────────────────────
-
-  void _handleDaySelected(DateTime selected, DateTime? deselected) {
-    final isDeselecting = selected == deselected;
-    final nextSelected  = isDeselecting ? null : selected;
-
-    setState(() => _selectedDay = nextSelected);
-
-    _applyFilter(_buildFilter(
-      selectedDay: nextSelected,
-      rangeStart:  _rangeStart,
-      rangeEnd:    _rangeEnd,
-    ));
-  }
-
-  /// Chamado pelo calendário sempre que o range visível muda.
-  /// Se há dia selecionado, apenas guarda o range para uso futuro.
-  void _handleRangeChanged(DateTime start, DateTime end) {
-    setState(() {
-      _rangeStart  = start;
-      _rangeEnd    = end;
-      _selectedDay = null; // range novo = sem seleção
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _applyFilter(_buildFilter());
     });
-
-    _applyFilter(_buildFilter(rangeStart: start, rangeEnd: end));
   }
 
-  // ── Handler das tabs ─────────────────────────────────────────────
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
   void _handleTabChange(OrgEventsTab newTab) {
     if (newTab == _selectedTab) return;
+    setState(() {
+      _selectedTab  = newTab;
+      _customStatus = null;
+    });
+    _applyFilter(_buildFilter(tab: newTab));
+  }
 
-    setState(() => _selectedTab = newTab);
+  void _handleSearchChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() => _searchQuery = value);
+      _applyFilter(_buildFilter(name: value));
+    });
+  }
 
-    _applyFilter(_buildFilter(
-      selectedDay: _selectedDay,
-      rangeStart:  _rangeStart,
-      rangeEnd:    _rangeEnd,
-      tab:         newTab,
-    ));
+  void _handleClearFilters() {
+    setState(() {
+      _customStatus      = null;
+      _customEventStatus = null;
+      _customStartDate   = null;
+      _customEndDate     = null;
+    });
+    _applyFilter(_buildFilter());
+  }
+
+  void _handleCreateEvent() {
+    context.pushNamed(
+      AppRoutes.orgCreateEvent,
+      pathParameters: {'orgId': widget.organizationId},
+    );
   }
 
   void _handleRetry() {
@@ -151,40 +163,40 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
         .reset(widget.organizationId, _filter);
   }
 
-  // ── Disponibilidade ──────────────────────────────────────────────
   Future<void> _handleAvailability(String eventId, bool available) async {
     final updated = await ref
         .read(answerAvailabilityProvider.notifier)
-        .answer(organizationId: widget.organizationId, eventId: eventId, available: available);
+        .answer(
+          organizationId: widget.organizationId,
+          eventId:        eventId,
+          available:      available,
+        );
 
     if (updated != null) {
       ref.read(eventMembershipProvider.notifier).updateItem(updated);
     }
   }
 
-
-  // ── Agrupamento ──────────────────────────────────────────────────
-  Map<DateTime, List<OrganizationEventMembershipModel>> _groupByDate(
-      List<OrganizationEventMembershipModel> items,
-      ) {
+  Map<DateTime, List<OrganizationEventMembershipModel>> _groupByMonth(
+    List<OrganizationEventMembershipModel> items,
+  ) {
     final map = <DateTime, List<OrganizationEventMembershipModel>>{};
     for (final item in items) {
-      final date = DateTime(
-        item.startTime.year,
-        item.startTime.month,
-        item.startTime.day,
-      );
-      map.putIfAbsent(date, () => []).add(item);
+      final key = DateTime(item.startTime.year, item.startTime.month);
+      map.putIfAbsent(key, () => []).add(item);
     }
     return map;
   }
 
-  // ── Build ────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final eventsState = ref.watch(eventMembershipProvider);
-    OrganizationMyMemberProfile currentUser = ref.watch(currentUserMembershipOrganizationProvider(widget.organizationId)).asData!.value;
-    final grouped = _groupByDate(eventsState.items);
+    final currentUser = ref
+        .watch(currentUserMembershipOrganizationProvider(widget.organizationId))
+        .asData!
+        .value;
+    final canManageEvents = currentUser.hasPermission(OrganizationPermissionEnum.manageEvents);
+    final grouped = _groupByMonth(eventsState.items);
 
     final hasListContent = !eventsState.isInitialLoading &&
         eventsState.error == null &&
@@ -196,43 +208,103 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
             ? const AlwaysScrollableScrollPhysics()
             : const NeverScrollableScrollPhysics(),
         slivers: [
-          // ── Calendário + Tabs ──────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CustomCalendar(
-                    events: {
-                      ...grouped.map(
-                            (date, events) => MapEntry(
-                          DateTime(date.year, date.month, date.day),
-                          events.map((e) => e.id).toList(),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: AppSearchInput(
+                          controller: _searchController,
+                          hint: 'Buscar por nome ou local...',
+                          onChanged: _handleSearchChanged,
                         ),
                       ),
-                    },
-                    onDaySelected:  _handleDaySelected,
-                    onRangeChanged: _handleRangeChanged,
+                      const SizedBox(width: 10),
+                      FilterButton(
+                        isActive: _hasActiveFilters,
+                        onClear:  _handleClearFilters,
+                        onApply: () {
+                          setState(() {
+                            _customStatus      = _pendingStatus;
+                            _customEventStatus = _pendingEventStatus;
+                            _customStartDate   = _pendingStartDate;
+                            _customEndDate     = _pendingEndDate;
+                          });
+                          _applyFilter(_buildFilter());
+                        },
+                        childrenBuilder: () {
+                          _pendingStatus      = _customStatus ?? _statusForTab(_selectedTab);
+                          _pendingEventStatus = _customEventStatus;
+                          _pendingStartDate   = _customStartDate;
+                          _pendingEndDate     = _customEndDate;
+                          return [
+                            EventStatusFilterSection(
+                              selected: _pendingEventStatus,
+                              onChanged: (statuses) {
+                                setState(() => _pendingEventStatus = statuses);
+                              },
+                            ),
+                            MembershipStatusFilterSection(
+                              selected: _pendingStatus,
+                              onChanged: (statuses) {
+                                setState(() => _pendingStatus = statuses);
+                              },
+                            ),
+                            DateRangeFilterSection(
+                              startDate: _pendingStartDate,
+                              endDate:   _pendingEndDate,
+                              onChanged: (start, end) {
+                                setState(() {
+                                  _pendingStartDate = start;
+                                  _pendingEndDate   = end;
+                                });
+                              },
+                            ),
+                          ];
+                        },
+                      ),                      if (canManageEvents) ...[  
+                        const SizedBox(width: 10),
+                        GestureDetector(
+                          onTap: _handleCreateEvent,
+                          child: Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryColor,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.04),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.add_rounded,
+                              size: 22,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],                    ],
                   ),
-                  const SizedBox(height: 20),
-                  ToggleTabs(
+                  const SizedBox(height: 14),
+                  EventsTabs(
                     selected: _selectedTab,
                     onChanged: _handleTabChange,
-                    values: OrgEventsTab.values,
-                    labelBuilder: (tab) => switch (tab) {
-                      OrgEventsTab.all         => 'Todos eventos',
-                      OrgEventsTab.mySchedules => 'Minhas Escalas',
-                      OrgEventsTab.pending     => 'Pendentes',
-                    },
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
           ),
 
-          // ── Conteúdo principal ─────────────────────────────────
           if (eventsState.isInitialLoading)
             const SliverFillRemaining(
               hasScrollBody: false,
@@ -241,88 +313,55 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
           else if (eventsState.error != null)
             SliverFillRemaining(
               hasScrollBody: false,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.cloud_off_rounded, size: 48, color: Colors.grey),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Não foi possível carregar os eventos',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Verifique sua conexão e tente novamente.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 24),
-                    ActionButton(
-                      label: 'Tentar novamente',
-                      icon: Icons.refresh_rounded,
-                      outlined: true,
-                      fullWidth: false,
-                      onPressed: _handleRetry,
-                    ),
-                  ],
-                ),
+              child: ErrorRetryState(
+                onRetry: _handleRetry,
+                message: 'Não foi possível carregar os eventos',
               ),
             )
           else if (eventsState.isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: EmptyEventsState(
-                  tab: _selectedTab,
-                  dateLabel: _dateLabel,
-                  membership: currentUser,
-                ),
-              )
-            else
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                      final entry  = grouped.entries.elementAt(index);
-                      final date   = entry.key;
-                      final events = entry.value;
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: EmptyEventsState(
+                tab:        _selectedTab,
+                membership: currentUser,
+                onCreateEvent: canManageEvents ? _handleCreateEvent : null,
+              ),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final entry  = grouped.entries.elementAt(index);
+                    final month  = entry.key;
+                    final events = entry.value;
 
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          TimelineGroup(
-                            title: DateFormat(
-                              "d 'de' MMMM 'de' yyyy",
-                              'pt_BR',
-                            ).format(date),
-                            children: [],
-                          ),
-                          const SizedBox(height: 8),
-                          ...events.map(
-                                (membership) => Column(
-                              children: [
-                                EventCard(
-                                  key: ValueKey(membership.id),
-                                  event: membership,
-                                  onAvailable: () => _handleAvailability(membership.id, true),
-                                  onUnavailable: () => _handleAvailability(membership.id, false),
-                                  onLeaveSchedule: () => _handleAvailability(membership.id, false),
-                                ),
-                                const SizedBox(height: 12),
-                              ],
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                          MonthDivider(month: month),
+                        const SizedBox(height: 12),
+                        ...events.map(
+                          (membership) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: EventCard(
+                              key: ValueKey(membership.id),
+                              event: membership,
+                              onAvailable:    () => _handleAvailability(membership.id, true),
+                              onUnavailable:  () => _handleAvailability(membership.id, false),
+                              onLeaveSchedule:() => _handleAvailability(membership.id, false),
                             ),
                           ),
-                          const SizedBox(height: 20),
-                        ],
-                      );
-                    },
-                    childCount: grouped.length,
-                  ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                    );
+                  },
+                  childCount: grouped.length,
                 ),
               ),
+            ),
         ],
       ),
     );

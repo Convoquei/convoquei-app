@@ -1,9 +1,6 @@
+import 'package:convoquei_app/app/router.dart';
 import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/features/home/widgets/action_tile.dart';
-import 'package:convoquei_app/features/organizations/members/pages/org_members_page.dart'
-    show OrgMembersTab;
-import 'package:convoquei_app/features/organizations/settings/pages/manage_functions_page.dart';
-import 'package:convoquei_app/features/organizations/settings/pages/manage_roles_page.dart';
 import 'package:convoquei_app/features/organizations/settings/widgets/organization_header_card.dart';
 import 'package:convoquei_app/features/organizations/settings/widgets/section_buttons_organization_settings.dart';
 import 'package:convoquei_app/features/organizations/settings/widgets/subscription_plan_card.dart';
@@ -13,15 +10,14 @@ import 'package:convoquei_app/features/organizations/shared/models/organization_
 import 'package:convoquei_app/features/organizations/shared/providers/organization_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class OrgSettingsPage extends ConsumerWidget {
   final OrganizationModel organization;
-  final void Function(OrgMembersTab)? onNavigateToMembersTab;
 
   const OrgSettingsPage({
     super.key,
     required this.organization,
-    this.onNavigateToMembersTab,
   });
 
   @override
@@ -47,6 +43,8 @@ class OrgSettingsPage extends ConsumerWidget {
       OrganizationPermissionEnum.manageFunctions,
     );
 
+    final orgId = organization.id;
+
     return SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -71,13 +69,9 @@ class OrgSettingsPage extends ConsumerWidget {
                     iconColor: const Color(0xFF9333EA),
                     onTap: () {
                       if (canPermissionManageRoles) {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            settings: const RouteSettings(name: 'Gerenciar Papéis'),
-                            builder: (context) => ManageRolesPage(
-                              organization: organization,
-                            ),
-                          ),
+                        context.pushNamed(
+                          AppRoutes.orgSettingsRoles,
+                          pathParameters: {'orgId': orgId},
                         );
                       }
                     },
@@ -88,7 +82,6 @@ class OrgSettingsPage extends ConsumerWidget {
                     description: 'Veja quem ainda não aceitou entrar',
                     icon: Icons.mail_outline_rounded,
                     iconColor: AppTheme.secondaryColor,
-                    //showBadge: true,
                     onTap: () {},
                     visible: canPermissionInviteMembers,
                   ),
@@ -100,8 +93,12 @@ class OrgSettingsPage extends ConsumerWidget {
                         ? 'Adicione ou remova membros da organização'
                         : 'Veja a lista de membros da organização',
                     icon: Icons.group_outlined,
-                    onTap: () =>
-                        onNavigateToMembersTab?.call(OrgMembersTab.membros),
+                    onTap: () {
+                      context.goNamed(
+                        AppRoutes.orgTeam,
+                        pathParameters: {'orgId': orgId},
+                      );
+                    },
                   ),
                   ActionTile(
                     title: canPermissionManageGroups
@@ -112,9 +109,12 @@ class OrgSettingsPage extends ConsumerWidget {
                         : 'Veja os grupos da organização',
                     icon: Icons.groups_outlined,
                     iconColor: const Color(0xFF0D9488),
-                    // teal
-                    onTap: () =>
-                        onNavigateToMembersTab?.call(OrgMembersTab.grupos),
+                    onTap: () {
+                      context.goNamed(
+                        AppRoutes.orgTeam,
+                        pathParameters: {'orgId': orgId},
+                      );
+                    },
                   ),
                   ActionTile(
                     title: 'Gerenciar Funções',
@@ -123,13 +123,9 @@ class OrgSettingsPage extends ConsumerWidget {
                     icon: Icons.music_note_outlined,
                     iconColor: const Color(0xFFEA580C),
                     onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          settings: const RouteSettings(name: 'Gerenciar Funções'),
-                          builder: (context) => ManageFunctionsPage(
-                            organization: organization,
-                          ),
-                        ),
+                      context.pushNamed(
+                        AppRoutes.orgSettingsFunctions,
+                        pathParameters: {'orgId': orgId},
                       );
                     },
                     visible: canPermissionManageFunctions,
@@ -154,7 +150,6 @@ class OrgSettingsPage extends ConsumerWidget {
                     description: 'Visualize e edite todo o histórico',
                     icon: Icons.event_outlined,
                     iconColor: AppTheme.primaryColor,
-                    //showBadge: true,
                     onTap: () {},
                   ),
                 ],
@@ -173,3 +168,4 @@ class OrgSettingsPage extends ConsumerWidget {
       );
   }
 }
+

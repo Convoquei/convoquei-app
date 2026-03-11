@@ -1,3 +1,4 @@
+import 'package:convoquei_app/app/router.dart';
 import 'package:convoquei_app/core/network/exceptions/api_exception.dart';
 import 'package:convoquei_app/core/services/user_feedback_service.dart';
 import 'package:convoquei_app/core/theme/app_theme.dart';
@@ -5,11 +6,11 @@ import 'package:convoquei_app/features/home/widgets/create_organization_modal.da
 import 'package:convoquei_app/features/home/widgets/my_invite_card.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_invite_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_model.dart';
-import 'package:convoquei_app/features/organizations/organization_shell.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/selected_organization_provider.dart';
 import 'package:convoquei_app/features/organizations/shared/widgets/organization_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../auth/providers/auth_providers.dart';
 import '../../organizations/shared/providers/organization_providers.dart';
@@ -20,7 +21,10 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authProvider).user!;
+    final user = ref.watch(authProvider).user;
+    if (user == null) {
+      return const Scaffold(body: SizedBox.shrink());
+    }
     final AsyncValue<List<OrganizationModel>> organizationsAsync = ref.watch(
       userOrganizationsProvider,
     );
@@ -190,11 +194,9 @@ class HomePage extends ConsumerWidget {
                             ref
                                 .read(selectedOrganizationProvider.notifier)
                                 .select(org);
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    OrganizationShell(organization: org),
-                              ),
+                            context.goNamed(
+                              AppRoutes.orgHome,
+                              pathParameters: {'orgId': org.id},
                             );
                           },
                         ),

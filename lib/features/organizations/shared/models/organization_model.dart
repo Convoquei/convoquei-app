@@ -9,6 +9,9 @@ class OrganizationModel {
   final int totalMembers;
   final DateTime createdAt;
 
+  final bool hasAutoScheduleFeature;
+  final bool hasRecurrencyFeature;
+
   OrganizationModel({
     required this.id,
     required this.name,
@@ -17,6 +20,8 @@ class OrganizationModel {
     required this.status,
     required this.totalMembers,
     required this.createdAt,
+    this.hasAutoScheduleFeature = true,
+    this.hasRecurrencyFeature = true,
   });
 
   factory OrganizationModel.fromJson(Map<String, dynamic> json) {
@@ -31,6 +36,8 @@ class OrganizationModel {
       ),
       totalMembers: json['totalMembers'] as int,
       createdAt: DateTime.parse(json['createdAt'] as String).toLocal(),
+      // hasAutoScheduleFeature: json['hasAutoScheduleFeature'] as bool? ?? false,
+      // hasRecurrencyFeature: json['hasRecurrencyFeature'] as bool? ?? false,
     );
   }
 }

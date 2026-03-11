@@ -1,10 +1,12 @@
 import 'package:convoquei_app/core/models/paged_response_model.dart';
 import 'package:convoquei_app/core/network/base_repository.dart';
-import 'package:convoquei_app/core/providers/providers.dart';
+import 'package:convoquei_app/core/providers/providers.dart' show apiClientProvider;
 import 'package:convoquei_app/features/organizations/shared/models/OrganizationRolePermissionModel.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_role_member_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_role_model.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'organization_role_repository.g.dart';
 
 class OrganizationRoleRepository extends BaseRepository {
   OrganizationRoleRepository({required super.apiClient});
@@ -110,9 +112,7 @@ class OrganizationRoleRepository extends BaseRepository {
   }
 }
 
-final organizationRoleRepositoryProvider = Provider<OrganizationRoleRepository>(
-  (ref) {
-    final apiClient = ref.watch(apiClientProvider);
-    return OrganizationRoleRepository(apiClient: apiClient);
-  },
-);
+@riverpod
+OrganizationRoleRepository organizationRoleRepository(Ref ref) {
+  return OrganizationRoleRepository(apiClient: ref.watch(apiClientProvider));
+}

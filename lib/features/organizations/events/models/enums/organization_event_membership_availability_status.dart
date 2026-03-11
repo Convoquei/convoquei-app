@@ -9,6 +9,8 @@ enum OrganizationEventMembershipAvailabilityStatus {
     'UNAVAILABLE': unavailable,
   };
 
+  String toCode() => _codeMap.entries.firstWhere((entry) => entry.value == this).key;
+
   static OrganizationEventMembershipAvailabilityStatus fromCode(String code) {
     return _codeMap[code.toUpperCase()] ?? OrganizationEventMembershipAvailabilityStatus.notAnswered;
   }
