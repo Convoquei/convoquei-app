@@ -47,6 +47,8 @@ Use os widgets já existentes antes de criar um novo:
 | `ActionCard` | Card clicável com ícone e título |
 | `AlertBanner` / `InfoBanner` | Banners de alerta e informação |
 | `AppLogo` | Logo do app |
+| `AppLoadingScreen` | Tela de carregamento com skeleton + spinner da marca |
+| `ConvoqueiLoadingIcon` | Spinner animado da marca (reutilizável isoladamente) |
 | `AppSearchInput` | Campo de busca padronizado |
 | `CustomCalendar` | Calendário interativo |
 | `DateRangeFilterSection` | Filtro por período |

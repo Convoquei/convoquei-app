@@ -25,7 +25,6 @@ class EventCard extends StatefulWidget {
   final Future<void> Function()? onUnavailable;
   final Future<void> Function()? onLeaveSchedule;
   final VoidCallback? onTap;
-
   const EventCard({
     super.key,
     required this.event,
@@ -76,6 +75,7 @@ class _EventCardState extends State<EventCard> {
     final isCanceled = event.status == OrganizationEventStatus.canceled;
 
     final showUrgent = !isCanceled &&
+        event.availabilityLockBeforeStartMinutes > 0 &&
         event.availabilityLockEpochSeconds <= 86400 &&
         event.availabilityLockEpochSeconds > 0;
 
@@ -157,7 +157,11 @@ class _EventCardState extends State<EventCard> {
                           Row(
                             children: [
                               if (showUrgent) ...[
-                                UrgentBadge(event: event),
+                                Flexible(
+                                  child: UrgentBadge(
+                                    event: event,
+                                  ),
+                                ),
                                 const SizedBox(width: 6),
                               ],
                               if (showInProgress) EventStatusBadge(event.status),

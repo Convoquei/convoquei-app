@@ -1,3 +1,4 @@
+import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_availability_status.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_status.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_status.dart';
 
@@ -9,6 +10,9 @@ class EventsFilter {
   /// Status de escala do participante.
   final List<OrganizationEventMembershipStatus>? membershipStatus;
 
+  /// Status de disponibilidade do participante no evento.
+  final List<OrganizationEventMembershipAvailabilityStatus>? availabilityStatus;
+
   /// Status do evento (scheduled, inProgress, completed, canceled).
   final List<OrganizationEventStatus>? eventStatus;
 
@@ -17,6 +21,7 @@ class EventsFilter {
     this.startAfter,
     this.startBefore,
     this.membershipStatus,
+    this.availabilityStatus,
     this.eventStatus,
   });
 
@@ -27,6 +32,7 @@ class EventsFilter {
       other.startAfter == startAfter &&
       other.startBefore == startBefore &&
       _listEquals(other.membershipStatus, membershipStatus) &&
+      _listEquals(other.availabilityStatus, availabilityStatus) &&
       _listEquals(other.eventStatus, eventStatus);
 
   @override
@@ -35,6 +41,7 @@ class EventsFilter {
         startAfter,
         startBefore,
         Object.hashAll(membershipStatus ?? []),
+        Object.hashAll(availabilityStatus ?? []),
         Object.hashAll(eventStatus ?? []),
       );
 

@@ -34,13 +34,14 @@ class EventMembershipNotifier extends _$EventMembershipNotifier {
           .findAllEvents(
         organizationId: organizationId,
         request: FindAllEventsOrganizationMembershipRequest(
-          page:            state.page,
-          size:            20,
-          name:            filter.name,
-          membershipStatus: filter.membershipStatus,
-          eventStatus:     filter.eventStatus,
-          startAfter:      filter.startAfter,
-          startBefore:     filter.startBefore,
+          page:               state.page,
+          size:               20,
+          name:               filter.name,
+          membershipStatus:   filter.membershipStatus,
+          availabilityStatus: filter.availabilityStatus,
+          eventStatus:        filter.eventStatus,
+          startAfter:         filter.startAfter,
+          startBefore:        filter.startBefore,
         ),
       );
 

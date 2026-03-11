@@ -269,8 +269,8 @@ class CreateEventStep3FinalRules extends ConsumerWidget {
                         value: data.deadlineMinutes,
                         label: 'Minutos',
                         min: 0,
-                        max: 45,
-                        step: 15,
+                        max: 59,
+                        step: 1,
                         onChanged: (v) =>
                             onChanged(data.copyWith(deadlineMinutes: v)),
                       ),

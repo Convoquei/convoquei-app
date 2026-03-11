@@ -3,6 +3,7 @@ import 'package:convoquei_app/features/auth/pages/login_page.dart';
 import 'package:convoquei_app/features/auth/providers/auth_providers.dart';
 import 'package:convoquei_app/features/home/pages/home_page.dart';
 import 'package:convoquei_app/features/organizations/events/pages/org_create_event_page.dart';
+import 'package:convoquei_app/features/organizations/events/pages/org_event_detail_page.dart';
 import 'package:convoquei_app/features/organizations/events/pages/org_events_page.dart';
 import 'package:convoquei_app/features/organizations/home/pages/org_home_page.dart';
 import 'package:convoquei_app/features/organizations/members/pages/org_members_page.dart';
@@ -32,6 +33,7 @@ abstract final class AppRoutes {
   static const orgSettings = 'org-settings';
   static const orgSettingsRoles = 'org-settings-roles';
   static const orgSettingsFunctions = 'org-settings-functions';
+  static const orgEventDetail = 'org-event-detail';
 }
 
 // ── Route paths ─────────────────────────────────────────────────────────────
@@ -50,6 +52,8 @@ abstract final class AppPaths {
       '/orgs/$orgId/settings/roles';
   static String orgSettingsFunctions(String orgId) =>
       '/orgs/$orgId/settings/functions';
+  static String orgEventDetail(String orgId, String eventId) =>
+      '/orgs/$orgId/events/$eventId';
 }
 
 // ── Router provider ─────────────────────────────────────────────────────────
@@ -130,6 +134,14 @@ final routerProvider = Provider<GoRouter>((ref) {
                 name: AppRoutes.orgCreateEvent,
                 builder: (_, state) => OrgCreateEventPage(
                   organizationId: state.pathParameters['orgId']!,
+                ),
+              ),
+              GoRoute(
+                path: ':eventId',
+                name: AppRoutes.orgEventDetail,
+                builder: (_, state) => OrgEventDetailPage(
+                  organizationId: state.pathParameters['orgId']!,
+                  eventId: state.pathParameters['eventId']!,
                 ),
               ),
             ],

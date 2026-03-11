@@ -17,6 +17,8 @@ import 'package:convoquei_app/features/organizations/events/widgets/empty_event_
 import 'package:convoquei_app/features/organizations/events/widgets/event_card.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/event_status_filter_section.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/events_tabs.dart';
+import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_availability_status.dart';
+import 'package:convoquei_app/features/organizations/events/widgets/availability_status_filter_section.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/membership_status_filter_section.dart';
 import 'package:convoquei_app/core/network/exceptions/api_exception.dart';
 import 'package:convoquei_app/core/services/toast_feedback_service.dart';
@@ -49,11 +51,13 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
   String _searchQuery = '';
 
   List<OrganizationEventMembershipStatus>? _customStatus;
+  List<OrganizationEventMembershipAvailabilityStatus>? _customAvailabilityStatus;
   List<OrganizationEventStatus>? _customEventStatus;
   DateTime? _customStartDate;
   DateTime? _customEndDate;
 
   List<OrganizationEventMembershipStatus>? _pendingStatus;
+  List<OrganizationEventMembershipAvailabilityStatus>? _pendingAvailabilityStatus;
   List<OrganizationEventStatus>? _pendingEventStatus;
   DateTime? _pendingStartDate;
   DateTime? _pendingEndDate;
@@ -63,44 +67,74 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
   EventsFilter _filter = EventsFilter(startAfter: startOfDay(DateTime.now()));
 
   bool get _hasActiveFilters {
-    const defaultEventStatus = {
-      OrganizationEventStatus.scheduled,
-      OrganizationEventStatus.inProgress,
-    };
+    final tabEventDefault = _eventStatusForTab(_selectedTab);
+    final defaultEventSet = {...tabEventDefault};
     final current = _customEventStatus != null
         ? {..._customEventStatus!}
-        : defaultEventStatus;
-    final eventFilterActive = current.length != defaultEventStatus.length ||
-        !current.containsAll(defaultEventStatus);
-    return (_customStatus != null && _customStatus!.isNotEmpty) ||
+        : defaultEventSet;
+    final eventFilterActive = current.length != defaultEventSet.length ||
+        !current.containsAll(defaultEventSet);
+
+    final tabMembershipDefault = _membershipStatusForTab(_selectedTab);
+    final defaultMembershipSet =
+        tabMembershipDefault != null ? {...tabMembershipDefault} : <OrganizationEventMembershipStatus>{};
+    final currentMembership = _customStatus != null ? {..._customStatus!} : defaultMembershipSet;
+    final membershipFilterActive = currentMembership.length != defaultMembershipSet.length ||
+        !currentMembership.containsAll(defaultMembershipSet);
+
+    final tabAvailDefault = _availabilityStatusForTab(_selectedTab);
+    final defaultAvailSet = tabAvailDefault != null
+        ? {...tabAvailDefault}
+        : <OrganizationEventMembershipAvailabilityStatus>{};
+    final currentAvail = _customAvailabilityStatus != null
+        ? {..._customAvailabilityStatus!}
+        : defaultAvailSet;
+    final availFilterActive = currentAvail.length != defaultAvailSet.length ||
+        !currentAvail.containsAll(defaultAvailSet);
+
+    return membershipFilterActive ||
+        availFilterActive ||
         eventFilterActive ||
         _customStartDate != null ||
         _customEndDate != null;
   }
 
-  List<OrganizationEventMembershipStatus>? _statusForTab(OrgEventsTab tab) =>
+  List<OrganizationEventMembershipStatus>? _membershipStatusForTab(OrgEventsTab tab) =>
       switch (tab) {
         OrgEventsTab.all         => null,
-        OrgEventsTab.pending     => [
-          OrganizationEventMembershipStatus.pending,
-          OrganizationEventMembershipStatus.awaitingAssignment,
-          OrganizationEventMembershipStatus.awaitingDraw,
-        ],
+        OrgEventsTab.pending     => [OrganizationEventMembershipStatus.pending],
         OrgEventsTab.mySchedules => [OrganizationEventMembershipStatus.assigned],
       };
 
+  List<OrganizationEventMembershipAvailabilityStatus>? _availabilityStatusForTab(
+      OrgEventsTab tab) =>
+      switch (tab) {
+        OrgEventsTab.all         => null,
+        OrgEventsTab.pending     => [OrganizationEventMembershipAvailabilityStatus.notAnswered],
+        OrgEventsTab.mySchedules => [OrganizationEventMembershipAvailabilityStatus.available],
+      };
+
+  List<OrganizationEventStatus> _eventStatusForTab(OrgEventsTab tab) =>
+      switch (tab) {
+        OrgEventsTab.all         => [OrganizationEventStatus.scheduled, OrganizationEventStatus.inProgress],
+        OrgEventsTab.pending     => [OrganizationEventStatus.scheduled],
+        OrgEventsTab.mySchedules => [OrganizationEventStatus.scheduled, OrganizationEventStatus.inProgress],
+      };
+
   EventsFilter _buildFilter({OrgEventsTab? tab, String? name}) {
-    final resolvedMembershipStatus = _customStatus ?? _statusForTab(tab ?? _selectedTab);
-    final resolvedEventStatus = _customEventStatus ??
-        [OrganizationEventStatus.scheduled, OrganizationEventStatus.inProgress];
+    final resolvedTab = tab ?? _selectedTab;
+    final resolvedMembershipStatus   = _customStatus             ?? _membershipStatusForTab(resolvedTab);
+    final resolvedAvailabilityStatus = _customAvailabilityStatus ?? _availabilityStatusForTab(resolvedTab);
+    final resolvedEventStatus        = _customEventStatus        ?? _eventStatusForTab(resolvedTab);
     final resolvedName = (name ?? _searchQuery).trim();
 
     return EventsFilter(
-      startAfter:      _customStartDate ?? startOfDay(DateTime.now()),
-      startBefore:     _customEndDate,
-      name:            resolvedName.isEmpty ? null : resolvedName,
-      membershipStatus: resolvedMembershipStatus,
-      eventStatus:     resolvedEventStatus,
+      startAfter:         _customStartDate ?? startOfDay(DateTime.now()),
+      startBefore:        _customEndDate,
+      name:               resolvedName.isEmpty ? null : resolvedName,
+      membershipStatus:   resolvedMembershipStatus,
+      availabilityStatus: resolvedAvailabilityStatus,
+      eventStatus:        resolvedEventStatus,
     );
   }
 
@@ -129,8 +163,10 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
   void _handleTabChange(OrgEventsTab newTab) {
     if (newTab == _selectedTab) return;
     setState(() {
-      _selectedTab  = newTab;
-      _customStatus = null;
+      _selectedTab              = newTab;
+      _customStatus             = null;
+      _customAvailabilityStatus = null;
+      _customEventStatus        = null;
     });
     _applyFilter(_buildFilter(tab: newTab));
   }
@@ -145,10 +181,11 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
 
   void _handleClearFilters() {
     setState(() {
-      _customStatus      = null;
-      _customEventStatus = null;
-      _customStartDate   = null;
-      _customEndDate     = null;
+      _customStatus             = null;
+      _customAvailabilityStatus = null;
+      _customEventStatus        = null;
+      _customStartDate          = null;
+      _customEndDate            = null;
     });
     _applyFilter(_buildFilter());
   }
@@ -258,23 +295,31 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
                         onClear:  _handleClearFilters,
                         onApply: () {
                           setState(() {
-                            _customStatus      = _pendingStatus;
-                            _customEventStatus = _pendingEventStatus;
-                            _customStartDate   = _pendingStartDate;
-                            _customEndDate     = _pendingEndDate;
+                            _customStatus             = _pendingStatus;
+                            _customAvailabilityStatus = _pendingAvailabilityStatus;
+                            _customEventStatus        = _pendingEventStatus;
+                            _customStartDate          = _pendingStartDate;
+                            _customEndDate            = _pendingEndDate;
                           });
                           _applyFilter(_buildFilter());
                         },
                         childrenBuilder: () {
-                          _pendingStatus      = _customStatus ?? _statusForTab(_selectedTab);
-                          _pendingEventStatus = _customEventStatus;
-                          _pendingStartDate   = _customStartDate;
-                          _pendingEndDate     = _customEndDate;
+                          _pendingStatus             = _customStatus             ?? _membershipStatusForTab(_selectedTab);
+                          _pendingAvailabilityStatus = _customAvailabilityStatus ?? _availabilityStatusForTab(_selectedTab);
+                          _pendingEventStatus        = _customEventStatus        ?? _eventStatusForTab(_selectedTab);
+                          _pendingStartDate          = _customStartDate;
+                          _pendingEndDate            = _customEndDate;
                           return [
                             EventStatusFilterSection(
                               selected: _pendingEventStatus,
                               onChanged: (statuses) {
                                 setState(() => _pendingEventStatus = statuses);
+                              },
+                            ),
+                            AvailabilityStatusFilterSection(
+                              selected: _pendingAvailabilityStatus,
+                              onChanged: (statuses) {
+                                setState(() => _pendingAvailabilityStatus = statuses);
                               },
                             ),
                             MembershipStatusFilterSection(
@@ -377,9 +422,16 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
                             child: EventCard(
                               key: ValueKey(membership.id),
                               event: membership,
-                              onAvailable:    () => _handleAvailability(membership, true),
-                              onUnavailable:  () => _handleAvailability(membership, false),
-                              onLeaveSchedule:() => _handleAvailability(membership, false),
+                              onTap: () => context.pushNamed(
+                                AppRoutes.orgEventDetail,
+                                pathParameters: {
+                                  'orgId':   widget.organizationId,
+                                  'eventId': membership.id,
+                                },
+                              ),
+                              onAvailable:     () => _handleAvailability(membership, true),
+                              onUnavailable:   () => _handleAvailability(membership, false),
+                              onLeaveSchedule: () => _handleAvailability(membership, false),
                             ),
                           ),
                         ),

@@ -48,8 +48,16 @@ class _OrganizationShellState extends ConsumerState<OrganizationShell> {
   bool _isSettingsLocation(String path) =>
       path.startsWith(AppPaths.orgSettings(_orgId()));
 
-  bool _showTabBar(String path) =>
-      !_isSettingsLocation(path);
+  bool _isDetailsEventLocation(String path) =>
+      path.startsWith('${AppPaths.orgEvents(_orgId())}/');
+
+  bool _showTabBar(String path) {
+      if (_isSettingsLocation(path) || _isDetailsEventLocation(path)) {
+        return false;
+      }
+
+      return true;
+  }
 
   int _tabIndexForPath(String path) {
     final id = _orgId();

@@ -1,6 +1,7 @@
 import 'package:convoquei_app/core/models/paged_response_model.dart';
 import 'package:convoquei_app/core/network/base_repository.dart';
 import 'package:convoquei_app/core/providers/providers.dart' show apiClientProvider;
+import 'package:convoquei_app/features/organizations/events/models/organization_event_details_model.dart';
 import 'package:convoquei_app/features/organizations/events/models/orgnaization_event_membership_model.dart';
 import 'package:convoquei_app/features/organizations/events/models/requests/create_organization_event_request.dart';
 import 'package:convoquei_app/features/organizations/events/models/requests/find_all_events_organization_membership_request.dart';
@@ -70,6 +71,32 @@ class OrganizationEventsRepository extends BaseRepository {
     );
 
     return OrganizationEventMembershipModel.fromJson(
+      data as Map<String, dynamic>,
+    );
+  }
+
+  Future<OrganizationEventMembershipModel> findEventById({
+    required String organizationId,
+    required String eventId,
+  }) async {
+    final data = await apiClient.get(
+      '/v1/organizations/$organizationId/events/$eventId',
+    );
+
+    return OrganizationEventMembershipModel.fromJson(
+      data as Map<String, dynamic>,
+    );
+  }
+
+  Future<OrganizationEventDetailsModel> findEventDetailsById({
+    required String organizationId,
+    required String eventId,
+  }) async {
+    final data = await apiClient.get(
+      '/v1/organizations/$organizationId/events/$eventId/details',
+    );
+
+    return OrganizationEventDetailsModel.fromJson(
       data as Map<String, dynamic>,
     );
   }

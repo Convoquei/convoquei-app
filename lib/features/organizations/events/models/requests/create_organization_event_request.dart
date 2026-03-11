@@ -31,7 +31,7 @@ class CreateOrganizationEventRequest {
   final String location;
   final OrganizationEventAssignmentMode assignmentMode;
   final OrganizationEventCallMode callMode;
-  final OrganizationEventFunctionCallMode functionCallMode;
+  final OrganizationEventFunctionCallMode? functionCallMode;
   final int availabilityLockBeforeStartInMinutes;
   final List<_CalledFunctionPayload> calledFunctionIds;
   final List<String> calledGroupIds;
@@ -44,7 +44,7 @@ class CreateOrganizationEventRequest {
     required this.location,
     required this.assignmentMode,
     required this.callMode,
-    required this.functionCallMode,
+    this.functionCallMode,
     required this.availabilityLockBeforeStartInMinutes,
     required this.calledFunctionIds,
     required this.calledGroupIds,
@@ -72,7 +72,8 @@ class CreateOrganizationEventRequest {
         step3.deadlineHours * 60 +
         step3.deadlineMinutes;
 
-    final functionCallMode = step3.functionCallMode;
+    final functionCallMode =
+        step3.hasFunctionRules ? step3.functionCallMode : null;
 
     final calledFunctions = step3.hasFunctionRules
         ? step3.functionRules
@@ -108,7 +109,7 @@ class CreateOrganizationEventRequest {
         'location': location,
         'assignmentMode': assignmentMode.toCode(),
         'callMode': callMode.toCode(),
-        'functionCallMode': functionCallMode.toCode(),
+        'functionCallMode': functionCallMode?.toCode(),
         'availabilityLockBeforeStartInMinutes':
             availabilityLockBeforeStartInMinutes,
         'calledFunctionIds': calledFunctionIds.map((f) => f.toJson()).toList(),
