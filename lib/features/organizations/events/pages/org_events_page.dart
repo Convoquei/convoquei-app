@@ -18,6 +18,10 @@ import 'package:convoquei_app/features/organizations/events/widgets/event_card.d
 import 'package:convoquei_app/features/organizations/events/widgets/event_status_filter_section.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/events_tabs.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/membership_status_filter_section.dart';
+import 'package:convoquei_app/core/network/exceptions/api_exception.dart';
+import 'package:convoquei_app/core/services/toast_feedback_service.dart';
+import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_function_call_mode.dart';
+import 'package:convoquei_app/features/organizations/events/widgets/function_selection_modal.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/month_divider.dart';
 import 'package:convoquei_app/features/organizations/shared/models/enums/organization_permission.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/organization_providers.dart';
@@ -86,8 +90,7 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
       };
 
   EventsFilter _buildFilter({OrgEventsTab? tab, String? name}) {
-    final resolvedMembershipStatus =
-        _customStatus ?? _statusForTab(tab ?? _selectedTab);
+    final resolvedMembershipStatus = _customStatus ?? _statusForTab(tab ?? _selectedTab);
     final resolvedEventStatus = _customEventStatus ??
         [OrganizationEventStatus.scheduled, OrganizationEventStatus.inProgress];
     final resolvedName = (name ?? _searchQuery).trim();
@@ -163,17 +166,43 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
         .reset(widget.organizationId, _filter);
   }
 
-  Future<void> _handleAvailability(String eventId, bool available) async {
-    final updated = await ref
-        .read(answerAvailabilityProvider.notifier)
-        .answer(
-          organizationId: widget.organizationId,
-          eventId:        eventId,
-          available:      available,
-        );
+  Future<void> _handleAvailability(
+    OrganizationEventMembershipModel event,
+    bool available,
+  ) async {
+    String? functionId;
 
-    if (updated != null) {
+    if (available && event.calledFunctions.isNotEmpty) {
+      final result = await FunctionSelectionModal.show(
+        context,
+        calledFunctions: event.calledFunctions,
+        allowNoFunction:
+            event.functionCallMode ==
+            OrganizationEventFunctionCallMode.allMembersWithFunctionLimits,
+      );
+      if (result == null) return;
+      functionId = result.functionId;
+    }
+
+    try {
+      final updated = await ref
+          .read(answerAvailabilityProvider.notifier)
+          .answer(
+            organizationId: widget.organizationId,
+            eventId:        event.id,
+            available:      available,
+            functionId:     functionId,
+          );
+
+      if (!mounted) return;
       ref.read(eventMembershipProvider.notifier).updateItem(updated);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ToastFeedbackService.showToast(
+        context,
+        e.userMessage,
+        ToastType.error,
+      );
     }
   }
 
@@ -348,9 +377,9 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
                             child: EventCard(
                               key: ValueKey(membership.id),
                               event: membership,
-                              onAvailable:    () => _handleAvailability(membership.id, true),
-                              onUnavailable:  () => _handleAvailability(membership.id, false),
-                              onLeaveSchedule:() => _handleAvailability(membership.id, false),
+                              onAvailable:    () => _handleAvailability(membership, true),
+                              onUnavailable:  () => _handleAvailability(membership, false),
+                              onLeaveSchedule:() => _handleAvailability(membership, false),
                             ),
                           ),
                         ),

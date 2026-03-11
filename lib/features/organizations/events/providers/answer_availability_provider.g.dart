@@ -13,8 +13,7 @@ part of 'answer_availability_provider.dart';
 final answerAvailabilityProvider = AnswerAvailabilityNotifierProvider._();
 
 final class AnswerAvailabilityNotifierProvider
-    extends
-        $NotifierProvider<AnswerAvailabilityNotifier, AnswerAvailabilityState> {
+    extends $AsyncNotifierProvider<AnswerAvailabilityNotifier, void> {
   AnswerAvailabilityNotifierProvider._()
     : super(
         from: null,
@@ -32,32 +31,22 @@ final class AnswerAvailabilityNotifierProvider
   @$internal
   @override
   AnswerAvailabilityNotifier create() => AnswerAvailabilityNotifier();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(AnswerAvailabilityState value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<AnswerAvailabilityState>(value),
-    );
-  }
 }
 
 String _$answerAvailabilityNotifierHash() =>
-    r'dd3d86cf6eb1d9ed6d6d229bf74e04c24743b382';
+    r'c67ff8642ab3bb9d167481c9d472e6640df724c5';
 
-abstract class _$AnswerAvailabilityNotifier
-    extends $Notifier<AnswerAvailabilityState> {
-  AnswerAvailabilityState build();
+abstract class _$AnswerAvailabilityNotifier extends $AsyncNotifier<void> {
+  FutureOr<void> build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref =
-        this.ref as $Ref<AnswerAvailabilityState, AnswerAvailabilityState>;
+    final ref = this.ref as $Ref<AsyncValue<void>, void>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AnswerAvailabilityState, AnswerAvailabilityState>,
-              AnswerAvailabilityState,
+              AnyNotifier<AsyncValue<void>, void>,
+              AsyncValue<void>,
               Object?,
               Object?
             >;

@@ -354,7 +354,9 @@ class _EventCardState extends State<EventCard> {
                     ),
               ),
               Text(
-                'Aguardando escalação',
+                widget.event.membershipFunctionName != null
+                    ? 'Você se disponibilizou para ${widget.event.membershipFunctionName}'
+                    : 'Você se disponibilizou para este evento',
                 style: Theme.of(context)
                     .textTheme
                     .bodySmall
@@ -543,7 +545,7 @@ class _EventCardState extends State<EventCard> {
           icon: Icons.hourglass_top_rounded,
           iconColor: Color(0xFF7C3AED),
           label: 'Aguardando escalação',
-          sublabel: 'Você será escalado em breve',
+          sublabel: 'Aguardando a aprovação da sua escala',
         ),
       OrganizationEventMembershipStatus.awaitingDraw => const InfoBanner(
           bgColor: Color(0xFFF5F3FF),

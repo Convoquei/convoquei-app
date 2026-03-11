@@ -46,10 +46,14 @@ class OrganizationEventsRepository extends BaseRepository {
     required String organizationId,
     required String eventId,
     required bool available,
+    String? functionId,
   }) async {
     final data = await apiClient.patch(
       '/v1/organizations/$organizationId/events/$eventId/availability',
-      data: {'available': available},
+      data: {
+        'available': available,
+        if (functionId != null) 'functionId': functionId,
+      },
     );
 
     return OrganizationEventMembershipModel.fromJson(
