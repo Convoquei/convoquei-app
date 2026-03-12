@@ -18,9 +18,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 export 'package:convoquei_app/features/organizations/events/models/event_form_step2_data.dart';
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 // WIDGET
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 
 class CreateEventStep2TeamScale extends ConsumerWidget {
   final String organizationId;
@@ -88,7 +88,7 @@ class CreateEventStep2TeamScale extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // â”€â”€ Info banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Info banner ──────────────────────────────────────────────────────
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -107,12 +107,12 @@ class CreateEventStep2TeamScale extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Como a equipe serÃ¡ formada?',
+                      'Como a equipe será formada?',
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Defina quem serÃ¡ convocado e a regra padrÃ£o de aprovaÃ§Ã£o para este evento.',
+                      'Defina quem será convocado e a regra padrão de aprovação para este evento.',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
@@ -123,17 +123,17 @@ class CreateEventStep2TeamScale extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
 
-        // â”€â”€ Regra de aprovaÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Regra de aprovação ───────────────────────────────────────────────
         StepCard(
           children: [
-            const FieldLabel(label: 'Regra de AprovaÃ§Ã£o PadrÃ£o'),
+            const FieldLabel(label: 'Regra de Aprovação Padrão'),
             AssignmentModeCard(
               mode: OrganizationEventAssignmentMode.manual,
               selected: data.assignmentMode == OrganizationEventAssignmentMode.manual,
               locked: false,
-              title: 'AprovaÃ§Ã£o Manual',
+              title: 'Aprovação Manual',
               description:
-                  'O membro diz que estÃ¡ disponÃ­vel, mas vocÃª decide quem entra e aprova a escala final.',
+                  'O membro diz que está disponível, mas você decide quem entra e aprova a escala final.',
               icon: Icons.shield_rounded,
               iconColor: AppTheme.primaryColor,
               onTap: () => onChanged(
@@ -144,9 +144,9 @@ class CreateEventStep2TeamScale extends ConsumerWidget {
               selected:
                   data.assignmentMode == OrganizationEventAssignmentMode.automatic,
               locked: !canUseAutoSchedule,
-              title: 'Escala AutomÃ¡tica',
+              title: 'Escala Automática',
               description:
-                  'Os membros que aceitarem a convocaÃ§Ã£o serÃ£o escalados automaticamente, e a escala serÃ¡ encerrada no tempo configurado.',
+                  'Os membros que aceitarem a convocação serão escalados automaticamente, e a escala será encerrada no tempo configurado.',
               icon: Icons.rocket_launch_rounded,
               iconColor: AppTheme.successColor,
               onTap: () => onChanged(data.copyWith(
@@ -157,10 +157,10 @@ class CreateEventStep2TeamScale extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
 
-        // â”€â”€ Escopo de convocaÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Escopo de convocação ─────────────────────────────────────────────
         StepCard(
           children: [
-            const FieldLabel(label: 'Quem serÃ¡ convocado?'),
+            const FieldLabel(label: 'Quem será convocado?'),
             EventScopeToggle(
               callMode: data.callMode,
               onChanged: (v) => onChanged(data.copyWith(callMode: v)),
