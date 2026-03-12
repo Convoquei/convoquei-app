@@ -264,15 +264,13 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
     final canManageEvents = currentUser.hasPermission(OrganizationPermissionEnum.manageEvents);
     final grouped = _groupByMonth(eventsState.items);
 
-    final hasListContent = !eventsState.isInitialLoading &&
-        eventsState.error == null &&
-        !eventsState.isEmpty;
-
     return Scaffold(
-      body: CustomScrollView(
-        physics: hasListContent
-            ? const AlwaysScrollableScrollPhysics()
-            : const NeverScrollableScrollPhysics(),
+      body: RefreshIndicator(
+        onRefresh: () => ref
+            .read(eventMembershipProvider.notifier)
+            .resetAsync(widget.organizationId, _filter),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           SliverToBoxAdapter(
             child: Padding(
@@ -444,6 +442,7 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
               ),
             ),
         ],
+        ),
       ),
     );
   }

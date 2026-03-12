@@ -3,6 +3,7 @@ import 'package:convoquei_app/features/auth/pages/login_page.dart';
 import 'package:convoquei_app/features/auth/providers/auth_providers.dart';
 import 'package:convoquei_app/features/home/pages/home_page.dart';
 import 'package:convoquei_app/features/organizations/events/pages/org_create_event_page.dart';
+import 'package:convoquei_app/features/organizations/events/pages/org_edit_event_page.dart';
 import 'package:convoquei_app/features/organizations/events/pages/org_event_detail_page.dart';
 import 'package:convoquei_app/features/organizations/events/pages/org_events_page.dart';
 import 'package:convoquei_app/features/organizations/home/pages/org_home_page.dart';
@@ -34,6 +35,7 @@ abstract final class AppRoutes {
   static const orgSettingsRoles = 'org-settings-roles';
   static const orgSettingsFunctions = 'org-settings-functions';
   static const orgEventDetail = 'org-event-detail';
+  static const orgEditEvent = 'org-edit-event';
 }
 
 // ── Route paths ─────────────────────────────────────────────────────────────
@@ -54,6 +56,8 @@ abstract final class AppPaths {
       '/orgs/$orgId/settings/functions';
   static String orgEventDetail(String orgId, String eventId) =>
       '/orgs/$orgId/events/$eventId';
+  static String orgEditEvent(String orgId, String eventId) =>
+      '/orgs/$orgId/events/$eventId/edit';
 }
 
 // ── Router provider ─────────────────────────────────────────────────────────
@@ -143,6 +147,16 @@ final routerProvider = Provider<GoRouter>((ref) {
                   organizationId: state.pathParameters['orgId']!,
                   eventId: state.pathParameters['eventId']!,
                 ),
+                routes: [
+                  GoRoute(
+                    path: 'edit',
+                    name: AppRoutes.orgEditEvent,
+                    builder: (_, state) => OrgEditEventPage(
+                      organizationId: state.pathParameters['orgId']!,
+                      eventId: state.pathParameters['eventId']!,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

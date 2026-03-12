@@ -1,8 +1,8 @@
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_assignment_mode.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_call_mode.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_function_call_mode.dart';
-import 'package:convoquei_app/features/organizations/events/widgets/create_event_step2_team_scale.dart';
-import 'package:convoquei_app/features/organizations/events/widgets/create_event_step3_final_rules.dart';
+import 'package:convoquei_app/features/organizations/events/models/event_form_step2_data.dart';
+import 'package:convoquei_app/features/organizations/events/models/event_form_step3_data.dart';
 
 class _CalledFunctionPayload {
   final String id;

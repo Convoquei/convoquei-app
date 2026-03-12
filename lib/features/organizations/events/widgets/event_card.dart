@@ -476,15 +476,14 @@ class _EventCardState extends State<EventCard> {
     }
 
     if (!event.allowAssignment) {
-      if (event.membershipStatus ==
-          OrganizationEventMembershipStatus.assigned) {
+      if (event.membershipStatus == OrganizationEventMembershipStatus.assigned) {
         return const InfoBanner(
           bgColor: Color(0xFFECFDF5),
           borderColor: Color(0xFFD1FAE5),
           icon: Icons.check_rounded,
           iconColor: Color(0xFF059669),
           label: 'Você está escalado',
-          sublabel: 'Este evento está fechado para novas escalas.',
+          sublabel: 'Este evento não aceita mais respostas.',
         );
       }
       return const InfoBanner(
@@ -493,7 +492,7 @@ class _EventCardState extends State<EventCard> {
         icon: Icons.lock_outline_rounded,
         iconColor: Color(0xFF94A3B8),
         label: 'Não escalado',
-        sublabel: 'Este evento está fechado para novas escalas.',
+        sublabel: 'Este evento não aceita mais respostas.',
         labelColor: AppTheme.textSecondary,
       );
     }

@@ -73,6 +73,12 @@ class EventMembershipNotifier extends _$EventMembershipNotifier {
     loadNextPage(organizationId, filter);
   }
 
+  Future<void> resetAsync(String organizationId, EventsFilter filter) {
+    _generation++;
+    state = const StateListPaged();
+    return loadNextPage(organizationId, filter);
+  }
+
   /// Substitui um item da lista pelo resultado atualizado da API.
   void updateItem(OrganizationEventMembershipModel updated) {
     state = state.copyWith(

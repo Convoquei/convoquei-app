@@ -73,6 +73,8 @@ class _OrganizationShellState extends ConsumerState<OrganizationShell> {
     if (path.startsWith(AppPaths.orgSettingsFunctions(id))) return 'Gerenciar Funções';
     if (path.startsWith(AppPaths.orgSettings(id))) return 'Configurações';
     if (path.startsWith(AppPaths.orgCreateEvent(id))) return 'Novo Evento';
+    if (path.endsWith('/edit')) return 'Editar Evento';
+    if (_isDetailsEventLocation(path)) return 'Detalhes do Evento';
     if (path.startsWith(AppPaths.orgEvents(id))) return kOrgTabs[1].label;
     if (path.startsWith(AppPaths.orgScales(id))) return kOrgTabs[2].label;
     if (path.startsWith(AppPaths.orgTeam(id))) return kOrgTabs[3].label;

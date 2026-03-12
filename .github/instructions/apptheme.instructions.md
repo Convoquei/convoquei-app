@@ -15,6 +15,10 @@ Sempre utilize `#file:app_theme.dart` como única fonte de verdade para todo est
    - `AppTheme.backgroundColor`
    - `AppTheme.textPrimary`
    - `AppTheme.textSecondary`
+   - `AppTheme.errorColor`
+   - `AppTheme.successColor`
+   - `AppTheme.warningColor`
+   - `AppTheme.infoColor`
 
 2. **Tipografia** — Sempre use os estilos de texto definidos em `AppTheme.light.textTheme` via `Theme.of(context).textTheme.*`. Nunca defina `TextStyle` inline com `fontFamily`, `fontSize`, `fontWeight` ou `color` fixos nos widgets.
 

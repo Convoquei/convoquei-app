@@ -5,6 +5,7 @@ import 'package:convoquei_app/features/organizations/events/models/organization_
 import 'package:convoquei_app/features/organizations/events/models/orgnaization_event_membership_model.dart';
 import 'package:convoquei_app/features/organizations/events/models/requests/create_organization_event_request.dart';
 import 'package:convoquei_app/features/organizations/events/models/requests/find_all_events_organization_membership_request.dart';
+import 'package:convoquei_app/features/organizations/events/models/requests/update_organization_event_request.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'organization_events_repository.g.dart';
@@ -88,6 +89,21 @@ class OrganizationEventsRepository extends BaseRepository {
     );
   }
 
+  Future<OrganizationEventDetailsModel> updateEvent({
+    required String organizationId,
+    required String eventId,
+    required UpdateOrganizationEventRequest request,
+  }) async {
+    final data = await apiClient.patch(
+      '/v1/organizations/$organizationId/events/$eventId',
+      data: request.toJson(),
+    );
+
+    return OrganizationEventDetailsModel.fromJson(
+      data as Map<String, dynamic>,
+    );
+  }
+
   Future<OrganizationEventDetailsModel> findEventDetailsById({
     required String organizationId,
     required String eventId,
@@ -98,6 +114,45 @@ class OrganizationEventsRepository extends BaseRepository {
 
     return OrganizationEventDetailsModel.fromJson(
       data as Map<String, dynamic>,
+    );
+  }
+
+  Future<void> assignParticipant({
+    required String organizationId,
+    required String eventId,
+    required String membershipId,
+  }) async {
+    await apiClient.patch(
+      '/v1/organizations/$organizationId/events/$eventId/participants/$membershipId/assign',
+    );
+  }
+
+  Future<void> rejectParticipant({
+    required String organizationId,
+    required String eventId,
+    required String membershipId,
+  }) async {
+    await apiClient.patch(
+      '/v1/organizations/$organizationId/events/$eventId/participants/$membershipId/reject',
+    );
+  }
+
+  Future<void> removeAssignedParticipant({
+    required String organizationId,
+    required String eventId,
+    required String membershipId,
+  }) async {
+    await apiClient.delete(
+      '/v1/organizations/$organizationId/events/$eventId/participants/$membershipId',
+    );
+  }
+
+  Future<void> notifyEventParticipants({
+    required String organizationId,
+    required String eventId,
+  }) async {
+    await apiClient.post(
+      '/v1/organizations/$organizationId/events/$eventId/participants/notify',
     );
   }
 }

@@ -28,13 +28,17 @@ Todas as cores abaixo devem estar declaradas como constantes no `AppTheme`. Nunc
 | `AppTheme.textPrimary` | `#1E293B` | Textos principais |
 | `AppTheme.textSecondary` | `#64748B` | Descrições, horários, locais |
 
-#### Cores Semânticas (ciclo de vida dos eventos)
-Estas cores representam estados do sistema e **devem ser adicionadas ao `AppTheme`** antes de serem usadas. Ao precisar de uma delas, siga o fluxo de `#file:apptheme.instructions.md` (pergunte ao usuário antes de implementar).
+#### Cores Semânticas (já existem no `AppTheme`)
+| Constante no AppTheme | Hex | Uso |
+|---|---|---|
+| `AppTheme.errorColor` | `#EF4444` | Indisponível / Cancelado / Erro |
 
-| Constante proposta | Hex | Significado |
+#### Cores Semânticas (ciclo de vida dos eventos — adicionadas ao AppTheme)
+Estas cores representam estados do sistema e estão disponíveis via `AppTheme`.
+
+| Constante no AppTheme | Hex | Significado |
 |---|---|---|
 | `AppTheme.successColor` | `#10B981` | Disponível / Escalado / Sucesso |
-| `AppTheme.errorColor` | `#EF4444` | Indisponível / Cancelado / Erro |
 | `AppTheme.warningColor` | `#F59E0B` | Aguardando Resposta / Alerta |
 | `AppTheme.infoColor` | `#3B82F6` | Em Andamento / Informação |
 
