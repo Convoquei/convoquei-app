@@ -1,4 +1,3 @@
-import 'package:convoquei_app/core/models/state_list_paged.dart';
 import 'package:convoquei_app/features/organizations/members/providers/list_all_members_query_provider.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/member_list_tile.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_member_model.dart';
@@ -101,7 +100,7 @@ class _MembersListState extends ConsumerState<MembersList> {
       controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
       itemCount: state.items.length + (state.hasNextPage ? 1 : 0),
-      separatorBuilder: (_, __) => const SizedBox(height: 4),
+      separatorBuilder: (_, _) => const SizedBox(height: 4),
       itemBuilder: (context, index) {
         if (index == state.items.length) {
           return const Padding(

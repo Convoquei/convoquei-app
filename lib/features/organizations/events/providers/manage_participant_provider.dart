@@ -56,6 +56,34 @@ class ManageParticipant extends _$ManageParticipant {
         );
   }
 
+  Future<void> approveAssignment({
+    required String organizationId,
+    required String eventId,
+    required String participantId,
+  }) async {
+    await ref
+        .read(organizationEventsRepositoryProvider)
+        .approveParticipantAssignment(
+          organizationId: organizationId,
+          eventId: eventId,
+          participantId: participantId,
+        );
+  }
+
+  Future<void> removeAssignment({
+    required String organizationId,
+    required String eventId,
+    required String participantId,
+  }) async {
+    await ref
+        .read(organizationEventsRepositoryProvider)
+        .removeParticipantAssignment(
+          organizationId: organizationId,
+          eventId: eventId,
+          participantId: participantId,
+        );
+  }
+
   Future<void> notifyParticipants({
     required String organizationId,
     required String eventId,

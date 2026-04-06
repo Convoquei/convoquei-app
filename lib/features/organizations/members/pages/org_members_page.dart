@@ -81,6 +81,7 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
                 .read(kickOrganizationMemberProvider.notifier)
                 .kick(organizationId: organizationId!, memberId: member.id);
 
+            if (!mounted) return;
             ToastFeedbackService.showToast(
               context,
               "${member.name} foi expulsado com sucesso!",
@@ -167,6 +168,7 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
           .read(inviteOrganizationMemberProvider.notifier)
           .invite(organizationId: orgId, email: email);
 
+      if (!mounted) return false;
       ToastFeedbackService.showToast(
         context,
         "Convite enviado com sucesso!",

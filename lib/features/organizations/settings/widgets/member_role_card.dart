@@ -21,14 +21,6 @@ class MemberRoleCard extends StatelessWidget {
 
   final VoidCallback? onActionTap;
 
-  String get _initials {
-    final parts = userName.trim().split(' ');
-    if (parts.length >= 2) {
-      return '${parts.first[0]}${parts[1][0]}'.toUpperCase();
-    }
-    return parts.first.substring(0, 2).toUpperCase();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(

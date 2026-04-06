@@ -262,7 +262,7 @@ class _OrgHomePageState extends State<OrgHomePage> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _notices.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (context, i) {
           final n = _notices[i];
           return Container(
@@ -355,7 +355,7 @@ class _OrgHomePageState extends State<OrgHomePage> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _mySchedules.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (context, i) {
           final s = _mySchedules[i];
           return Container(

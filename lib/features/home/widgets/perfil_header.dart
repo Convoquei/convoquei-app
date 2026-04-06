@@ -135,7 +135,7 @@ class _NarrowHeader extends StatelessWidget {
         ),
         border: Border(
           bottom: BorderSide(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             width: 1,
           ),
         ),

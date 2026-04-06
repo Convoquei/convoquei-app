@@ -1,10 +1,18 @@
+import 'package:convoquei_app/app/router.dart';
+import 'package:convoquei_app/core/network/exceptions/api_exception.dart';
+import 'package:convoquei_app/core/services/toast_feedback_service.dart';
+import 'package:convoquei_app/core/services/user_feedback_service.dart';
 import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/core/widgets/action_button.dart';
 import 'package:convoquei_app/core/widgets/app_loading_info.dart';
 import 'package:convoquei_app/core/widgets/app_loading_screen.dart';
 import 'package:convoquei_app/core/widgets/error_retry_state.dart';
+import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_status.dart';
 import 'package:convoquei_app/features/organizations/events/models/organization_event_details_model.dart';
+import 'package:convoquei_app/features/organizations/events/providers/cancel_event_provider.dart';
 import 'package:convoquei_app/features/organizations/events/providers/find_event_details_by_id_provider.dart';
+import 'package:convoquei_app/features/organizations/events/providers/manage_assignments_provider.dart';
+import 'package:convoquei_app/features/organizations/events/services/event_share_service.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/event_detail_hero_card.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/event_participants_view.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/event_rules_view.dart';
@@ -14,6 +22,7 @@ import 'package:convoquei_app/features/organizations/shared/models/organization_
 import 'package:convoquei_app/features/organizations/shared/providers/organization_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 enum _EventDetailTab { people, rules }
 
@@ -56,7 +65,7 @@ class OrgEventDetailPage extends ConsumerWidget {
         ),
         skeleton: AppLoadingSkeleton.details,
       ),
-      error: (_, __) => Center(
+      error: (_, _) => Center(
         child: ErrorRetryState(
           icon: Icons.event_busy_rounded,
           message: 'Não foi possível carregar o evento',
@@ -118,8 +127,98 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
         organizationId: widget.organizationId,
         eventId: widget.eventId,
         canManageEvents: widget.canManageEvents,
+        eventStatus: widget.details.status,
+        allowAssignment: widget.details.allowAssignment,
+        onShareEvent: _handleShare,
+        onCancelEvent: _handleCancelEvent,
+        onLockAssignments: _handleLockAssignments,
+        onReopenAssignments: _handleReopenAssignments,
       ),
     );
+  }
+
+  Future<void> _handleShare() async {
+    await EventShareService.share(
+      organizationId: widget.organizationId,
+      eventId: widget.eventId,
+      details: widget.details,
+    );
+  }
+
+  Future<void> _handleLockAssignments() async {
+    final confirmed = await UserFeedbackService.confirm(
+      context,
+      title: 'Fechar Escalação',
+      message: 'Deseja fechar as respostas? Os membros não poderão mais confirmar disponibilidade.',
+      confirmLabel: 'Fechar Escalação',
+      cancelLabel: 'Voltar',
+    );
+    if (!confirmed || !mounted) return;
+
+    try {
+      await ref.read(manageAssignmentsProvider.notifier).lock(
+            organizationId: widget.organizationId,
+            eventId: widget.eventId,
+          );
+      if (!mounted) return;
+      ref.invalidate(findEventDetailsByIdProvider(
+        organizationId: widget.organizationId,
+        eventId: widget.eventId,
+      ));
+      ToastFeedbackService.showToast(
+          context, 'Escalação fechada com sucesso.', ToastType.success);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ToastFeedbackService.showToast(context, e.userMessage, ToastType.error);
+    }
+  }
+
+  Future<void> _handleReopenAssignments() async {
+    try {
+      await ref.read(manageAssignmentsProvider.notifier).reopen(
+            organizationId: widget.organizationId,
+            eventId: widget.eventId,
+          );
+      if (!mounted) return;
+      ref.invalidate(findEventDetailsByIdProvider(
+        organizationId: widget.organizationId,
+        eventId: widget.eventId,
+      ));
+      ToastFeedbackService.showToast(
+          context, 'Escalação reaberta com sucesso.', ToastType.success);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ToastFeedbackService.showToast(context, e.userMessage, ToastType.error);
+    }
+  }
+
+  Future<void> _handleCancelEvent() async {
+    final confirmed = await UserFeedbackService.confirm(
+      context,
+      title: 'Cancelar Evento',
+      message:
+          'Tem certeza que deseja cancelar este evento? Esta ação não pode ser desfeita.',
+      confirmLabel: 'Cancelar Evento',
+      cancelLabel: 'Voltar',
+    );
+    if (!confirmed || !mounted) return;
+
+    try {
+      await ref.read(cancelEventProvider.notifier).cancel(
+            organizationId: widget.organizationId,
+            eventId: widget.eventId,
+          );
+      if (!mounted) return;
+      ref.invalidate(findEventDetailsByIdProvider(
+        organizationId: widget.organizationId,
+        eventId: widget.eventId,
+      ));
+      ToastFeedbackService.showToast(
+          context, 'Evento cancelado com sucesso.', ToastType.success);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ToastFeedbackService.showToast(context, e.userMessage, ToastType.error);
+    }
   }
 
   @override
@@ -244,14 +343,30 @@ class _EventOptionsSheet extends StatelessWidget {
     required this.organizationId,
     required this.eventId,
     required this.canManageEvents,
+    required this.eventStatus,
+    required this.allowAssignment,
+    this.onShareEvent,
+    this.onCancelEvent,
+    this.onLockAssignments,
+    this.onReopenAssignments,
   });
 
   final String organizationId;
   final String eventId;
   final bool canManageEvents;
+  final OrganizationEventStatus eventStatus;
+  final bool allowAssignment;
+  final VoidCallback? onShareEvent;
+  final VoidCallback? onCancelEvent;
+  final VoidCallback? onLockAssignments;
+  final VoidCallback? onReopenAssignments;
 
   @override
   Widget build(BuildContext context) {
+    final isScheduled = eventStatus == OrganizationEventStatus.scheduled;
+    final canEdit = canManageEvents && isScheduled;
+    final canManageAssignments = canManageEvents && isScheduled;
+
     return SafeArea(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -268,15 +383,62 @@ class _EventOptionsSheet extends StatelessWidget {
           _OptionItem(
             icon: Icons.share_rounded,
             label: 'Compartilhar Evento',
-            onTap: () => Navigator.of(context).pop(),
+            onTap: () {
+              Navigator.of(context).pop();
+              onShareEvent?.call();
+            },
           ),
-          if (canManageEvents) ...[
+          if (canEdit) ...[
+            const Divider(indent: 16, endIndent: 16),
+            _OptionItem(
+              icon: Icons.edit_rounded,
+              label: 'Editar Evento',
+              onTap: () {
+                Navigator.of(context).pop();
+                context.pushNamed(
+                  AppRoutes.orgEditEvent,
+                  pathParameters: {
+                    'orgId': organizationId,
+                    'eventId': eventId,
+                  },
+                );
+              },
+            ),
+          ],
+          if (canManageAssignments && allowAssignment) ...[
+            const Divider(indent: 16, endIndent: 16),
+            _OptionItem(
+              icon: Icons.lock_rounded,
+              label: 'Fechar Escalação',
+              onTap: () {
+                Navigator.of(context).pop();
+                onLockAssignments?.call();
+              },
+            ),
+          ],
+          if (canManageAssignments && !allowAssignment) ...[
+            const Divider(indent: 16, endIndent: 16),
+            _OptionItem(
+              icon: Icons.lock_open_rounded,
+              label: 'Reabrir Escalação',
+              color: AppTheme.successColor,
+              onTap: () {
+                Navigator.of(context).pop();
+                onReopenAssignments?.call();
+              },
+            ),
+          ],
+          if (canManageEvents &&
+              eventStatus != OrganizationEventStatus.canceled) ...[
             const Divider(indent: 16, endIndent: 16),
             _OptionItem(
               icon: Icons.cancel_rounded,
               label: 'Cancelar Evento',
               color: AppTheme.errorColor,
-              onTap: () => Navigator.of(context).pop(),
+              onTap: () {
+                Navigator.of(context).pop();
+                onCancelEvent?.call();
+              },
             ),
           ],
           const SizedBox(height: 8),

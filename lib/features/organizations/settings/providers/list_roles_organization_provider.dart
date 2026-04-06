@@ -1,5 +1,5 @@
 import 'package:convoquei_app/core/models/paged_response_model.dart';
-import 'package:convoquei_app/features/organizations/shared/models/OrganizationRolePermissionModel.dart';
+import 'package:convoquei_app/features/organizations/shared/models/organization_role_permission_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_role_model.dart';
 import 'package:convoquei_app/features/organizations/shared/repositories/organization_role_repository.dart';
 import 'package:flutter/cupertino.dart';

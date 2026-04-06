@@ -1,6 +1,5 @@
 import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_model.dart';
-import 'package:convoquei_app/features/organizations/organization_tab.dart';
 import 'package:flutter/material.dart';
 
 /// Top AppBar used in the narrow (mobile) layout of [OrganizationShell].

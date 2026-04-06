@@ -98,12 +98,12 @@ class _RoleTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: isSelected
-                ? AppTheme.primaryColor.withOpacity(0.05)
+                ? AppTheme.primaryColor.withValues(alpha: 0.05)
                 : Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isSelected
-                  ? AppTheme.primaryColor.withOpacity(0.4)
+                  ? AppTheme.primaryColor.withValues(alpha: 0.4)
                   : const Color(0xFFE2E8F0),
             ),
           ),
@@ -114,7 +114,7 @@ class _RoleTile extends StatelessWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? AppTheme.primaryColor.withOpacity(0.1)
+                      ? AppTheme.primaryColor.withValues(alpha: 0.1)
                       : const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(12),
                 ),

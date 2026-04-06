@@ -24,7 +24,7 @@ class InviteCard extends StatelessWidget {
         color: theme.cardTheme.color,
         borderRadius: const BorderRadius.all(Radius.circular(16)),
         border: Border.all(
-          color: AppTheme.textSecondary.withOpacity(0.12),
+          color: AppTheme.textSecondary.withValues(alpha: 0.12),
         ),
       ),
       child: Row(
@@ -34,7 +34,7 @@ class InviteCard extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppTheme.secondaryColor.withOpacity(0.08),
+              color: AppTheme.secondaryColor.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
@@ -107,7 +107,7 @@ class _IconAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: color.withOpacity(0.08),
+      color: color.withValues(alpha: 0.08),
       borderRadius: BorderRadius.circular(10),
       child: InkWell(
         onTap: onPressed,

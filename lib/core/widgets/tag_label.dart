@@ -46,7 +46,7 @@ class TagLabel extends StatelessWidget {
   Color get _backgroundColor => switch (variant) {
     TagLabelVariant.filled   => color,
     TagLabelVariant.outlined => Colors.transparent,
-    TagLabelVariant.soft     => color.withOpacity(0.10),
+    TagLabelVariant.soft     => color.withValues(alpha: 0.10),
     TagLabelVariant.ghost    => Colors.transparent,
     TagLabelVariant.elevated => Colors.white,
   };
@@ -54,7 +54,7 @@ class TagLabel extends StatelessWidget {
   Border? get _border => switch (variant) {
     TagLabelVariant.filled   => null,
     TagLabelVariant.outlined => Border.all(color: color),
-    TagLabelVariant.soft     => Border.all(color: color.withOpacity(0.25)),
+    TagLabelVariant.soft     => Border.all(color: color.withValues(alpha: 0.25)),
     TagLabelVariant.ghost    => null,
     TagLabelVariant.elevated => Border.all(color: const Color(0xFFE2E8F0)),
   };

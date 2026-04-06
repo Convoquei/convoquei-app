@@ -65,8 +65,6 @@ abstract final class AppPaths {
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authNotifier = ref.watch(authProvider.notifier);
-
   return GoRouter(
     initialLocation: AppPaths.home,
     refreshListenable: _AuthStateListenable(ref),
@@ -90,14 +88,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppPaths.login,
         name: AppRoutes.login,
-        builder: (_, __) => const LoginPage(),
+        builder: (_, _) => const LoginPage(),
       ),
 
       // ── Home ────────────────────────────────────────────────────────────
       GoRoute(
         path: AppPaths.home,
         name: AppRoutes.home,
-        builder: (_, __) => const HomePage(),
+        builder: (_, _) => const HomePage(),
       ),
 
       // ── Organization shell (single persistent shell for tabs + settings) ──
@@ -234,6 +232,6 @@ OrganizationModel? _orgFromState(Ref ref, GoRouterState state) {
 /// react to authentication changes and re-evaluate its redirect logic.
 class _AuthStateListenable extends ChangeNotifier {
   _AuthStateListenable(Ref ref) {
-    ref.listen<AuthState>(authProvider, (_, __) => notifyListeners());
+    ref.listen<AuthState>(authProvider, (_, _) => notifyListeners());
   }
 }

@@ -13,8 +13,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Aba "Pessoas" da tela de detalhes do evento.
 ///
-/// Agrupa participantes em quatro seções colapsáveis via [ExpandedCard].
-/// Exibe botões de ação contextuais com base em [canManageEvents] e [currentMemberId].
+/// Seções:
+/// 1. Aguardando Escalação — [awaitingAssignment] ou [awaitingDraw]
+/// 2. Escalados             — [assigned]
+/// 3. Não Escalados         — [notAssigned] + disponíveis
+/// 4. Não Confirmados       — não responderam (primeiro) + indisponíveis (final)
 class EventParticipantsView extends ConsumerWidget {
   final String organizationId;
   final String eventId;
@@ -31,7 +34,9 @@ class EventParticipantsView extends ConsumerWidget {
     required this.participants,
   });
 
-  List<OrganizationEventParticipantModel> get _awaitingApproval =>
+  // ── Agrupamentos ─────────────────────────────────────────────────────────────
+
+  List<OrganizationEventParticipantModel> get _awaitingAssignment =>
       participants
           .where((p) =>
               p.status == OrganizationEventMembershipStatus.awaitingAssignment ||
@@ -42,29 +47,39 @@ class EventParticipantsView extends ConsumerWidget {
       .where((p) => p.status == OrganizationEventMembershipStatus.assigned)
       .toList();
 
-  List<OrganizationEventParticipantModel> get _notAnswered => participants
+  List<OrganizationEventParticipantModel> get _notAssigned => participants
       .where((p) =>
+          p.status == OrganizationEventMembershipStatus.notAssigned &&
           p.availabilityStatus ==
-          OrganizationEventMembershipAvailabilityStatus.notAnswered)
+              OrganizationEventMembershipAvailabilityStatus.available)
       .toList();
 
-  List<OrganizationEventParticipantModel> get _unavailable => participants
-      .where((p) =>
-          p.availabilityStatus ==
-          OrganizationEventMembershipAvailabilityStatus.unavailable)
-      .toList();
+  /// Não responderam primeiro, indisponíveis no final.
+  List<OrganizationEventParticipantModel> get _semConfirmacao {
+    final notAnswered = participants
+        .where((p) =>
+            p.availabilityStatus ==
+            OrganizationEventMembershipAvailabilityStatus.notAnswered)
+        .toList();
+    final unavailable = participants
+        .where((p) =>
+            p.availabilityStatus ==
+            OrganizationEventMembershipAvailabilityStatus.unavailable)
+        .toList();
+    return [...notAnswered, ...unavailable];
+  }
 
-  void _handleAssign(BuildContext context, WidgetRef ref, String membershipId) async {
+  // ── Handlers ─────────────────────────────────────────────────────────────────
+
+  void _handleApprove(BuildContext context, WidgetRef ref, String membershipId) async {
     try {
-      await ref.read(manageParticipantProvider.notifier).assign(
+      await ref.read(manageParticipantProvider.notifier).approveAssignment(
             organizationId: organizationId,
             eventId: eventId,
-            membershipId: membershipId,
+            participantId: membershipId,
           );
       ref.invalidate(findEventDetailsByIdProvider(
-        organizationId: organizationId,
-        eventId: eventId,
-      ));
+          organizationId: organizationId, eventId: eventId));
     } catch (_) {
       if (!context.mounted) return;
       ToastFeedbackService.showToast(
@@ -80,9 +95,7 @@ class EventParticipantsView extends ConsumerWidget {
             membershipId: membershipId,
           );
       ref.invalidate(findEventDetailsByIdProvider(
-        organizationId: organizationId,
-        eventId: eventId,
-      ));
+          organizationId: organizationId, eventId: eventId));
     } catch (_) {
       if (!context.mounted) return;
       ToastFeedbackService.showToast(
@@ -90,18 +103,15 @@ class EventParticipantsView extends ConsumerWidget {
     }
   }
 
-  void _handleRemoveAssigned(
-      BuildContext context, WidgetRef ref, String membershipId) async {
+  void _handleRemove(BuildContext context, WidgetRef ref, String membershipId) async {
     try {
-      await ref.read(manageParticipantProvider.notifier).removeAssigned(
+      await ref.read(manageParticipantProvider.notifier).removeAssignment(
             organizationId: organizationId,
             eventId: eventId,
-            membershipId: membershipId,
+            participantId: membershipId,
           );
       ref.invalidate(findEventDetailsByIdProvider(
-        organizationId: organizationId,
-        eventId: eventId,
-      ));
+          organizationId: organizationId, eventId: eventId));
     } catch (_) {
       if (!context.mounted) return;
       ToastFeedbackService.showToast(
@@ -109,16 +119,30 @@ class EventParticipantsView extends ConsumerWidget {
     }
   }
 
-  void _handleRemoveOwn(BuildContext context, WidgetRef ref) async {
+  void _handleAssign(BuildContext context, WidgetRef ref, String membershipId) async {
+    try {
+      await ref.read(manageParticipantProvider.notifier).assign(
+            organizationId: organizationId,
+            eventId: eventId,
+            membershipId: membershipId,
+          );
+      ref.invalidate(findEventDetailsByIdProvider(
+          organizationId: organizationId, eventId: eventId));
+    } catch (_) {
+      if (!context.mounted) return;
+      ToastFeedbackService.showToast(
+          context, 'Não foi possível escalar o membro.', ToastType.error);
+    }
+  }
+
+  void _handleLeave(BuildContext context, WidgetRef ref) async {
     try {
       await ref.read(manageParticipantProvider.notifier).removeOwn(
             organizationId: organizationId,
             eventId: eventId,
           );
       ref.invalidate(findEventDetailsByIdProvider(
-        organizationId: organizationId,
-        eventId: eventId,
-      ));
+          organizationId: organizationId, eventId: eventId));
     } catch (_) {
       if (!context.mounted) return;
       ToastFeedbackService.showToast(
@@ -142,24 +166,107 @@ class EventParticipantsView extends ConsumerWidget {
     }
   }
 
+  void _showAwaitingSheet(
+      BuildContext context, WidgetRef ref, String membershipId) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => _ParticipantActionsSheet(
+        actions: [
+          _SheetAction(
+            icon: Icons.check_circle_rounded,
+            label: 'Escalar membro',
+            color: AppTheme.successColor,
+            onTap: () {
+              Navigator.of(context).pop();
+              _handleApprove(context, ref, membershipId);
+            },
+          ),
+          _SheetAction(
+            icon: Icons.cancel_rounded,
+            label: 'Rejeitar membro',
+            color: AppTheme.errorColor,
+            onTap: () {
+              Navigator.of(context).pop();
+              _handleReject(context, ref, membershipId);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAssignedSheet(
+      BuildContext context, WidgetRef ref, String membershipId) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => _ParticipantActionsSheet(
+        actions: [
+          _SheetAction(
+            icon: Icons.person_remove_rounded,
+            label: 'Remover da escala',
+            color: AppTheme.errorColor,
+            onTap: () {
+              Navigator.of(context).pop();
+              _handleRemove(context, ref, membershipId);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showNotAssignedSheet(
+      BuildContext context, WidgetRef ref, String membershipId) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => _ParticipantActionsSheet(
+        actions: [
+          _SheetAction(
+            icon: Icons.how_to_reg_rounded,
+            label: 'Escalar membro',
+            color: AppTheme.primaryColor,
+            onTap: () {
+              Navigator.of(context).pop();
+              _handleAssign(context, ref, membershipId);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final awaiting = _awaitingApproval;
+    final awaiting = _awaitingAssignment;
     final assigned = _assigned;
-    final notAnswered = _notAnswered;
-    final unavailable = _unavailable;
+    final notAssigned = _notAssigned;
+    final semConfirmacao = _semConfirmacao;
+    final notAnsweredCount = semConfirmacao
+        .where((p) =>
+            p.availabilityStatus ==
+            OrganizationEventMembershipAvailabilityStatus.notAnswered)
+        .length;
 
     return Column(
       children: [
-        // ── Aguardando Aprovação ────────────────────────────────────────────
+        // ── 1. Aguardando Escalação ────────────────────────────────────────────
         ExpandedCard(
           leading: _SectionIcon(
             bgColor: const Color(0xFFFFF7ED),
             iconColor: AppTheme.secondaryColor,
             icon: Icons.pan_tool_rounded,
           ),
-          title: 'Aguardando Aprovação',
-          description: _memberLabel(awaiting.length, 'disponíveis'),
+          title: 'Aguardando Escalação',
+          description: _label(awaiting.length, 'disponíveis'),
           initiallyExpanded: awaiting.isNotEmpty,
           children: awaiting.isEmpty
               ? [const _EmptySection()]
@@ -167,24 +274,20 @@ class EventParticipantsView extends ConsumerWidget {
                   .map((p) => EventParticipantTile(
                         participant: p,
                         trailing: canManageEvents
-                            ? _ApprovalActions(
-                                onApprove: () =>
-                                    _handleAssign(context, ref, p.membershipId),
-                                onReject: () =>
-                                    _handleReject(context, ref, p.membershipId),
+                            ? _ManageButton(
+                                onTap: () => _showAwaitingSheet(
+                                    context, ref, p.membershipId),
                               )
                             : p.membershipId == currentMemberId
                                 ? _LeaveButton(
-                                    onLeave: () =>
-                                        _handleRemoveOwn(context, ref),
-                                  )
+                                    onLeave: () => _handleLeave(context, ref))
                                 : null,
                       ))
                   .toList(),
         ),
         const SizedBox(height: 12),
 
-        // ── Escalados ───────────────────────────────────────────────────────
+        // ── 2. Escalados ──────────────────────────────────────────────────────
         ExpandedCard(
           leading: _SectionIcon(
             bgColor: const Color(0xFFECFDF5),
@@ -192,7 +295,7 @@ class EventParticipantsView extends ConsumerWidget {
             icon: Icons.check_circle_rounded,
           ),
           title: 'Escalados',
-          description: _memberLabel(assigned.length, 'confirmados'),
+          description: _label(assigned.length, 'confirmados'),
           initiallyExpanded: assigned.isNotEmpty,
           children: assigned.isEmpty
               ? [const _EmptySection()]
@@ -201,8 +304,8 @@ class EventParticipantsView extends ConsumerWidget {
                         participant: p,
                         functionColor: AppTheme.successColor,
                         trailing: canManageEvents
-                            ? _RemoveButton(
-                                onRemove: () => _handleRemoveAssigned(
+                            ? _ManageButton(
+                                onTap: () => _showAssignedSheet(
                                     context, ref, p.membershipId),
                               )
                             : null,
@@ -211,26 +314,56 @@ class EventParticipantsView extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
 
-        // ── Não Responderam ─────────────────────────────────────────────────
+        // ── 3. Não Escalados ──────────────────────────────────────────────────
         ExpandedCard(
           leading: _SectionIcon(
-            bgColor: const Color(0xFFEFF6FF),
-            iconColor: AppTheme.infoColor,
-            icon: Icons.schedule_rounded,
+            bgColor: const Color(0xFFF1F5F9),
+            iconColor: AppTheme.textSecondary,
+            icon: Icons.person_outline_rounded,
           ),
-          title: 'Não Responderam',
-          description: _memberLabel(notAnswered.length, 'convocados'),
+          title: 'Não Escalados',
+          description: _label(notAssigned.length, 'disponíveis'),
+          initiallyExpanded: false,
+          children: notAssigned.isEmpty
+              ? [const _EmptySection()]
+              : notAssigned
+                  .map((p) => EventParticipantTile(
+                        participant: p,
+                        trailing: canManageEvents
+                            ? _ManageButton(
+                                onTap: () => _showNotAssignedSheet(
+                                    context, ref, p.membershipId),
+                              )
+                            : null,
+                      ))
+                  .toList(),
+        ),
+        const SizedBox(height: 12),
+
+        // ── 4. Não Confirmados (não responderam + indisponíveis) ──────────────
+        ExpandedCard(
+          leading: _SectionIcon(
+            bgColor: const Color(0xFFF8FAFC),
+            iconColor: AppTheme.textSecondary,
+            icon: Icons.help_outline_rounded,
+          ),
+          title: 'Não Confirmados',
+          description: _label(semConfirmacao.length, 'convocados'),
           initiallyExpanded: false,
           children: [
-            if (notAnswered.isEmpty)
+            if (semConfirmacao.isEmpty)
               const _EmptySection()
             else
-              ...notAnswered.map((p) => EventParticipantTile(participant: p)),
-            if (notAnswered.isNotEmpty && canManageEvents)
+              ...semConfirmacao.map((p) => EventParticipantTile(
+                    participant: p,
+                    strikethrough: p.availabilityStatus ==
+                        OrganizationEventMembershipAvailabilityStatus.unavailable,
+                  )),
+            if (notAnsweredCount > 0 && canManageEvents)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: ActionButton(
-                  label: 'Notificar Todos',
+                  label: 'Notificar Quem Não Respondeu',
                   icon: Icons.notifications_rounded,
                   schema: ActionButtonSchema.secondary,
                   size: ActionButtonSize.sm,
@@ -239,34 +372,81 @@ class EventParticipantsView extends ConsumerWidget {
               ),
           ],
         ),
-        const SizedBox(height: 12),
-
-        // ── Indisponíveis ───────────────────────────────────────────────────
-        ExpandedCard(
-          leading: _SectionIcon(
-            bgColor: const Color(0xFFF1F5F9),
-            iconColor: AppTheme.errorColor,
-            icon: Icons.person_remove_rounded,
-          ),
-          title: 'Indisponíveis',
-          description: _memberLabel(unavailable.length, 'membros'),
-          initiallyExpanded: false,
-          children: unavailable.isEmpty
-              ? [const _EmptySection()]
-              : unavailable
-                  .map((p) => EventParticipantTile(
-                        participant: p,
-                        strikethrough: true,
-                      ))
-                  .toList(),
-        ),
       ],
     );
   }
 
-  static String _memberLabel(int count, String pluralSuffix) {
+  static String _label(int count, String pluralSuffix) {
     if (count == 0) return 'Nenhum membro';
     return '$count ${count == 1 ? 'membro' : pluralSuffix}';
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PARTICIPANT ACTIONS SHEET
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _SheetAction {
+  final IconData icon;
+  final String label;
+  final Color? color;
+  final VoidCallback onTap;
+
+  const _SheetAction({
+    required this.icon,
+    required this.label,
+    this.color,
+    required this.onTap,
+  });
+}
+
+class _ParticipantActionsSheet extends StatelessWidget {
+  final List<_SheetAction> actions;
+
+  const _ParticipantActionsSheet({required this.actions});
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE2E8F0),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          for (int i = 0; i < actions.length; i++) ...[
+            if (i > 0) const Divider(indent: 16, endIndent: 16),
+            _SheetActionTile(action: actions[i]),
+          ],
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+}
+
+class _SheetActionTile extends StatelessWidget {
+  final _SheetAction action;
+
+  const _SheetActionTile({required this.action});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = action.color ?? AppTheme.textPrimary;
+    return ListTile(
+      leading: Icon(action.icon, color: color),
+      title: Text(
+        action.label,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(color: color),
+      ),
+      onTap: action.onTap,
+    );
   }
 }
 
@@ -274,31 +454,29 @@ class EventParticipantsView extends ConsumerWidget {
 // ACTION WIDGETS
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _ApprovalActions extends StatelessWidget {
-  final VoidCallback onApprove;
-  final VoidCallback onReject;
+class _ManageButton extends StatelessWidget {
+  final VoidCallback onTap;
 
-  const _ApprovalActions({required this.onApprove, required this.onReject});
+  const _ManageButton({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _ActionIcon(
-          icon: Icons.check_rounded,
-          color: AppTheme.successColor,
-          bgColor: const Color(0xFFECFDF5),
-          onTap: onApprove,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
         ),
-        const SizedBox(width: 6),
-        _ActionIcon(
-          icon: Icons.close_rounded,
-          color: AppTheme.errorColor,
-          bgColor: const Color(0xFFFEF2F2),
-          onTap: onReject,
+        child: Icon(
+          Icons.more_vert_rounded,
+          color: AppTheme.textSecondary,
+          size: 18,
         ),
-      ],
+      ),
     );
   }
 }
@@ -317,7 +495,7 @@ class _LeaveButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xFFFEF2F2),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppTheme.errorColor.withOpacity(0.3)),
+          border: Border.all(color: AppTheme.errorColor.withValues(alpha: 0.3)),
         ),
         child: Text(
           'Sair',
@@ -326,53 +504,6 @@ class _LeaveButton extends StatelessWidget {
                 fontWeight: FontWeight.w700,
               ),
         ),
-      ),
-    );
-  }
-}
-
-class _RemoveButton extends StatelessWidget {
-  final VoidCallback onRemove;
-
-  const _RemoveButton({required this.onRemove});
-
-  @override
-  Widget build(BuildContext context) {
-    return _ActionIcon(
-      icon: Icons.remove_rounded,
-      color: AppTheme.errorColor,
-      bgColor: const Color(0xFFFEF2F2),
-      onTap: onRemove,
-    );
-  }
-}
-
-class _ActionIcon extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final Color bgColor;
-  final VoidCallback onTap;
-
-  const _ActionIcon({
-    required this.icon,
-    required this.color,
-    required this.bgColor,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.3)),
-        ),
-        child: Icon(icon, color: color, size: 16),
       ),
     );
   }

@@ -1,4 +1,3 @@
-import 'package:convoquei_app/features/organizations/shared/models/organization_role_model.dart';
 
 class PagedResponseModel<T> {
   final List<T> items;

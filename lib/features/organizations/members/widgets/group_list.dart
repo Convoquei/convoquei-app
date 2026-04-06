@@ -100,7 +100,7 @@ class _GroupsListState extends ConsumerState<GroupsList> {
       controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
       itemCount: state.items.length + (state.hasNextPage ? 1 : 0),
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      separatorBuilder: (_, _) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         if (index == state.items.length) {
           return const Padding(

@@ -296,7 +296,7 @@ class _MonthEventsCard extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
             ),
             child: const Icon(
               Icons.calendar_month_rounded,

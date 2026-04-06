@@ -89,8 +89,6 @@ class _UrgentBadgeState extends State<UrgentBadge> {
 
       return 'Bloqueando disponibilidade em ${_formatRemaining(_remaining)}';
     }
-
-    return '';
   }
 
   @override

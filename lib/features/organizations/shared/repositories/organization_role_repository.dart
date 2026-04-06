@@ -1,7 +1,7 @@
 import 'package:convoquei_app/core/models/paged_response_model.dart';
 import 'package:convoquei_app/core/network/base_repository.dart';
 import 'package:convoquei_app/core/providers/providers.dart' show apiClientProvider;
-import 'package:convoquei_app/features/organizations/shared/models/OrganizationRolePermissionModel.dart';
+import 'package:convoquei_app/features/organizations/shared/models/organization_role_permission_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_role_member_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_role_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';

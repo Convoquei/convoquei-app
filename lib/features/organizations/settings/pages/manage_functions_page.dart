@@ -38,32 +38,6 @@ class _ManageFunctionsPageState extends ConsumerState<ManageFunctionsPage> {
     await CreateFunctionModal.show(context, widget.organization.id);
   }
 
-  Future<void> _handleDeleteFunction(OrganizationFunctionModel fn) async {
-    final confirmed = await UserFeedbackService.confirm(
-      context,
-      title: 'Excluir função',
-      message:
-          'Tem certeza que deseja excluir a função "${fn.name}"? Esta ação não pode ser desfeita.',
-      confirmLabel: 'Excluir',
-      destructive: true,
-    );
-
-    if (!confirmed || !mounted) return;
-
-    try {
-      await ref.read(deleteFunctionProvider.notifier).delete(
-            organizationId: widget.organization.id,
-            functionId: fn.id,
-          );
-    } catch (_) {
-      if (!mounted) return;
-      await UserFeedbackService.error(
-        context,
-        message: 'Não foi possível excluir a função. Tente novamente.',
-      );
-    }
-  }
-
   @override
   void initState() {
     super.initState();
@@ -431,7 +405,7 @@ class _Avatar extends StatelessWidget {
                 width: 32,
                 height: 32,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _initials,
+                errorBuilder: (_, _, _) => _initials,
               ),
             )
           : _initials,

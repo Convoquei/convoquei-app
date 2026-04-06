@@ -4,13 +4,13 @@ import 'package:convoquei_app/features/organizations/events/models/enums/organiz
 import 'package:convoquei_app/features/organizations/events/models/event_form_step2_data.dart';
 import 'package:convoquei_app/features/organizations/events/models/event_form_step3_data.dart';
 
-class _CalledFunctionPayload {
+class CalledFunctionPayload {
   final String id;
   final int minMembers;
   final int? maxMembers;
   final OrganizationEventAssignmentMode assignmentMode;
 
-  const _CalledFunctionPayload({
+  const CalledFunctionPayload({
     required this.id,
     required this.minMembers,
     this.maxMembers,
@@ -33,7 +33,7 @@ class CreateOrganizationEventRequest {
   final OrganizationEventCallMode callMode;
   final OrganizationEventFunctionCallMode? functionCallMode;
   final int availabilityLockBeforeStartInMinutes;
-  final List<_CalledFunctionPayload> calledFunctionIds;
+  final List<CalledFunctionPayload> calledFunctionIds;
   final List<String> calledGroupIds;
   final DateTime startDate;
   final DateTime endDate;
@@ -78,7 +78,7 @@ class CreateOrganizationEventRequest {
     final calledFunctions = step3.hasFunctionRules
         ? step3.functionRules
             .map(
-              (r) => _CalledFunctionPayload(
+              (r) => CalledFunctionPayload(
                 id: r.functionId,
                 minMembers: r.min,
                 maxMembers: r.max,
@@ -86,7 +86,7 @@ class CreateOrganizationEventRequest {
               ),
             )
             .toList()
-        : <_CalledFunctionPayload>[];
+        : <CalledFunctionPayload>[];
 
     return CreateOrganizationEventRequest._(
       name: name,

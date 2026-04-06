@@ -33,7 +33,7 @@ final class ManageParticipantProvider
   ManageParticipant create() => ManageParticipant();
 }
 
-String _$manageParticipantHash() => r'23afe78f9bcc833a1b3424e3c96a4d922198cf7a';
+String _$manageParticipantHash() => r'ff84ae405be53ecc91bee3109a440e5fc5aa7a50';
 
 abstract class _$ManageParticipant extends $AsyncNotifier<void> {
   FutureOr<void> build();

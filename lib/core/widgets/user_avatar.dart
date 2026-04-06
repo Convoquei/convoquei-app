@@ -1,4 +1,3 @@
-import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class UserAvatar extends StatelessWidget {

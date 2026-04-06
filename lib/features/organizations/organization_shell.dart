@@ -1,4 +1,4 @@
-﻿import 'package:convoquei_app/app/router.dart';
+import 'package:convoquei_app/app/router.dart';
 import 'package:convoquei_app/core/constants/app_breakpoints.dart';
 import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_model.dart';
@@ -182,7 +182,7 @@ class _OrganizationShellState extends ConsumerState<OrganizationShell> {
   Widget build(BuildContext context) {
     ref.listen(
       currentUserMembershipOrganizationProvider(_orgId()),
-      (_, next) => next.whenOrNull(error: (_, __) => _exitOrganization()),
+      (_, next) => next.whenOrNull(error: (_, _) => _exitOrganization()),
     );
 
     final path = GoRouterState.of(context).uri.path;

@@ -1,6 +1,5 @@
 import 'package:convoquei_app/core/services/user_feedback_service.dart';
 import 'package:convoquei_app/core/theme/app_theme.dart';
-import 'package:convoquei_app/core/widgets/alert_banner.dart';
 import 'package:convoquei_app/core/widgets/base_scrollable_page.dart';
 import 'package:convoquei_app/core/widgets/header_modal_title_subtitle.dart';
 import 'package:convoquei_app/core/widgets/modals/multi_select_modal.dart';
@@ -17,12 +16,10 @@ import 'package:convoquei_app/features/organizations/settings/providers/update_r
 import 'package:convoquei_app/features/organizations/settings/widgets/create_role_modal.dart';
 import 'package:convoquei_app/features/organizations/settings/widgets/member_role_card.dart';
 import 'package:convoquei_app/features/organizations/settings/widgets/no_roles_empty_state.dart';
-import 'package:convoquei_app/features/organizations/shared/models/OrganizationRolePermissionModel.dart';
+import 'package:convoquei_app/features/organizations/shared/models/organization_role_permission_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_model.dart';
-import 'package:convoquei_app/features/organizations/shared/models/organization_my_member_profile_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_role_member_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_role_model.dart';
-import 'package:convoquei_app/features/organizations/shared/providers/organization_providers.dart';
 import 'package:convoquei_app/features/organizations/shared/widgets/expanded_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -182,7 +179,7 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
                 Icon(
                   Icons.person_off_outlined,
                   size: 14,
-                  color: AppTheme.textSecondary.withOpacity(0.5),
+                  color: AppTheme.textSecondary.withValues(alpha: 0.5),
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -190,7 +187,7 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 13,
-                    color: AppTheme.textSecondary.withOpacity(0.6),
+                    color: AppTheme.textSecondary.withValues(alpha: 0.6),
                     fontStyle: FontStyle.italic,
                   ),
                 ),
@@ -203,7 +200,7 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: members.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 4),
+          separatorBuilder: (_, _) => const SizedBox(height: 4),
           itemBuilder: (context, index) {
             final member = members[index];
             return MemberRoleCard(
@@ -245,7 +242,7 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
 
     return CircleAvatar(
       radius: 22,
-      backgroundColor: color.withOpacity(0.12),
+      backgroundColor: color.withValues(alpha: 0.12),
       child: Text(
         name.substring(0, 1).toUpperCase(),
         style: TextStyle(
@@ -377,10 +374,10 @@ class _DeleteRoleButton extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: dangerColor.withOpacity(0.07),
+            color: dangerColor.withValues(alpha: 0.07),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: dangerColor.withOpacity(0.18),
+              color: dangerColor.withValues(alpha: 0.18),
               width: 1,
             ),
           ),
@@ -473,7 +470,7 @@ class _SectionDivider extends StatelessWidget {
               gradient: LinearGradient(
                 colors: [
                   const Color(0xFFE2E8F0),
-                  const Color(0xFFE2E8F0).withOpacity(0),
+                  const Color(0xFFE2E8F0).withValues(alpha: 0),
                 ],
               ),
             ),

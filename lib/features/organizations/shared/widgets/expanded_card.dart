@@ -85,7 +85,7 @@ class _ExpandedCardState extends State<ExpandedCard> {
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeInOut,
             child: _expanded
-                ? _Body(children: widget.children, actions: widget.actions)
+                ? _Body(actions: widget.actions, children: widget.children)
                 : const SizedBox.shrink(),
           ),
         ],

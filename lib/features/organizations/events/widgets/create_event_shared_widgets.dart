@@ -156,7 +156,7 @@ class DateTimePickerButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: hasValue
-                ? AppTheme.primaryColor.withOpacity(0.4)
+                ? AppTheme.primaryColor.withValues(alpha: 0.4)
                 : const Color(0xFFE2E8F0),
           ),
         ),

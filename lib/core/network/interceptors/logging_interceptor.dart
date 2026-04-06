@@ -38,12 +38,4 @@ class LoggingInterceptor extends Interceptor {
     handler.next(err);
   }
 
-  /// Masks Authorization header value for security.
-  Map<String, dynamic> _sanitizeHeaders(Map<String, dynamic> headers) {
-    final copy = Map<String, dynamic>.from(headers);
-    if (copy.containsKey('Authorization')) {
-      copy['Authorization'] = 'Bearer ***';
-    }
-    return copy;
-  }
 }

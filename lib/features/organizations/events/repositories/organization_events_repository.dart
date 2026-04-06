@@ -1,6 +1,7 @@
 import 'package:convoquei_app/core/models/paged_response_model.dart';
 import 'package:convoquei_app/core/network/base_repository.dart';
-import 'package:convoquei_app/core/providers/providers.dart' show apiClientProvider;
+import 'package:convoquei_app/core/providers/providers.dart'
+    show apiClientProvider;
 import 'package:convoquei_app/features/organizations/events/models/organization_event_details_model.dart';
 import 'package:convoquei_app/features/organizations/events/models/orgnaization_event_membership_model.dart';
 import 'package:convoquei_app/features/organizations/events/models/requests/create_organization_event_request.dart';
@@ -29,8 +30,8 @@ class OrganizationEventsRepository extends BaseRepository {
 
   Future<PagedResponseModel<OrganizationEventMembershipModel>> findAllEvents({
     required String organizationId,
-    required FindAllEventsOrganizationMembershipRequest request
-}) async {
+    required FindAllEventsOrganizationMembershipRequest request,
+  }) async {
     final queryParameters = request.toJson();
 
     final data = await apiClient.get(
@@ -52,10 +53,7 @@ class OrganizationEventsRepository extends BaseRepository {
   }) async {
     final data = await apiClient.patch(
       '/v1/organizations/$organizationId/events/$eventId/availability',
-      data: {
-        'available': available,
-        if (functionId != null) 'functionId': functionId,
-      },
+      data: {'available': available, 'functionId': ?functionId},
     );
 
     return OrganizationEventMembershipModel.fromJson(
@@ -99,9 +97,7 @@ class OrganizationEventsRepository extends BaseRepository {
       data: request.toJson(),
     );
 
-    return OrganizationEventDetailsModel.fromJson(
-      data as Map<String, dynamic>,
-    );
+    return OrganizationEventDetailsModel.fromJson(data as Map<String, dynamic>);
   }
 
   Future<OrganizationEventDetailsModel> findEventDetailsById({
@@ -112,9 +108,7 @@ class OrganizationEventsRepository extends BaseRepository {
       '/v1/organizations/$organizationId/events/$eventId/details',
     );
 
-    return OrganizationEventDetailsModel.fromJson(
-      data as Map<String, dynamic>,
-    );
+    return OrganizationEventDetailsModel.fromJson(data as Map<String, dynamic>);
   }
 
   Future<void> assignParticipant({
@@ -122,7 +116,7 @@ class OrganizationEventsRepository extends BaseRepository {
     required String eventId,
     required String membershipId,
   }) async {
-    await apiClient.patch(
+    await apiClient.post(
       '/v1/organizations/$organizationId/events/$eventId/participants/$membershipId/assign',
     );
   }
@@ -153,6 +147,53 @@ class OrganizationEventsRepository extends BaseRepository {
   }) async {
     await apiClient.post(
       '/v1/organizations/$organizationId/events/$eventId/participants/notify',
+    );
+  }
+
+  Future<void> cancelEvent({
+    required String organizationId,
+    required String eventId,
+  }) async {
+    await apiClient.post(
+      '/v1/organizations/$organizationId/events/$eventId/cancel',
+    );
+  }
+
+  Future<void> approveParticipantAssignment({
+    required String organizationId,
+    required String eventId,
+    required String participantId,
+  }) async {
+    await apiClient.post(
+      '/v1/organizations/$organizationId/events/$eventId/participants/$participantId/assignment/approve',
+    );
+  }
+
+  Future<void> removeParticipantAssignment({
+    required String organizationId,
+    required String eventId,
+    required String participantId,
+  }) async {
+    await apiClient.delete(
+      '/v1/organizations/$organizationId/events/$eventId/participants/$participantId/assignment',
+    );
+  }
+
+  Future<void> lockAssignments({
+    required String organizationId,
+    required String eventId,
+  }) async {
+    await apiClient.post(
+      '/v1/organizations/$organizationId/events/$eventId/lock-assignments',
+    );
+  }
+
+  Future<void> reopenAssignments({
+    required String organizationId,
+    required String eventId,
+  }) async {
+    await apiClient.post(
+      '/v1/organizations/$organizationId/events/$eventId/reopen-assignments',
     );
   }
 }

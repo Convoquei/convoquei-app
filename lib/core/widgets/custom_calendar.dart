@@ -161,7 +161,7 @@ class _CustomCalendarState extends State<CustomCalendar> {
                 border: Border.all(color: colorScheme.outlineVariant),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -319,14 +319,14 @@ class _MonthDayCell extends StatelessWidget {
                 color: isSelected
                     ? primary
                     : isToday
-                    ? primary.withOpacity(0.12)
+                    ? primary.withValues(alpha: 0.12)
                     : Colors.transparent,
                 border: isToday && !isSelected
                     ? Border.all(color: primary, width: 1.5)
                     : null,
                 boxShadow: isSelected
                     ? [BoxShadow(
-                  color: primary.withOpacity(0.28),
+                  color: primary.withValues(alpha: 0.28),
                   blurRadius: 8,
                   offset: const Offset(0, 3),
                 )]
@@ -406,12 +406,12 @@ class _WeekDayChip extends StatelessWidget {
         color: isSelected
             ? primary
             : isToday
-            ? primary.withOpacity(0.12)
+            ? primary.withValues(alpha: 0.12)
             : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isSelected
-              ? primary.withOpacity(0.8)
+              ? primary.withValues(alpha: 0.8)
               : isToday
               ? primary
               : Theme.of(context).colorScheme.outlineVariant,
@@ -420,8 +420,8 @@ class _WeekDayChip extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: isSelected
-                ? primary.withOpacity(0.28)
-                : Colors.black.withOpacity(0.04),
+                ? primary.withValues(alpha: 0.28)
+                : Colors.black.withValues(alpha: 0.04),
             blurRadius: isSelected ? 10 : 4,
             offset: Offset(0, isSelected ? 4 : 2),
           ),

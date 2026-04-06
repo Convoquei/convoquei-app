@@ -1,4 +1,3 @@
-import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/create_event_shared_widgets.dart';
 import 'package:flutter/material.dart';
 

@@ -141,12 +141,12 @@ class _ConvoqueiLoadingIconState extends State<ConvoqueiLoadingIcon>
           RepaintBoundary(
             child: AnimatedBuilder(
               animation: _spinCtrl,
-              builder: (_, __) {
+              builder: (_, _) {
                 return Transform.rotate(
                   angle: _rotation.value,
                   child: AnimatedBuilder(
                     animation: _drawCtrl,
-                    builder: (_, __) {
+                    builder: (_, _) {
                       return CustomPaint(
                         size: Size(widget.size, widget.size),
                         painter: _ArcsPainter(

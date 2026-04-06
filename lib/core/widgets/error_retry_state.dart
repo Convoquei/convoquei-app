@@ -42,14 +42,14 @@ class ErrorRetryState extends StatelessWidget {
               width: 96,
               height: 96,
               decoration: BoxDecoration(
-                color: AppTheme.errorColor.withOpacity(0.08),
+                color: AppTheme.errorColor.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: AppTheme.errorColor.withOpacity(0.15),
+                  color: AppTheme.errorColor.withValues(alpha: 0.15),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.errorColor.withOpacity(0.15),
+                    color: AppTheme.errorColor.withValues(alpha: 0.15),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
