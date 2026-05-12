@@ -32,7 +32,7 @@ class CreateFunctionNotifier extends AsyncNotifier<void> {
       );
 
       if (ref.mounted) {
-        ref.read(functionsPagedProvider.notifier).reset();
+        ref.read(functionsProvider.notifier).reset();
       }
 
       state = const AsyncValue.data(null);

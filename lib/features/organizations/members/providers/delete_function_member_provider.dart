@@ -35,7 +35,7 @@ class DeleteFunctionMemberNotifier extends AsyncNotifier<void> {
       ref
           .read(functionMembersPagedProvider(functionId).notifier)
           .removeMember(memberId);
-      ref.read(functionsPagedProvider.notifier).decrementMemberCount(functionId);
+      ref.read(functionsProvider.notifier).decrementMemberCount(functionId);
     } finally {
       link.close();
     }

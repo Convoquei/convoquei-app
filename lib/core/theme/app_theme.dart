@@ -11,6 +11,7 @@ class AppTheme {
   static const successColor = Color(0xFF10B981);
   static const warningColor = Color(0xFFF59E0B);
   static const infoColor = Color(0xFF3B82F6);
+  static const surfaceSubtle = Color(0xFFF1F5F9);
 
   static ThemeData get light {
     return ThemeData(

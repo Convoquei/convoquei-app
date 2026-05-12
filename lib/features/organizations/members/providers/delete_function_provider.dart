@@ -30,7 +30,7 @@ class DeleteFunctionNotifier extends AsyncNotifier<void> {
 
       if (!ref.mounted) return;
 
-      ref.read(functionsPagedProvider.notifier).reset();
+      ref.read(functionsProvider.notifier).reset();
     } finally {
       link.close();
     }

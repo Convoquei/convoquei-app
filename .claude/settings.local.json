@@ -9,7 +9,8 @@
       "Bash(dart pub:*)",
       "Bash(git -C C:/repo/convoquei/convoquei-app status)",
       "Bash(git -C C:/repo/convoquei/convoquei-app diff --stat)",
-      "Bash(grep -E \"\\\\.dart$\")"
+      "Bash(grep -E \"\\\\.dart$\")",
+      "Bash(flutter analyze *)"
     ]
   }
 }

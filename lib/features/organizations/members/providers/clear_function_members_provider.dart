@@ -32,7 +32,7 @@ class ClearFunctionMembersNotifier extends AsyncNotifier<void> {
       if (!ref.mounted) return;
 
       ref.read(functionMembersPagedProvider(functionId).notifier).clearAll();
-      ref.read(functionsPagedProvider.notifier).clearMemberCount(functionId);
+      ref.read(functionsProvider.notifier).clearMemberCount(functionId);
     } finally {
       link.close();
     }

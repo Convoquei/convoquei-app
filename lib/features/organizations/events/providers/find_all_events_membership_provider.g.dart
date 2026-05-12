@@ -51,7 +51,7 @@ final class EventMembershipNotifierProvider
 }
 
 String _$eventMembershipNotifierHash() =>
-    r'722ac11e483b72298f393b11b513492c31a3f74a';
+    r'd49aa72ed698f98e357285e28dc15bc0d626beca';
 
 abstract class _$EventMembershipNotifier
     extends $Notifier<StateListPaged<OrganizationEventMembershipModel>> {

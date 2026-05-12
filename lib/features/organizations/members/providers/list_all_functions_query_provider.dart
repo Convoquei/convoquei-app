@@ -3,38 +3,43 @@ import 'package:convoquei_app/features/organizations/members/models/organization
 import 'package:convoquei_app/features/organizations/members/models/requests/find_all_organization_functions_request.dart';
 import 'package:convoquei_app/features/organizations/members/repositories/organization_functions_repository.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/selected_organization_provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-final functionsPagedProvider =
-    NotifierProvider.autoDispose<
-      FunctionsNotifier,
-      StateListPaged<OrganizationFunctionModel>
-    >(FunctionsNotifier.new);
+part 'list_all_functions_query_provider.g.dart';
 
-class FunctionsNotifier extends Notifier<StateListPaged<OrganizationFunctionModel>> {
+@riverpod
+class FunctionsNotifier extends _$FunctionsNotifier {
+  int _generation = 0;
+  String? _name;
+
   @override
   StateListPaged<OrganizationFunctionModel> build() {
-    return StateListPaged();
+    return const StateListPaged();
   }
 
   Future<void> loadNextPage({int size = 10}) async {
     final organizationId = ref.read(selectedOrganizationProvider)?.id;
-
     if (organizationId == null) return;
+    if (!state.hasNextPage || state.isLoadingMore) return;
 
-    if (state.isLoadingMore || state.isInitialLoading) return;
+    final currentGeneration = _generation;
 
-    state = state.page == 0
-        ? state.copyWith(isInitialLoading: true)
-        : state.copyWith(isLoadingMore: true);
+    state = state.copyWith(
+      isInitialLoading: state.page == 0,
+      isLoadingMore: state.page > 0,
+      clearError: true,
+    );
 
     try {
-      final repo = ref.read(organizationFunctionsRepositoryProvider);
+      final result = await ref
+          .read(organizationFunctionsRepositoryProvider)
+          .findAllFunctions(
+            organizationId,
+            FindAllOrganizationFunctionsRequest(page: state.page, size: size, name: _name),
+          );
 
-      final result = await repo.findAllFunctions(
-        organizationId,
-        FindAllOrganizationFunctionsRequest(page: state.page, size: size),
-      );
+      if (!ref.mounted) return;
+      if (_generation != currentGeneration) return;
 
       state = state.copyWith(
         items: [...state.items, ...result.items],
@@ -42,20 +47,31 @@ class FunctionsNotifier extends Notifier<StateListPaged<OrganizationFunctionMode
         hasNextPage: result.hasNextPage,
         isInitialLoading: false,
         isLoadingMore: false,
-        error: null,
       );
     } catch (e) {
+      if (!ref.mounted) return;
+      if (_generation != currentGeneration) return;
+
       state = state.copyWith(
-        error: e,
         isInitialLoading: false,
         isLoadingMore: false,
+        error: e,
       );
     }
   }
 
-  void reset() {
-    state = state.reset();
+  void reset({String? name}) {
+    _generation++;
+    _name = name;
+    state = const StateListPaged();
     loadNextPage();
+  }
+
+  Future<void> resetAsync({String? name}) {
+    _generation++;
+    _name = name;
+    state = const StateListPaged();
+    return loadNextPage();
   }
 
   void decrementMemberCount(String functionId) {
