@@ -24,6 +24,11 @@ class App extends ConsumerWidget {
         Locale('pt', 'BR'),
       ],
       routerConfig: router,
+      builder: (context, child) => GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        behavior: HitTestBehavior.translucent,
+        child: child,
+      ),
     );
   }
 }
