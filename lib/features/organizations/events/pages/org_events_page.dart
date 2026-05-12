@@ -304,6 +304,7 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
     }
 
     final grouped = _groupByMonth(eventsState.items);
+    final isPartialLoading = eventsState.isInitialLoading && _hasLoadedOnce;
 
     return Scaffold(
       body: RefreshIndicator(
@@ -326,6 +327,7 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
                           child: TextField(
                             controller: _searchController,
                             onChanged: _handleSearchChanged,
+                            enabled: !isPartialLoading,
                             decoration: const InputDecoration(
                               hintText: 'Buscar por nome ou local...',
                               prefixIcon: Icon(Icons.search_rounded, size: 20),
@@ -333,80 +335,92 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        FilterButton(
-                          isActive: _hasActiveFilters,
-                          onClear:  _handleClearFilters,
-                          onApply: () {
-                            setState(() {
-                              _customStatus             = _pendingStatus;
-                              _customAvailabilityStatus = _pendingAvailabilityStatus;
-                              _customEventStatus        = _pendingEventStatus;
-                              _customStartDate          = _pendingStartDate;
-                              _customEndDate            = _pendingEndDate;
-                            });
-                            _applyFilter(_buildFilter());
-                          },
-                          childrenBuilder: () {
-                            _pendingStatus             = _customStatus             ?? _membershipStatusForTab(_selectedTab);
-                            _pendingAvailabilityStatus = _customAvailabilityStatus ?? _availabilityStatusForTab(_selectedTab);
-                            _pendingEventStatus        = _customEventStatus        ?? _eventStatusForTab(_selectedTab);
-                            _pendingStartDate          = _customStartDate;
-                            _pendingEndDate            = _customEndDate;
-                            return [
-                              EventStatusFilterSection(
-                                selected: _pendingEventStatus,
-                                onChanged: (statuses) {
-                                  setState(() => _pendingEventStatus = statuses);
-                                },
-                              ),
-                              AvailabilityStatusFilterSection(
-                                selected: _pendingAvailabilityStatus,
-                                onChanged: (statuses) {
-                                  setState(() => _pendingAvailabilityStatus = statuses);
-                                },
-                              ),
-                              MembershipStatusFilterSection(
-                                selected: _pendingStatus,
-                                onChanged: (statuses) {
-                                  setState(() => _pendingStatus = statuses);
-                                },
-                              ),
-                              DateRangeFilterSection(
-                                startDate: _pendingStartDate,
-                                endDate:   _pendingEndDate,
-                                onChanged: (start, end) {
-                                  setState(() {
-                                    _pendingStartDate = start;
-                                    _pendingEndDate   = end;
-                                  });
-                                },
-                              ),
-                            ];
-                          },
+                        Opacity(
+                          opacity: isPartialLoading ? 0.4 : 1.0,
+                          child: AbsorbPointer(
+                            absorbing: isPartialLoading,
+                            child: FilterButton(
+                              isActive: _hasActiveFilters,
+                              onClear:  _handleClearFilters,
+                              onApply: () {
+                                setState(() {
+                                  _customStatus             = _pendingStatus;
+                                  _customAvailabilityStatus = _pendingAvailabilityStatus;
+                                  _customEventStatus        = _pendingEventStatus;
+                                  _customStartDate          = _pendingStartDate;
+                                  _customEndDate            = _pendingEndDate;
+                                });
+                                _applyFilter(_buildFilter());
+                              },
+                              childrenBuilder: () {
+                                _pendingStatus             = _customStatus             ?? _membershipStatusForTab(_selectedTab);
+                                _pendingAvailabilityStatus = _customAvailabilityStatus ?? _availabilityStatusForTab(_selectedTab);
+                                _pendingEventStatus        = _customEventStatus        ?? _eventStatusForTab(_selectedTab);
+                                _pendingStartDate          = _customStartDate;
+                                _pendingEndDate            = _customEndDate;
+                                return [
+                                  EventStatusFilterSection(
+                                    selected: _pendingEventStatus,
+                                    onChanged: (statuses) {
+                                      setState(() => _pendingEventStatus = statuses);
+                                    },
+                                  ),
+                                  AvailabilityStatusFilterSection(
+                                    selected: _pendingAvailabilityStatus,
+                                    onChanged: (statuses) {
+                                      setState(() => _pendingAvailabilityStatus = statuses);
+                                    },
+                                  ),
+                                  MembershipStatusFilterSection(
+                                    selected: _pendingStatus,
+                                    onChanged: (statuses) {
+                                      setState(() => _pendingStatus = statuses);
+                                    },
+                                  ),
+                                  DateRangeFilterSection(
+                                    startDate: _pendingStartDate,
+                                    endDate:   _pendingEndDate,
+                                    onChanged: (start, end) {
+                                      setState(() {
+                                        _pendingStartDate = start;
+                                        _pendingEndDate   = end;
+                                      });
+                                    },
+                                  ),
+                                ];
+                              },
+                            ),
+                          ),
                         ),
                         if (canManageEvents) ...[
                           const SizedBox(width: 10),
-                          GestureDetector(
-                            onTap: _handleCreateEvent,
-                            child: Container(
-                              width: 48,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color: AppTheme.primaryColor,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: const Color(0xFFE2E8F0)),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.04),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 2),
+                          Opacity(
+                            opacity: isPartialLoading ? 0.4 : 1.0,
+                            child: AbsorbPointer(
+                              absorbing: isPartialLoading,
+                              child: GestureDetector(
+                                onTap: _handleCreateEvent,
+                                child: Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primaryColor,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.04),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.add_rounded,
-                                size: 22,
-                                color: Colors.white,
+                                  child: const Icon(
+                                    Icons.add_rounded,
+                                    size: 22,
+                                    color: Colors.white,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -414,9 +428,15 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
                       ],
                     ),
                     const SizedBox(height: 14),
-                    EventsTabs(
-                      selected: _selectedTab,
-                      onChanged: _handleTabChange,
+                    Opacity(
+                      opacity: isPartialLoading ? 0.4 : 1.0,
+                      child: AbsorbPointer(
+                        absorbing: isPartialLoading,
+                        child: EventsTabs(
+                          selected: _selectedTab,
+                          onChanged: _handleTabChange,
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 16),
                   ],
