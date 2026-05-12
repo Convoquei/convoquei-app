@@ -4,6 +4,15 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme/app_theme.dart';
 
+class _NoStretchScrollBehavior extends ScrollBehavior {
+  @override
+  Widget buildOverscrollIndicator(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) => child;
+}
+
 class App extends ConsumerWidget {
   const App({super.key});
 
@@ -15,6 +24,7 @@ class App extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       title: 'Convoquei',
       theme: AppTheme.light,
+      scrollBehavior: _NoStretchScrollBehavior(),
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,

@@ -81,7 +81,7 @@ class AppTheme {
         ),
         bodyLarge: TextStyle(
           fontFamily: 'Inter',
-          fontSize: 16,
+          fontSize: 14,
           fontWeight: FontWeight.w400,
           color: textPrimary,
           height: 1.5,
@@ -152,12 +152,12 @@ class AppTheme {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         hintStyle: const TextStyle(
           fontFamily: 'Inter',
-          fontSize: 14,
+          fontSize: 13,
           color: textSecondary,
         ),
         labelStyle: const TextStyle(
           fontFamily: 'Inter',
-          fontSize: 14,
+          fontSize: 13,
           color: textSecondary,
         ),
         prefixIconColor: textSecondary,
