@@ -2,7 +2,6 @@
 
 import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/core/utils/date_locale_pt.dart';
-import 'package:convoquei_app/core/widgets/app_search_input.dart';
 import 'package:convoquei_app/core/widgets/date_range_filter_section.dart';
 import 'package:convoquei_app/core/widgets/error_retry_state.dart';
 import 'package:convoquei_app/core/widgets/filter_button.dart';
@@ -281,10 +280,13 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
                   Row(
                     children: [
                       Expanded(
-                        child: AppSearchInput(
+                        child: TextField(
                           controller: _searchController,
-                          hint: 'Buscar por nome ou local...',
                           onChanged: _handleSearchChanged,
+                          decoration: const InputDecoration(
+                            hintText: 'Buscar por nome ou local...',
+                            prefixIcon: Icon(Icons.search_rounded, size: 20),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 10),

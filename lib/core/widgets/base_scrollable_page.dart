@@ -1,5 +1,4 @@
 import 'package:convoquei_app/core/theme/app_theme.dart';
-import 'package:convoquei_app/core/widgets/app_search_input.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -141,7 +140,13 @@ class _SearchBar extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: AppSearchInput(hint: hint, onChanged: onChanged),
+            child: TextField(
+              onChanged: onChanged,
+              decoration: InputDecoration(
+                hintText: hint,
+                prefixIcon: const Icon(Icons.search_rounded, size: 20),
+              ),
+            ),
           ),
           if (onIconTap != null) ...[
             const SizedBox(width: 12),

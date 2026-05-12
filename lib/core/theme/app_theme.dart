@@ -6,6 +6,7 @@ class AppTheme {
   static const backgroundColor = Color(0xFFF8FAFC);
   static const textPrimary = Color(0xFF1E293B);
   static const textSecondary = Color(0xFF64748B);
+  static const borderColor = Color(0xFFE2E8F0);
   static const errorColor = Color(0xFFEF4444);
   static const successColor = Color(0xFF10B981);
   static const warningColor = Color(0xFFF59E0B);
@@ -138,6 +139,49 @@ class AppTheme {
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(16)),
+        ),
+      ),
+
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        hintStyle: const TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 14,
+          color: textSecondary,
+        ),
+        labelStyle: const TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 14,
+          color: textSecondary,
+        ),
+        prefixIconColor: textSecondary,
+        suffixIconColor: textSecondary,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: borderColor),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: borderColor),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: primaryColor, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: errorColor),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: errorColor, width: 1.5),
+        ),
+        errorStyle: const TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 12,
+          color: errorColor,
         ),
       ),
     );

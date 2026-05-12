@@ -125,6 +125,13 @@ class AuthNotifier extends Notifier<AuthState> {
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
 
+  Future<void> refreshProfile() async {
+    final user = await _fetchProfile();
+    if (user != null) {
+      state = state.copyWith(user: user);
+    }
+  }
+
   String _buildErrorMessage(Object e) =>
       e is ApiException
           ? e.userMessage

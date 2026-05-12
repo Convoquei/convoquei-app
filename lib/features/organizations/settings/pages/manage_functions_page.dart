@@ -1,8 +1,9 @@
-import 'package:convoquei_app/core/models/state_list_paged.dart';
 import 'package:convoquei_app/core/network/exceptions/api_exception.dart';
 import 'package:convoquei_app/core/services/toast_feedback_service.dart';
 import 'package:convoquei_app/core/services/user_feedback_service.dart';
 import 'package:convoquei_app/core/theme/app_theme.dart';
+import 'package:convoquei_app/core/widgets/app_loading_info.dart';
+import 'package:convoquei_app/core/widgets/app_loading_screen.dart';
 import 'package:convoquei_app/core/widgets/base_scrollable_page.dart';
 import 'package:convoquei_app/core/widgets/tag_label.dart';
 import 'package:convoquei_app/features/organizations/members/models/organization_function_member_model.dart';
@@ -15,8 +16,14 @@ import 'package:convoquei_app/features/organizations/members/providers/list_all_
 import 'package:convoquei_app/features/organizations/members/widgets/modals/create_function_modal.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_model.dart';
 import 'package:convoquei_app/features/organizations/shared/widgets/expanded_card.dart';
+import 'package:convoquei_app/core/models/state_list_paged.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+// ── Cores de ação destrutiva/atenção ────────────────────────────────────────
+const _kDangerColor = Color(0xFFEF4444);
+const _kWarningColor = Color(0xFFF97316);
+const _kSurfaceColor = Color(0xFFF1F5F9);
 
 class ManageFunctionsPage extends ConsumerStatefulWidget {
   final OrganizationModel organization;
@@ -42,43 +49,54 @@ class _ManageFunctionsPageState extends ConsumerState<ManageFunctionsPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(functionsPagedProvider.notifier).reset();
+      if (mounted) ref.read(functionsPagedProvider.notifier).reset();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final functionsState = ref.watch(functionsPagedProvider);
-    final hasNextPage = functionsState.hasNextPage;
+    final state = ref.watch(functionsPagedProvider);
 
-    final emptyState = functionsState.items.isEmpty &&
-            !functionsState.isInitialLoading &&
-            !functionsState.isLoadingMore
+    // Loading inicial — cobre o frame em que page==0, items vazios e sem erro
+    if (state.isInitialLoading ||
+        (state.page == 0 && state.items.isEmpty && state.error == null)) {
+      return const AppLoadingScreen(
+        content: AppLoadingInfo(
+          label: 'Carregando funções...',
+          description: 'Buscando funções da organização',
+        ),
+        skeleton: AppLoadingSkeleton.list,
+      );
+    }
+
+    final emptyState = state.items.isEmpty
         ? _NoFunctionsEmptyState(onCreateFunction: _handleCreateFunction)
         : null;
 
     return BaseScrollablePage(
       useSafeArea: true,
       searchHint: 'Procurar funções...',
-      onRequestNextPage: hasNextPage ? _handleRequestNextPage : null,
+      onRequestNextPage: state.hasNextPage ? _handleRequestNextPage : null,
       icon: Icons.add,
       emptyState: emptyState,
       onIconTap: _handleCreateFunction,
       children: [
-        if (functionsState.isInitialLoading)
-          const Center(child: CircularProgressIndicator())
-        else
-          Column(
-            spacing: 8,
-            children: functionsState.items
-                .map(
-                  (fn) => _FunctionExpandedCard(
-                    key: ValueKey(fn.id),
-                    function: fn,
-                    organizationId: widget.organization.id,
-                  ),
-                )
-                .toList(),
+        Column(
+          spacing: 8,
+          children: state.items
+              .map(
+                (fn) => _FunctionExpandedCard(
+                  key: ValueKey(fn.id),
+                  function: fn,
+                  organizationId: widget.organization.id,
+                ),
+              )
+              .toList(),
+        ),
+        if (state.isLoadingMore)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(child: CircularProgressIndicator()),
           ),
       ],
     );
@@ -99,14 +117,12 @@ class _FunctionExpandedCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final membersState = ref.watch(functionMembersPagedProvider(function.id));
-
     return ExpandedCard(
       leading: Container(
         width: 48,
         height: 48,
         decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9),
+          color: _kSurfaceColor,
           borderRadius: BorderRadius.circular(12),
         ),
         alignment: Alignment.center,
@@ -128,47 +144,43 @@ class _FunctionExpandedCard extends ConsumerWidget {
         _ActionButton(
           label: 'Limpar função',
           icon: Icons.cleaning_services_rounded,
-          color: const Color(0xFFF97316),
+          color: _kWarningColor,
           onTap: () => _confirmClear(context, ref),
         ),
         const SizedBox(width: 8),
         _IconActionButton(
           icon: Icons.delete_outline_rounded,
-          color: const Color(0xFFEF4444),
+          color: _kDangerColor,
           tooltip: 'Excluir função',
           onTap: () => _confirmDelete(context, ref),
         ),
       ],
       children: [
-        _MembersList(
+        _MembersSection(
           functionId: function.id,
           organizationId: organizationId,
-          state: membersState,
         ),
       ],
     );
   }
 
   Future<void> _confirmClear(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => _ConfirmDialog(
-        title: 'Limpar função',
-        message:
-            'Tem certeza que deseja remover todos os membros de "${function.name}"? Esta ação não pode ser desfeita.',
-        confirmLabel: 'Limpar',
-        confirmColor: const Color(0xFFF97316),
-      ),
+    final confirmed = await UserFeedbackService.confirm(
+      context,
+      title: 'Limpar função',
+      message:
+          'Tem certeza que deseja remover todos os membros de "${function.name}"? Esta ação não pode ser desfeita.',
+      confirmLabel: 'Limpar',
+      destructive: true,
     );
 
     if (confirmed != true) return;
     if (!context.mounted) return;
 
     try {
-      await ref.read(clearFunctionMembersProvider.notifier).clear(
-            organizationId: organizationId,
-            functionId: function.id,
-          );
+      await ref
+          .read(clearFunctionMembersProvider.notifier)
+          .clear(organizationId: organizationId, functionId: function.id);
 
       if (!context.mounted) return;
       ToastFeedbackService.showToast(
@@ -185,15 +197,13 @@ class _FunctionExpandedCard extends ConsumerWidget {
   }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => _ConfirmDialog(
-        title: 'Excluir função',
-        message:
-            'Tem certeza que deseja excluir a função "${function.name}"? Esta ação não pode ser desfeita.',
-        confirmLabel: 'Excluir',
-        confirmColor: const Color(0xFFEF4444),
-      ),
+    final confirmed = await UserFeedbackService.confirm(
+      context,
+      title: 'Excluir função',
+      message:
+          'Tem certeza que deseja excluir a função "${function.name}"? Esta ação não pode ser desfeita.',
+      confirmLabel: 'Excluir',
+      destructive: true,
     );
 
     if (confirmed != true) return;
@@ -220,24 +230,31 @@ class _FunctionExpandedCard extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
+// Seção de membros — widget separado para isolar o watch do provider Family
 
-class _MembersList extends ConsumerWidget {
-  const _MembersList({
+class _MembersSection extends ConsumerWidget {
+  const _MembersSection({
     required this.functionId,
     required this.organizationId,
-    required this.state,
   });
 
   final String functionId;
   final String organizationId;
-  final StateListPaged<OrganizationFunctionMemberModel> state;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(functionMembersPagedProvider(functionId));
+
     if (state.isInitialLoading) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 16),
-        child: Center(child: CircularProgressIndicator()),
+        child: Center(
+          child: SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
       );
     }
 
@@ -267,6 +284,29 @@ class _MembersList extends ConsumerWidget {
       );
     }
 
+    return _MembersList(
+      functionId: functionId,
+      organizationId: organizationId,
+      state: state,
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+
+class _MembersList extends ConsumerWidget {
+  const _MembersList({
+    required this.functionId,
+    required this.organizationId,
+    required this.state,
+  });
+
+  final String functionId;
+  final String organizationId;
+  final StateListPaged<OrganizationFunctionMemberModel> state;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -280,7 +320,13 @@ class _MembersList extends ConsumerWidget {
         if (state.isLoadingMore)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
-            child: Center(child: CircularProgressIndicator()),
+            child: Center(
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
           ),
         if (state.hasNextPage && !state.isLoadingMore)
           TextButton(
@@ -341,7 +387,7 @@ class _MemberTile extends ConsumerWidget {
                   icon: const Icon(
                     Icons.person_remove_outlined,
                     size: 18,
-                    color: Color(0xFFEF4444),
+                    color: _kDangerColor,
                   ),
                   tooltip: 'Remover da função',
                   visualDensity: VisualDensity.compact,
@@ -356,21 +402,21 @@ class _MemberTile extends ConsumerWidget {
   }
 
   Future<void> _confirmRemove(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => _ConfirmDialog(
-        title: 'Remover membro',
-        message: 'Remover "${member.memberName}" da função?',
-        confirmLabel: 'Remover',
-        confirmColor: const Color(0xFFEF4444),
-      ),
+    final confirmed = await UserFeedbackService.confirm(
+      context,
+      title: 'Remover membro',
+      message: 'Remover "${member.memberName}" da função?',
+      confirmLabel: 'Remover',
+      destructive: true,
     );
 
     if (confirmed != true) return;
     if (!context.mounted) return;
 
     try {
-      await ref.read(deleteFunctionMemberProvider.notifier).remove(
+      await ref
+          .read(deleteFunctionMemberProvider.notifier)
+          .remove(
             organizationId: organizationId,
             functionId: functionId,
             memberId: member.id,
@@ -413,13 +459,13 @@ class _Avatar extends StatelessWidget {
   }
 
   Widget get _initials => Text(
-        name.isNotEmpty ? name[0].toUpperCase() : '?',
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: AppTheme.primaryColor,
-        ),
-      );
+    name.isNotEmpty ? name[0].toUpperCase() : '?',
+    style: TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w600,
+      color: AppTheme.primaryColor,
+    ),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -506,56 +552,6 @@ class _IconActionButton extends StatelessWidget {
 
 // ---------------------------------------------------------------------------
 
-class _ConfirmDialog extends StatelessWidget {
-  const _ConfirmDialog({
-    required this.title,
-    required this.message,
-    required this.confirmLabel,
-    required this.confirmColor,
-  });
-
-  final String title;
-  final String message;
-  final String confirmLabel;
-  final Color confirmColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: Text(
-        title,
-        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-      ),
-      content: Text(
-        message,
-        style: const TextStyle(fontSize: 14, color: Color(0xFF475569)),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: const Text(
-            'Cancelar',
-            style: TextStyle(color: Color(0xFF64748B)),
-          ),
-        ),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(true),
-          child: Text(
-            confirmLabel,
-            style: TextStyle(
-              color: confirmColor,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-
 class _NoFunctionsEmptyState extends StatelessWidget {
   const _NoFunctionsEmptyState({this.onCreateFunction});
 
@@ -574,7 +570,7 @@ class _NoFunctionsEmptyState extends StatelessWidget {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
+              color: _kSurfaceColor,
               borderRadius: BorderRadius.circular(20),
             ),
             alignment: Alignment.center,

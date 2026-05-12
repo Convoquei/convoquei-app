@@ -3,7 +3,6 @@ import 'package:convoquei_app/core/network/exceptions/api_exception.dart';
 import 'package:convoquei_app/core/services/toast_feedback_service.dart';
 import 'package:convoquei_app/core/services/user_feedback_service.dart';
 import 'package:convoquei_app/core/theme/app_theme.dart';
-import 'package:convoquei_app/core/widgets/app_search_input.dart';
 import 'package:convoquei_app/features/organizations/members/models/enums/manage_member_action.dart';
 import 'package:convoquei_app/features/organizations/members/providers/invite_member_provider.dart';
 import 'package:convoquei_app/features/organizations/members/providers/kick_member_provider.dart';
@@ -229,10 +228,13 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
                 Row(
                   children: [
                     Expanded(
-                      child: AppSearchInput(
-                        hint: 'Procurar ${_tab.name}',
+                      child: TextField(
                         controller: _searchController,
                         onChanged: _onSearchChanged,
+                        decoration: InputDecoration(
+                          hintText: 'Procurar ${_tab.name}',
+                          prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                        ),
                       ),
                     ),
                     if ((_tab == OrgMembersTab.membros && canInviteMembers) ||

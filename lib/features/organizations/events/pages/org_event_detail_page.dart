@@ -6,7 +6,10 @@ import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/core/widgets/action_button.dart';
 import 'package:convoquei_app/core/widgets/app_loading_info.dart';
 import 'package:convoquei_app/core/widgets/app_loading_screen.dart';
+import 'package:convoquei_app/core/widgets/base_modal_stateful_widget.dart';
 import 'package:convoquei_app/core/widgets/error_retry_state.dart';
+import 'package:convoquei_app/core/widgets/header_modal_title_subtitle.dart';
+import 'package:convoquei_app/features/home/widgets/action_tile.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_status.dart';
 import 'package:convoquei_app/features/organizations/events/models/organization_event_details_model.dart';
 import 'package:convoquei_app/features/organizations/events/providers/cancel_event_provider.dart';
@@ -118,22 +121,18 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
   bool _rulesSaving = false;
 
   void _showOptionsModal() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => _EventOptionsSheet(
-        organizationId: widget.organizationId,
-        eventId: widget.eventId,
-        canManageEvents: widget.canManageEvents,
-        eventStatus: widget.details.status,
-        allowAssignment: widget.details.allowAssignment,
-        onShareEvent: _handleShare,
-        onCancelEvent: _handleCancelEvent,
-        onLockAssignments: _handleLockAssignments,
-        onReopenAssignments: _handleReopenAssignments,
-      ),
+    _EventOptionsModal.show(
+      context,
+      organizationId: widget.organizationId,
+      eventId: widget.eventId,
+      eventName: widget.details.name,
+      canManageEvents: widget.canManageEvents,
+      eventStatus: widget.details.status,
+      allowAssignment: widget.details.allowAssignment,
+      onShareEvent: _handleShare,
+      onCancelEvent: _handleCancelEvent,
+      onLockAssignments: _handleLockAssignments,
+      onReopenAssignments: _handleReopenAssignments,
     );
   }
 
@@ -338,10 +337,11 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
 
 // ─── Options Sheet ────────────────────────────────────────────────────────────
 
-class _EventOptionsSheet extends StatelessWidget {
-  const _EventOptionsSheet({
+class _EventOptionsModal extends BaseModalStatefulWidget {
+  const _EventOptionsModal({
     required this.organizationId,
     required this.eventId,
+    required this.eventName,
     required this.canManageEvents,
     required this.eventStatus,
     required this.allowAssignment,
@@ -353,6 +353,7 @@ class _EventOptionsSheet extends StatelessWidget {
 
   final String organizationId;
   final String eventId;
+  final String eventName;
   final bool canManageEvents;
   final OrganizationEventStatus eventStatus;
   final bool allowAssignment;
@@ -361,116 +362,130 @@ class _EventOptionsSheet extends StatelessWidget {
   final VoidCallback? onLockAssignments;
   final VoidCallback? onReopenAssignments;
 
-  @override
-  Widget build(BuildContext context) {
-    final isScheduled = eventStatus == OrganizationEventStatus.scheduled;
-    final canEdit = canManageEvents && isScheduled;
-    final canManageAssignments = canManageEvents && isScheduled;
+  static Future<void> show(
+    BuildContext context, {
+    required String organizationId,
+    required String eventId,
+    required String eventName,
+    required bool canManageEvents,
+    required OrganizationEventStatus eventStatus,
+    required bool allowAssignment,
+    VoidCallback? onShareEvent,
+    VoidCallback? onCancelEvent,
+    VoidCallback? onLockAssignments,
+    VoidCallback? onReopenAssignments,
+  }) =>
+      BaseModalStatefulWidget.show(
+        context,
+        _EventOptionsModal(
+          organizationId: organizationId,
+          eventId: eventId,
+          eventName: eventName,
+          canManageEvents: canManageEvents,
+          eventStatus: eventStatus,
+          allowAssignment: allowAssignment,
+          onShareEvent: onShareEvent,
+          onCancelEvent: onCancelEvent,
+          onLockAssignments: onLockAssignments,
+          onReopenAssignments: onReopenAssignments,
+        ),
+      );
 
-    return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          _OptionItem(
-            icon: Icons.share_rounded,
-            label: 'Compartilhar Evento',
-            onTap: () {
-              Navigator.of(context).pop();
-              onShareEvent?.call();
-            },
-          ),
-          if (canEdit) ...[
-            const Divider(indent: 16, endIndent: 16),
-            _OptionItem(
-              icon: Icons.edit_rounded,
-              label: 'Editar Evento',
-              onTap: () {
-                Navigator.of(context).pop();
-                context.pushNamed(
-                  AppRoutes.orgEditEvent,
-                  pathParameters: {
-                    'orgId': organizationId,
-                    'eventId': eventId,
-                  },
-                );
-              },
-            ),
-          ],
-          if (canManageAssignments && allowAssignment) ...[
-            const Divider(indent: 16, endIndent: 16),
-            _OptionItem(
-              icon: Icons.lock_rounded,
-              label: 'Fechar Escalação',
-              onTap: () {
-                Navigator.of(context).pop();
-                onLockAssignments?.call();
-              },
-            ),
-          ],
-          if (canManageAssignments && !allowAssignment) ...[
-            const Divider(indent: 16, endIndent: 16),
-            _OptionItem(
-              icon: Icons.lock_open_rounded,
-              label: 'Reabrir Escalação',
-              color: AppTheme.successColor,
-              onTap: () {
-                Navigator.of(context).pop();
-                onReopenAssignments?.call();
-              },
-            ),
-          ],
-          if (canManageEvents &&
-              eventStatus != OrganizationEventStatus.canceled) ...[
-            const Divider(indent: 16, endIndent: 16),
-            _OptionItem(
-              icon: Icons.cancel_rounded,
-              label: 'Cancelar Evento',
-              color: AppTheme.errorColor,
-              onTap: () {
-                Navigator.of(context).pop();
-                onCancelEvent?.call();
-              },
-            ),
-          ],
-          const SizedBox(height: 8),
-        ],
-      ),
-    );
-  }
+  @override
+  State<_EventOptionsModal> createState() => _EventOptionsModalState();
 }
 
-class _OptionItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color? color;
-  final VoidCallback onTap;
-
-  const _OptionItem({
-    required this.icon,
-    required this.label,
-    this.color,
-    required this.onTap,
-  });
+class _EventOptionsModalState extends BaseModalState<_EventOptionsModal> {
+  @override
+  Widget? get titleWidget => HeaderModalTitleSubtitle(
+        title: 'Opções do evento',
+        subtitle: widget.eventName,
+      );
 
   @override
-  Widget build(BuildContext context) {
-    final c = color ?? AppTheme.textPrimary;
-    return ListTile(
-      leading: Icon(icon, color: c),
-      title: Text(
-        label,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(color: c),
+  List<Widget> buildBody(BuildContext context) {
+    final isScheduled = widget.eventStatus == OrganizationEventStatus.scheduled;
+    final canEdit = widget.canManageEvents && isScheduled;
+    final canManageAssignments = widget.canManageEvents && isScheduled;
+
+    return [
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: ActionTile(
+          icon: Icons.share_rounded,
+          title: 'Compartilhar Evento',
+          description: 'Enviar informações e link do evento',
+          onTap: () {
+            BaseModalStatefulWidget.hide(context);
+            widget.onShareEvent?.call();
+          },
+        ),
       ),
-      onTap: onTap,
-    );
+      if (canEdit)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: ActionTile(
+            icon: Icons.edit_rounded,
+            title: 'Editar Evento',
+            description: 'Alterar data, local e configurações',
+            onTap: () {
+              BaseModalStatefulWidget.hide(context);
+              context.pushNamed(
+                AppRoutes.orgEditEvent,
+                pathParameters: {
+                  'orgId': widget.organizationId,
+                  'eventId': widget.eventId,
+                },
+              );
+            },
+          ),
+        ),
+      if (canManageAssignments && widget.allowAssignment)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: ActionTile(
+            icon: Icons.lock_rounded,
+            title: 'Fechar Escalação',
+            description: 'Encerrar respostas de disponibilidade',
+            iconColor: const Color(0xFFD97706),
+            iconBgColor: const Color(0xFFFFF7ED),
+            onTap: () {
+              BaseModalStatefulWidget.hide(context);
+              widget.onLockAssignments?.call();
+            },
+          ),
+        ),
+      if (canManageAssignments && !widget.allowAssignment)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: ActionTile(
+            icon: Icons.lock_open_rounded,
+            title: 'Reabrir Escalação',
+            description: 'Permitir novas respostas de disponibilidade',
+            iconColor: AppTheme.successColor,
+            iconBgColor: const Color(0xFFECFDF5),
+            onTap: () {
+              BaseModalStatefulWidget.hide(context);
+              widget.onReopenAssignments?.call();
+            },
+          ),
+        ),
+      if (widget.canManageEvents &&
+          widget.eventStatus != OrganizationEventStatus.canceled)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: ActionTile(
+            icon: Icons.cancel_rounded,
+            title: 'Cancelar Evento',
+            description: 'Encerrar e notificar todos os membros',
+            destructive: true,
+            onTap: () {
+              BaseModalStatefulWidget.hide(context);
+              widget.onCancelEvent?.call();
+            },
+          ),
+        ),
+      const SizedBox(height: 8),
+    ];
   }
 }

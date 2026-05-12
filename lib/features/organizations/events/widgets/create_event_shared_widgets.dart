@@ -67,68 +67,6 @@ class FieldLabel extends StatelessWidget {
   }
 }
 
-/// TextField estilizado conforme o design.
-class StyledTextField extends StatelessWidget {
-  final TextEditingController controller;
-  final ValueChanged<String>? onChanged;
-  final String hint;
-  final IconData? prefixIcon;
-  final int maxLines;
-
-  const StyledTextField({
-    super.key,
-    required this.controller,
-    this.onChanged,
-    required this.hint,
-    this.prefixIcon,
-    this.maxLines = 1,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      onChanged: onChanged,
-      maxLines: maxLines,
-      minLines: maxLines,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 13,
-          color: Color(0xFFCBD5E1),
-        ),
-        filled: true,
-        fillColor: const Color(0xFFF8FAFC),
-        prefixIcon: prefixIcon != null
-            ? Icon(prefixIcon, size: 18, color: const Color(0xFF94A3B8))
-            : null,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              const BorderSide(color: AppTheme.primaryColor, width: 1.5),
-        ),
-      ),
-      style: const TextStyle(
-        fontFamily: 'Inter',
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: AppTheme.textPrimary,
-      ),
-    );
-  }
-}
-
 /// Botão para selecionar data/hora — exibe o valor selecionado ou placeholder.
 class DateTimePickerButton extends StatelessWidget {
   final DateTime? value;

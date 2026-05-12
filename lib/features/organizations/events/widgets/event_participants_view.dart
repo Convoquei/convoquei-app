@@ -1,6 +1,9 @@
 import 'package:convoquei_app/core/services/toast_feedback_service.dart';
 import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/core/widgets/action_button.dart';
+import 'package:convoquei_app/core/widgets/base_modal_stateful_widget.dart';
+import 'package:convoquei_app/core/widgets/header_modal_title_subtitle.dart';
+import 'package:convoquei_app/features/home/widgets/action_tile.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_availability_status.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_status.dart';
 import 'package:convoquei_app/features/organizations/events/models/organization_event_details_model.dart';
@@ -167,80 +170,62 @@ class EventParticipantsView extends ConsumerWidget {
   }
 
   void _showAwaitingSheet(
-      BuildContext context, WidgetRef ref, String membershipId) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => _ParticipantActionsSheet(
-        actions: [
-          _SheetAction(
-            icon: Icons.check_circle_rounded,
-            label: 'Escalar membro',
-            color: AppTheme.successColor,
-            onTap: () {
-              Navigator.of(context).pop();
-              _handleApprove(context, ref, membershipId);
-            },
-          ),
-          _SheetAction(
-            icon: Icons.cancel_rounded,
-            label: 'Rejeitar membro',
-            color: AppTheme.errorColor,
-            onTap: () {
-              Navigator.of(context).pop();
-              _handleReject(context, ref, membershipId);
-            },
-          ),
-        ],
-      ),
+      BuildContext context, WidgetRef ref, OrganizationEventParticipantModel p) {
+    _ParticipantManageModal.show(
+      context,
+      participant: p,
+      actions: [
+        _ParticipantAction(
+          icon: Icons.check_circle_rounded,
+          label: 'Escalar membro',
+          description: 'Confirmar disponibilidade e adicionar à escala',
+          iconColor: AppTheme.successColor,
+          iconBgColor: const Color(0xFFECFDF5),
+          onTap: () => _handleApprove(context, ref, p.membershipId),
+        ),
+        _ParticipantAction(
+          icon: Icons.cancel_rounded,
+          label: 'Rejeitar membro',
+          description: 'Remover da fila de disponíveis',
+          destructive: true,
+          onTap: () => _handleReject(context, ref, p.membershipId),
+        ),
+      ],
     );
   }
 
   void _showAssignedSheet(
-      BuildContext context, WidgetRef ref, String membershipId) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => _ParticipantActionsSheet(
-        actions: [
-          _SheetAction(
-            icon: Icons.person_remove_rounded,
-            label: 'Remover da escala',
-            color: AppTheme.errorColor,
-            onTap: () {
-              Navigator.of(context).pop();
-              _handleRemove(context, ref, membershipId);
-            },
-          ),
-        ],
-      ),
+      BuildContext context, WidgetRef ref, OrganizationEventParticipantModel p) {
+    _ParticipantManageModal.show(
+      context,
+      participant: p,
+      actions: [
+        _ParticipantAction(
+          icon: Icons.person_remove_rounded,
+          label: 'Remover da escala',
+          description: 'Desfazer a escalação deste membro',
+          destructive: true,
+          onTap: () => _handleRemove(context, ref, p.membershipId),
+        ),
+      ],
     );
   }
 
   void _showNotAssignedSheet(
-      BuildContext context, WidgetRef ref, String membershipId) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => _ParticipantActionsSheet(
-        actions: [
-          _SheetAction(
-            icon: Icons.how_to_reg_rounded,
-            label: 'Escalar membro',
-            color: AppTheme.primaryColor,
-            onTap: () {
-              Navigator.of(context).pop();
-              _handleAssign(context, ref, membershipId);
-            },
-          ),
-        ],
-      ),
+      BuildContext context, WidgetRef ref, OrganizationEventParticipantModel p) {
+    _ParticipantManageModal.show(
+      context,
+      participant: p,
+      actions: [
+        _ParticipantAction(
+          icon: Icons.how_to_reg_rounded,
+          label: 'Escalar membro',
+          description: 'Adicionar manualmente à escala do evento',
+          iconColor: AppTheme.primaryColor,
+          iconBgColor: const Color(0xFFEFF6FF),
+          onTap: () => _handleAssign(context, ref, p.membershipId),
+        ),
+      ],
     );
   }
 
@@ -275,8 +260,7 @@ class EventParticipantsView extends ConsumerWidget {
                         participant: p,
                         trailing: canManageEvents
                             ? _ManageButton(
-                                onTap: () => _showAwaitingSheet(
-                                    context, ref, p.membershipId),
+                                onTap: () => _showAwaitingSheet(context, ref, p),
                               )
                             : p.membershipId == currentMemberId
                                 ? _LeaveButton(
@@ -305,8 +289,7 @@ class EventParticipantsView extends ConsumerWidget {
                         functionColor: AppTheme.successColor,
                         trailing: canManageEvents
                             ? _ManageButton(
-                                onTap: () => _showAssignedSheet(
-                                    context, ref, p.membershipId),
+                                onTap: () => _showAssignedSheet(context, ref, p),
                               )
                             : null,
                       ))
@@ -331,8 +314,7 @@ class EventParticipantsView extends ConsumerWidget {
                         participant: p,
                         trailing: canManageEvents
                             ? _ManageButton(
-                                onTap: () => _showNotAssignedSheet(
-                                    context, ref, p.membershipId),
+                                onTap: () => _showNotAssignedSheet(context, ref, p),
                               )
                             : null,
                       ))
@@ -383,70 +365,83 @@ class EventParticipantsView extends ConsumerWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PARTICIPANT ACTIONS SHEET
+// PARTICIPANT MANAGE MODAL
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _SheetAction {
+class _ParticipantAction {
   final IconData icon;
   final String label;
-  final Color? color;
+  final String description;
+  final Color? iconColor;
+  final Color? iconBgColor;
+  final bool destructive;
   final VoidCallback onTap;
 
-  const _SheetAction({
+  const _ParticipantAction({
     required this.icon,
     required this.label,
-    this.color,
+    required this.description,
+    this.iconColor,
+    this.iconBgColor,
+    this.destructive = false,
     required this.onTap,
   });
 }
 
-class _ParticipantActionsSheet extends StatelessWidget {
-  final List<_SheetAction> actions;
+class _ParticipantManageModal extends BaseModalStatefulWidget {
+  final OrganizationEventParticipantModel participant;
+  final List<_ParticipantAction> actions;
 
-  const _ParticipantActionsSheet({required this.actions});
+  const _ParticipantManageModal({
+    required this.participant,
+    required this.actions,
+  });
+
+  static Future<void> show(
+    BuildContext context, {
+    required OrganizationEventParticipantModel participant,
+    required List<_ParticipantAction> actions,
+  }) =>
+      BaseModalStatefulWidget.show(
+        context,
+        _ParticipantManageModal(participant: participant, actions: actions),
+      );
 
   @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          for (int i = 0; i < actions.length; i++) ...[
-            if (i > 0) const Divider(indent: 16, endIndent: 16),
-            _SheetActionTile(action: actions[i]),
-          ],
-          const SizedBox(height: 8),
-        ],
-      ),
-    );
-  }
+  State<_ParticipantManageModal> createState() =>
+      _ParticipantManageModalState();
 }
 
-class _SheetActionTile extends StatelessWidget {
-  final _SheetAction action;
-
-  const _SheetActionTile({required this.action});
+class _ParticipantManageModalState
+    extends BaseModalState<_ParticipantManageModal> {
+  @override
+  Widget? get titleWidget => HeaderModalTitleSubtitle(
+        title: 'Gerenciar participante',
+        subtitle: widget.participant.name,
+      );
 
   @override
-  Widget build(BuildContext context) {
-    final color = action.color ?? AppTheme.textPrimary;
-    return ListTile(
-      leading: Icon(action.icon, color: color),
-      title: Text(
-        action.label,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(color: color),
+  List<Widget> buildBody(BuildContext context) {
+    return [
+      ...widget.actions.map(
+        (action) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: ActionTile(
+            icon: action.icon,
+            title: action.label,
+            description: action.description,
+            iconColor: action.iconColor,
+            iconBgColor: action.iconBgColor,
+            destructive: action.destructive,
+            onTap: () {
+              BaseModalStatefulWidget.hide(context);
+              action.onTap();
+            },
+          ),
+        ),
       ),
-      onTap: action.onTap,
-    );
+      const SizedBox(height: 8),
+    ];
   }
 }
 

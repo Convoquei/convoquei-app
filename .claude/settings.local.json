@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__dart-mcp__analyze_files",
+      "Bash(dart analyze:*)",
+      "Bash(dart fix:*)",
+      "Bash(xargs sed:*)",
+      "Bash(dart run:*)",
+      "Bash(dart pub:*)",
+      "Bash(git -C C:/repo/convoquei/convoquei-app status)",
+      "Bash(git -C C:/repo/convoquei/convoquei-app diff --stat)",
+      "Bash(grep -E \"\\\\.dart$\")"
+    ]
+  }
+}

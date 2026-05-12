@@ -1,31 +1,6 @@
----
-description: Use estas instruções em qualquer tarefa relacionada ao app Convoquei — incluindo UI, lógica de domínio, navegação, decisões de produto ou arquitetura frontend.
-applyTo: '**'
----
+# Convoquei – Domínio e Conceitos
 
-# Convoquei – Contexto do Projeto
-
-## O que é o Convoquei?
-
-Convoquei é um aplicativo mobile para gerenciamento de **organizações**, **equipes** e **eventos**.
-Centraliza comunicação, disponibilidade e escalas (manuais ou automáticas) em um único ambiente digital.
-
-**Problema que resolve:**
-- Falta de controle sobre quem vai participar de um evento
-- Dificuldade para montar escalas de forma justa
-- Comunicação dispersa em múltiplos grupos de mensagens (ex.: WhatsApp)
-- Falta de histórico de eventos e responsabilidades
-- Desequilíbrio na participação dos membros em escalas
-
-**Motivação real:** A dor foi identificada na ICM (Igreja Cristã Maranata), onde semanalmente alguém precisa enviar enquetes manualmente, coletar respostas e montar escalas sem qualquer histórico — gerando injustiça e sobrecarga para alguns membros.
-
-**Público-alvo:** Líderes de ministérios, coordenadores de equipes voluntárias, organizadores de eventos e membros em geral. Foco inicial em igrejas, mas escalável para qualquer grupo.
-
-**Palavras-chave da marca:** Organização · Justiça · Transparência · Comunidade · Agilidade · Confiança · Previsibilidade
-
----
-
-## Domínio: Conceitos Principais
+## Conceitos Principais
 
 Entender esses conceitos é essencial para nomear variáveis, widgets, rotas, providers e lógica de estado de forma consistente.
 
@@ -70,18 +45,6 @@ Cada participante possui:
 Regra de repetição que gera eventos automaticamente. Não é um evento — é uma configuração.
 - Tipos: `daily`, `weekly`, `monthly_cycle`, `unique`
 - Eventos gerados herdam os parâmetros da recorrência (modo de escalação, bloqueio de disponibilidade etc.)
-
----
-
-## Tom de Voz (Microcopy)
-
-Direto, empático e transparente. Nunca robótico.
-
-| ❌ Evitar | ✅ Usar |
-|---|---|
-| "Falha na submissão de disponibilidade." | "Ops! Não conseguimos salvar sua resposta. Tente novamente." |
-| "Usuário não escalado." | "Você não está escalado para este evento." |
-| Ações sem feedback | Sempre confirmar o estado: "Sua disponibilidade foi enviada. Aguardando o líder fechar a escala." |
 
 ---
 

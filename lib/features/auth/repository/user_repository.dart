@@ -12,4 +12,11 @@ class UserRepository {
     );
     return UserModel.fromJson(data);
   }
+
+  Future<void> updateProfile({required String name}) async {
+    await _apiClient.put<void>(
+      '/v1/users/me/profile',
+      data: {'name': name},
+    );
+  }
 }

@@ -74,25 +74,8 @@ class _CreateRoleModalState extends BaseModalState<CreateRoleModal> {
                   textCapitalization: TextCapitalization.words,
                   onChanged: (_) => setState(() {}),
                   onFieldSubmitted: (_) => _submit(),
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     hintText: 'Ex: Administrador, Líder de Louvor...',
-                    filled: true,
-                    fillColor: const Color(0xFFF8FAFC),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(
-                        color: AppTheme.primaryColor,
-                        width: 1.5,
-                      ),
-                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {

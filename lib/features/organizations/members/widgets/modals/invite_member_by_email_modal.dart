@@ -77,23 +77,9 @@ class _InviteMemberByEmailModalState
                   keyboardType: TextInputType.emailAddress,
                   autocorrect: false,
                   onChanged: (_) => setState(() {}),
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     hintText: "Ex: joao@email.com",
-                    prefixIcon: const Icon(
-                      Icons.email_outlined,
-                      size: 20,
-                      color: Color(0xFF94A3B8),
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFFF8FAFC),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
+                    prefixIcon: Icon(Icons.email_outlined, size: 20),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {

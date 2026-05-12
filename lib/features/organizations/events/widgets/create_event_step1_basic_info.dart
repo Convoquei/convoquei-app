@@ -192,10 +192,12 @@ class _CreateEventStep1BasicInfoState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const FieldLabel(label: 'Nome do Evento *'),
-                StyledTextField(
+                TextField(
                   controller: _nameCtr,
                   onChanged: (_) => _notifyText(),
-                  hint: 'Digite o nome do evento',
+                  decoration: const InputDecoration(
+                    hintText: 'Digite o nome do evento',
+                  ),
                 ),
               ],
             ),
@@ -203,11 +205,13 @@ class _CreateEventStep1BasicInfoState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const FieldLabel(label: 'Local *'),
-                StyledTextField(
+                TextField(
                   controller: _locationCtr,
                   onChanged: (_) => _notifyText(),
-                  hint: 'Digite o local do evento',
-                  prefixIcon: Icons.location_on_rounded,
+                  decoration: const InputDecoration(
+                    hintText: 'Digite o local do evento',
+                    prefixIcon: Icon(Icons.location_on_rounded, size: 18),
+                  ),
                 ),
               ],
             ),
@@ -215,11 +219,14 @@ class _CreateEventStep1BasicInfoState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const FieldLabel(label: 'Descrição (Opcional)'),
-                StyledTextField(
+                TextField(
                   controller: _descCtr,
                   onChanged: (_) => _notifyText(),
-                  hint: 'Digite a descrição do evento',
                   maxLines: 2,
+                  minLines: 2,
+                  decoration: const InputDecoration(
+                    hintText: 'Digite a descrição do evento',
+                  ),
                 ),
               ],
             ),

@@ -75,18 +75,8 @@ class _CreateOrganizationModalState
                 TextFormField(
                   controller: _nameController,
                   onChanged: (_) => setState(() {}),
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     hintText: "Ex: Igreja Central, Ministério de Louvor...",
-                    filled: true,
-                    fillColor: const Color(0xFFF8FAFC),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
@@ -110,14 +100,6 @@ class _CreateOrganizationModalState
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                   initialValue: _selectedType,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: const Color(0xFFF8FAFC),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
-                  ),
                   items: const [
                     DropdownMenuItem(
                       value: "igreja",
