@@ -1,3 +1,4 @@
+import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/create_event_shared_widgets.dart';
 import 'package:flutter/material.dart';
 
@@ -125,28 +126,23 @@ class _CreateEventStep1BasicInfoState
 
   Future<void> _pickDateTime({required bool isStart}) async {
     final now = DateTime.now();
-    // Earliest selectable moment: right now (no past dates).
     final todayStart = DateTime(now.year, now.month, now.day);
 
-    // For end picker, first selectable day is the start day (or today).
     final firstDate = !isStart && widget.data.startAt != null
         ? DateTime(widget.data.startAt!.year, widget.data.startAt!.month,
             widget.data.startAt!.day)
         : todayStart;
 
-    // Sensible initial value for the picker.
     DateTime initial;
     if (isStart) {
       initial = widget.data.startAt ?? DateTime(now.year, now.month, now.day, now.hour + 1);
     } else {
-      // Default end = start + 1 hour, or now + 2 hours if start not set.
       initial = widget.data.endAt ??
           (widget.data.startAt != null
               ? widget.data.startAt!.add(const Duration(hours: 1))
               : DateTime(now.year, now.month, now.day, now.hour + 2));
     }
 
-    // Clamp initial so it is never before firstDate.
     if (initial.isBefore(firstDate)) initial = firstDate;
 
     final date = await showDatePicker(
@@ -154,56 +150,69 @@ class _CreateEventStep1BasicInfoState
       initialDate: initial,
       firstDate: firstDate,
       lastDate: DateTime(now.year + 5),
+      helpText: isStart ? 'DATA DE INÍCIO' : 'DATA DE FIM',
+      confirmText: 'PRÓXIMO',
     );
     if (date == null || !mounted) return;
 
-    // For the time picker: clamp initial time so past times on today are avoided.
     TimeOfDay initialTime = TimeOfDay.fromDateTime(initial);
     if (isStart) {
-      final selectedDay =
-          DateTime(date.year, date.month, date.day);
+      final selectedDay = DateTime(date.year, date.month, date.day);
       final isToday = selectedDay.isAtSameMomentAs(todayStart);
       if (isToday) {
-        // Ensure the default time is at least "now + 1 min" so user doesn't
-        // accidentally pick a past time without noticing.
         final minTime = TimeOfDay(hour: now.hour, minute: now.minute);
         if (_timeToMinutes(initialTime) <= _timeToMinutes(minTime)) {
-          initialTime = TimeOfDay(
-              hour: (now.hour + 1) % 24, minute: now.minute);
+          initialTime = TimeOfDay(hour: (now.hour + 1) % 24, minute: now.minute);
         }
       }
     }
 
-    final time = await showTimePicker(
-      context: context,
-      initialTime: initialTime,
-    );
-    if (time == null || !mounted) return;
+    TimeOfDay? time;
+    while (true) {
+      time = await showTimePicker(
+        context: context,
+        initialTime: initialTime,
+        helpText: isStart ? 'HORÁRIO DE INÍCIO' : 'HORÁRIO DE FIM',
+        confirmText: 'CONFIRMAR',
+      );
+      if (time == null || !mounted) return;
 
-    DateTime combined =
-        DateTime(date.year, date.month, date.day, time.hour, time.minute);
+      final combined = DateTime(date.year, date.month, date.day, time.hour, time.minute);
 
-    // Guard: start must not be in the past.
-    if (isStart && combined.isBefore(now)) {
-      combined = DateTime(now.year, now.month, now.day, now.hour, now.minute);
-    }
-
-    // Guard: end must not be before or equal to start.
-    if (!isStart && widget.data.startAt != null &&
-        !combined.isAfter(widget.data.startAt!)) {
-      combined = widget.data.startAt!.add(const Duration(hours: 1));
-    }
-
-    if (isStart) {
-      final needsEndPick = widget.data.endAt == null ||
-          !widget.data.endAt!.isAfter(combined);
-      widget.onChanged(widget.data.copyWith(startAt: combined));
-      if (needsEndPick && mounted) {
-        await _pickDateTime(isStart: false);
+      if (isStart && combined.isBefore(now)) {
+        initialTime = TimeOfDay(hour: (now.hour + 1) % 24, minute: now.minute);
+        _showTimeError('Selecione um horário a partir de agora.');
+        continue;
       }
-    } else {
-      widget.onChanged(widget.data.copyWith(endAt: combined));
+
+      if (!isStart && widget.data.startAt != null && !combined.isAfter(widget.data.startAt!)) {
+        final start = widget.data.startAt!;
+        initialTime = TimeOfDay(hour: (start.hour + 1) % 24, minute: start.minute);
+        _showTimeError(
+          'O horário de fim deve ser após '
+          '${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')}.',
+        );
+        continue;
+      }
+
+      if (isStart) {
+        widget.onChanged(widget.data.copyWith(startAt: combined));
+      } else {
+        widget.onChanged(widget.data.copyWith(endAt: combined));
+      }
+      break;
     }
+  }
+
+  void _showTimeError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppTheme.errorColor,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   int _timeToMinutes(TimeOfDay t) => t.hour * 60 + t.minute;
@@ -265,43 +274,34 @@ class _CreateEventStep1BasicInfoState
         StepCard(
           children: [
             Text('Quando?', style: theme.titleSmall),
-            Row(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const FieldLabel(label: 'Início *'),
-                      TextFormField(
-                        controller: _startCtr,
-                        readOnly: true,
-                        showCursor: false,
-                        onTap: () => _pickDateTime(isStart: true),
-                        decoration: const InputDecoration(
-                          hintText: 'Selecionar',
-                          prefixIcon: Icon(Icons.calendar_today_rounded, size: 18),
-                        ),
-                      ),
-                    ],
+                const FieldLabel(label: 'Início *'),
+                TextFormField(
+                  controller: _startCtr,
+                  readOnly: true,
+                  showCursor: false,
+                  onTap: () => _pickDateTime(isStart: true),
+                  decoration: const InputDecoration(
+                    hintText: 'Toque para selecionar',
+                    prefixIcon: Icon(Icons.play_circle_outline_rounded, size: 20),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const FieldLabel(label: 'Fim *'),
-                      TextFormField(
-                        controller: _endCtr,
-                        readOnly: true,
-                        showCursor: false,
-                        onTap: () => _pickDateTime(isStart: false),
-                        decoration: const InputDecoration(
-                          hintText: 'Selecionar',
-                          prefixIcon: Icon(Icons.calendar_today_rounded, size: 18),
-                        ),
-                      ),
-                    ],
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const FieldLabel(label: 'Fim *'),
+                TextFormField(
+                  controller: _endCtr,
+                  readOnly: true,
+                  showCursor: false,
+                  onTap: () => _pickDateTime(isStart: false),
+                  decoration: const InputDecoration(
+                    hintText: 'Toque para selecionar',
+                    prefixIcon: Icon(Icons.stop_circle_outlined, size: 20),
                   ),
                 ),
               ],

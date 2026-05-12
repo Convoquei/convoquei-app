@@ -142,6 +142,110 @@ class AppTheme {
         ),
       ),
 
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: Colors.white,
+        headerBackgroundColor: primaryColor,
+        headerForegroundColor: Colors.white,
+        headerHeadlineStyle: const TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: 28,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+        headerHelpStyle: const TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: Colors.white70,
+          letterSpacing: 1.2,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        dayStyle: const TextStyle(fontFamily: 'Inter', fontSize: 13),
+        weekdayStyle: const TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: textSecondary,
+        ),
+        yearStyle: const TextStyle(fontFamily: 'Inter', fontSize: 13),
+        todayBorder: const BorderSide(color: primaryColor, width: 1.5),
+        todayForegroundColor: WidgetStateColor.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? Colors.white : primaryColor,
+        ),
+        dayForegroundColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) return borderColor;
+          if (states.contains(WidgetState.selected)) return Colors.white;
+          return textPrimary;
+        }),
+        dayBackgroundColor: WidgetStateColor.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? primaryColor : Colors.transparent,
+        ),
+        dayOverlayColor: WidgetStateColor.resolveWith(
+          (_) => primaryColor.withValues(alpha: 0.08),
+        ),
+        cancelButtonStyle: TextButton.styleFrom(
+          foregroundColor: textSecondary,
+          textStyle: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w500),
+        ),
+        confirmButtonStyle: TextButton.styleFrom(
+          foregroundColor: primaryColor,
+          textStyle: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600),
+        ),
+      ),
+
+      timePickerTheme: TimePickerThemeData(
+        backgroundColor: Colors.white,
+        hourMinuteColor: WidgetStateColor.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? primaryColor.withValues(alpha: 0.12)
+              : backgroundColor,
+        ),
+        hourMinuteTextColor: WidgetStateColor.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? primaryColor : textPrimary,
+        ),
+        hourMinuteShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        dialBackgroundColor: backgroundColor,
+        dialHandColor: primaryColor,
+        dialTextColor: WidgetStateColor.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? Colors.white : textPrimary,
+        ),
+        entryModeIconColor: textSecondary,
+        helpTextStyle: const TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: textSecondary,
+          letterSpacing: 1.2,
+        ),
+        hourMinuteTextStyle: const TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: 48,
+          fontWeight: FontWeight.w600,
+        ),
+        dayPeriodTextStyle: const TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
+        dayPeriodColor: WidgetStateColor.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? primaryColor.withValues(alpha: 0.12)
+              : backgroundColor,
+        ),
+        dayPeriodTextColor: WidgetStateColor.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? primaryColor : textSecondary,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        cancelButtonStyle: TextButton.styleFrom(
+          foregroundColor: textSecondary,
+          textStyle: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w500),
+        ),
+        confirmButtonStyle: TextButton.styleFrom(
+          foregroundColor: primaryColor,
+          textStyle: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600),
+        ),
+      ),
+
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: WidgetStateColor.resolveWith((_) => Colors.white),
