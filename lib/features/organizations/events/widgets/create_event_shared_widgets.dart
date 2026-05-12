@@ -67,63 +67,6 @@ class FieldLabel extends StatelessWidget {
   }
 }
 
-/// Botão para selecionar data/hora — exibe o valor selecionado ou placeholder.
-class DateTimePickerButton extends StatelessWidget {
-  final DateTime? value;
-  final VoidCallback onTap;
-
-  const DateTimePickerButton({super.key, required this.value, required this.onTap});
-
-  String _format(DateTime dt) {
-    final day = dt.day.toString().padLeft(2, '0');
-    final month = dt.month.toString().padLeft(2, '0');
-    final hour = dt.hour.toString().padLeft(2, '0');
-    final min = dt.minute.toString().padLeft(2, '0');
-    return '$day/$month  $hour:$min';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final hasValue = value != null;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-        decoration: BoxDecoration(
-          color: hasValue ? Colors.white : const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: hasValue
-                ? AppTheme.primaryColor.withValues(alpha: 0.4)
-                : const Color(0xFFE2E8F0),
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.calendar_today_rounded,
-              size: 14,
-              color: hasValue ? AppTheme.primaryColor : const Color(0xFF94A3B8),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(
-                hasValue ? _format(value!) : 'Selecionar',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: hasValue ? AppTheme.textPrimary : const Color(0xFFCBD5E1),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 /// Toggle switch estilizado reutilizável.
 class StepToggle extends StatelessWidget {
   final bool value;

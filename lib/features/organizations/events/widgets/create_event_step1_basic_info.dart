@@ -69,6 +69,16 @@ class _CreateEventStep1BasicInfoState
   late final TextEditingController _nameCtr;
   late final TextEditingController _locationCtr;
   late final TextEditingController _descCtr;
+  late final TextEditingController _startCtr;
+  late final TextEditingController _endCtr;
+
+  static String _formatDateTime(DateTime dt) {
+    final day = dt.day.toString().padLeft(2, '0');
+    final month = dt.month.toString().padLeft(2, '0');
+    final hour = dt.hour.toString().padLeft(2, '0');
+    final min = dt.minute.toString().padLeft(2, '0');
+    return '$day/$month  $hour:$min';
+  }
 
   @override
   void initState() {
@@ -76,6 +86,23 @@ class _CreateEventStep1BasicInfoState
     _nameCtr = TextEditingController(text: widget.data.name);
     _locationCtr = TextEditingController(text: widget.data.location);
     _descCtr = TextEditingController(text: widget.data.description);
+    _startCtr = TextEditingController(
+      text: widget.data.startAt != null ? _formatDateTime(widget.data.startAt!) : '',
+    );
+    _endCtr = TextEditingController(
+      text: widget.data.endAt != null ? _formatDateTime(widget.data.endAt!) : '',
+    );
+  }
+
+  @override
+  void didUpdateWidget(CreateEventStep1BasicInfo oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.data.startAt != widget.data.startAt) {
+      _startCtr.text = widget.data.startAt != null ? _formatDateTime(widget.data.startAt!) : '';
+    }
+    if (oldWidget.data.endAt != widget.data.endAt) {
+      _endCtr.text = widget.data.endAt != null ? _formatDateTime(widget.data.endAt!) : '';
+    }
   }
 
   @override
@@ -83,6 +110,8 @@ class _CreateEventStep1BasicInfoState
     _nameCtr.dispose();
     _locationCtr.dispose();
     _descCtr.dispose();
+    _startCtr.dispose();
+    _endCtr.dispose();
     super.dispose();
   }
 
@@ -243,9 +272,15 @@ class _CreateEventStep1BasicInfoState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const FieldLabel(label: 'Início *'),
-                      DateTimePickerButton(
-                        value: widget.data.startAt,
+                      TextFormField(
+                        controller: _startCtr,
+                        readOnly: true,
+                        showCursor: false,
                         onTap: () => _pickDateTime(isStart: true),
+                        decoration: const InputDecoration(
+                          hintText: 'Selecionar',
+                          prefixIcon: Icon(Icons.calendar_today_rounded, size: 18),
+                        ),
                       ),
                     ],
                   ),
@@ -256,9 +291,15 @@ class _CreateEventStep1BasicInfoState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const FieldLabel(label: 'Fim *'),
-                      DateTimePickerButton(
-                        value: widget.data.endAt,
+                      TextFormField(
+                        controller: _endCtr,
+                        readOnly: true,
+                        showCursor: false,
                         onTap: () => _pickDateTime(isStart: false),
+                        decoration: const InputDecoration(
+                          hintText: 'Selecionar',
+                          prefixIcon: Icon(Icons.calendar_today_rounded, size: 18),
+                        ),
                       ),
                     ],
                   ),
