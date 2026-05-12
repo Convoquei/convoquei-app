@@ -20,19 +20,21 @@ const _weekdayAbbr = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 // ─────────────────────────────────────────────────────────────────────────────
 
 class EventCard extends StatefulWidget {
-  final OrganizationEventMembershipModel event;
+  final OrganizationEventMembershipModel? event;
+  final bool skeleton;
   final Future<void> Function()? onAvailable;
   final Future<void> Function()? onUnavailable;
   final Future<void> Function()? onLeaveSchedule;
   final VoidCallback? onTap;
   const EventCard({
     super.key,
-    required this.event,
+    this.event,
+    this.skeleton = false,
     this.onAvailable,
     this.onUnavailable,
     this.onLeaveSchedule,
     this.onTap,
-  });
+  }) : assert(skeleton || event != null, 'event is required when skeleton is false');
 
   @override
   State<EventCard> createState() => _EventCardState();
@@ -47,10 +49,10 @@ class _EventCardState extends State<EventCard> {
       _isLoadingAvailable || _isLoadingUnavailable || _isLoadingLeave;
 
   // ── Accent color by membership status ────────────────────────────
-  Color get _accentColor => switch (widget.event.membershipStatus) {
+  Color get _accentColor => switch (widget.event!.membershipStatus) {
         OrganizationEventMembershipStatus.assigned => AppTheme.primaryColor,
         OrganizationEventMembershipStatus.pending =>
-          switch (widget.event.membershipAvailabilityStatus) {
+          switch (widget.event!.membershipAvailabilityStatus) {
             OrganizationEventMembershipAvailabilityStatus.available =>
               const Color(0xFF059669),
             OrganizationEventMembershipAvailabilityStatus.unavailable =>
@@ -71,7 +73,9 @@ class _EventCardState extends State<EventCard> {
   // ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    final event      = widget.event;
+    if (widget.skeleton) return const _EventCardSkeleton();
+
+    final event      = widget.event!;
     final isCanceled = event.status == OrganizationEventStatus.canceled;
 
     final showUrgent = !isCanceled &&
@@ -249,7 +253,7 @@ class _EventCardState extends State<EventCard> {
   // ─────────────────────────────────────────────────────────────────
 
   Widget _buildFooter(BuildContext context) {
-    final event = widget.event;
+    final event = widget.event!;
 
     if (event.status == OrganizationEventStatus.completed ||
         event.status == OrganizationEventStatus.canceled ||
@@ -358,8 +362,8 @@ class _EventCardState extends State<EventCard> {
                     ),
               ),
               Text(
-                widget.event.membershipFunctionName != null
-                    ? 'Você se disponibilizou para ${widget.event.membershipFunctionName}'
+                widget.event!.membershipFunctionName != null
+                    ? 'Você se disponibilizou para ${widget.event!.membershipFunctionName}'
                     : 'Você se disponibilizou para este evento',
                 style: Theme.of(context)
                     .textTheme
@@ -448,7 +452,7 @@ class _EventCardState extends State<EventCard> {
   }
 
   Widget _buildStatusFooter(BuildContext context) {
-    final event = widget.event;
+    final event = widget.event!;
 
     if (event.status == OrganizationEventStatus.canceled) {
       return const InfoBanner(
@@ -581,9 +585,132 @@ class _EventCardState extends State<EventCard> {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Skeleton
+// ─────────────────────────────────────────────────────────────────────────────
 
+class _EventCardSkeleton extends StatelessWidget {
+  const _EventCardSkeleton();
 
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.hardEdge,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const _SkeletonBox(width: 5, borderRadius: 0),
+            Container(
+              width: 52,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              child: const Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  SizedBox(height: 4),
+                  _SkeletonBox(width: 28, height: 10, borderRadius: 4),
+                  SizedBox(height: 4),
+                  _SkeletonBox(width: 32, height: 28, borderRadius: 6),
+                ],
+              ),
+            ),
+            Container(
+              width: 1,
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              color: const Color(0xFFF1F5F9),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: const [
+                        Expanded(child: _SkeletonBox(height: 16, borderRadius: 6)),
+                        SizedBox(width: 8),
+                        _SkeletonBox(width: 72, height: 22, borderRadius: 8),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const _SkeletonBox(width: 130, height: 12, borderRadius: 4),
+                    const SizedBox(height: 10),
+                    const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                    const SizedBox(height: 10),
+                    const _SkeletonBox(height: 32, borderRadius: 8),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
+class _SkeletonBox extends StatefulWidget {
+  final double? width;
+  final double? height;
+  final double borderRadius;
+
+  const _SkeletonBox({this.width, this.height, this.borderRadius = 8});
+
+  @override
+  State<_SkeletonBox> createState() => _SkeletonBoxState();
+}
+
+class _SkeletonBoxState extends State<_SkeletonBox>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<Color?> _color;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat(reverse: true);
+    _color = ColorTween(
+      begin: const Color(0xFFF1F5F9),
+      end: const Color(0xFFE2E8F0),
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _color,
+      builder: (_, _) => Container(
+        width: widget.width,
+        height: widget.height,
+        decoration: BoxDecoration(
+          color: _color.value,
+          borderRadius: BorderRadius.circular(widget.borderRadius),
+        ),
+      ),
+    );
+  }
+}
 
 
 

@@ -51,6 +51,7 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
   final _searchController = TextEditingController();
   final _scrollController = ScrollController();
   String _searchQuery = '';
+  bool _hasLoadedOnce = false;
 
   List<OrganizationEventMembershipStatus>? _customStatus;
   List<OrganizationEventMembershipAvailabilityStatus>? _customAvailabilityStatus;
@@ -279,7 +280,9 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
         .value;
     final canManageEvents = currentUser.hasPermission(OrganizationPermissionEnum.manageEvents);
 
-    if (eventsState.isInitialLoading) {
+    if (!eventsState.isInitialLoading) _hasLoadedOnce = true;
+
+    if (eventsState.isInitialLoading && !_hasLoadedOnce) {
       return const AppLoadingScreen(
         skeleton: AppLoadingSkeleton.list,
         content: AppLoadingInfo(
@@ -289,7 +292,7 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
       );
     }
 
-    if (eventsState.error != null && eventsState.items.isEmpty) {
+    if (eventsState.error != null && eventsState.items.isEmpty && !eventsState.isInitialLoading) {
       return Scaffold(
         body: Center(
           child: ErrorRetryState(
@@ -421,7 +424,20 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
               ),
             ),
 
-            if (eventsState.isEmpty)
+            if (eventsState.isInitialLoading && _hasLoadedOnce)
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => const Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: EventCard(skeleton: true),
+                    ),
+                    childCount: 3,
+                  ),
+                ),
+              )
+            else if (eventsState.isEmpty)
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: EmptyEventsState(
