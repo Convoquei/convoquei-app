@@ -28,7 +28,7 @@ class ExpandedCard extends StatefulWidget {
   final List<Widget> actions;
   final bool initiallyExpanded;
 
-  /// Called once when the card is first expanded.
+  /// Called every time the card is expanded.
   final VoidCallback? onExpand;
 
   @override
@@ -37,21 +37,16 @@ class ExpandedCard extends StatefulWidget {
 
 class _ExpandedCardState extends State<ExpandedCard> {
   late bool _expanded;
-  bool _hasExpandedOnce = false;
-
   @override
   void initState() {
     super.initState();
     _expanded = widget.initiallyExpanded;
-    if (_expanded) _hasExpandedOnce = true;
+    if (_expanded) widget.onExpand?.call();
   }
 
   void _toggle() {
     setState(() => _expanded = !_expanded);
-    if (_expanded && !_hasExpandedOnce) {
-      _hasExpandedOnce = true;
-      widget.onExpand?.call();
-    }
+    if (_expanded) widget.onExpand?.call();
   }
 
   @override

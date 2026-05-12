@@ -1,4 +1,3 @@
-import 'package:convoquei_app/core/models/state_list_paged.dart';
 import 'package:convoquei_app/core/network/exceptions/api_exception.dart';
 import 'package:convoquei_app/core/services/toast_feedback_service.dart';
 import 'package:convoquei_app/core/services/user_feedback_service.dart';
@@ -46,11 +45,6 @@ class FunctionCard extends ConsumerWidget {
         color: AppTheme.textSecondary,
         variant: TagLabelVariant.elevated,
       ),
-      onExpand: () {
-        ref
-            .read(functionMembersPagedProvider(function.id).notifier)
-            .loadNextPage();
-      },
       actions: [
         _ActionButton(
           label: 'Limpar função',
@@ -153,100 +147,77 @@ class _MembersSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(functionMembersPagedProvider(functionId));
+    final async = ref.watch(functionMembersProvider(functionId));
 
-    if (state.isInitialLoading) {
-      return const Column(
+    return async.when(
+      loading: () => const Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           _MemberTileSkeleton(nameWidth: 140),
           _MemberTileSkeleton(nameWidth: 100),
           _MemberTileSkeleton(nameWidth: 120),
         ],
-      );
-    }
-
-    if (state.error != null && state.items.isEmpty) {
-      return Padding(
+      ),
+      error: (_, __) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Center(
           child: TextButton(
-            onPressed: () => ref
-                .read(functionMembersPagedProvider(functionId).notifier)
-                .loadNextPage(),
+            onPressed: () => ref.invalidate(functionMembersProvider(functionId)),
             child: const Text('Erro ao carregar. Tentar novamente'),
           ),
         ),
-      );
-    }
-
-    if (state.items.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Center(
-          child: Text(
-            'Nenhum membro nesta função',
-            style: TextStyle(
-              fontSize: 13,
-              color: AppTheme.textSecondary.withValues(alpha: 0.7),
+      ),
+      data: (items) {
+        if (items.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Center(
+              child: Text(
+                'Nenhum membro nesta função',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppTheme.textSecondary.withValues(alpha: 0.7),
+                ),
+              ),
             ),
-          ),
-        ),
-      );
-    }
-
-    return _MembersList(
-      functionId: functionId,
-      organizationId: organizationId,
-      state: state,
+          );
+        }
+        return _MembersList(
+          functionId: functionId,
+          organizationId: organizationId,
+          items: items,
+        );
+      },
     );
   }
 }
 
 // ---------------------------------------------------------------------------
 
-class _MembersList extends ConsumerWidget {
+class _MembersList extends StatelessWidget {
   const _MembersList({
     required this.functionId,
     required this.organizationId,
-    required this.state,
+    required this.items,
   });
 
   final String functionId;
   final String organizationId;
-  final StateListPaged<OrganizationFunctionMemberModel> state;
+  final List<OrganizationFunctionMemberModel> items;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
-      children: [
-        ...state.items.map(
-          (m) => _MemberTile(
-            member: m,
-            organizationId: organizationId,
-            functionId: functionId,
-          ),
-        ),
-        if (state.isLoadingMore)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
-            child: Center(
-              child: SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
+      children: items
+          .map(
+            (m) => _MemberTile(
+              member: m,
+              organizationId: organizationId,
+              functionId: functionId,
             ),
-          ),
-        if (state.hasNextPage && !state.isLoadingMore)
-          TextButton(
-            onPressed: () => ref
-                .read(functionMembersPagedProvider(functionId).notifier)
-                .loadNextPage(),
-            child: const Text('Carregar mais'),
-          ),
-      ],
+          )
+          .toList(),
     );
   }
 }
@@ -362,7 +333,11 @@ class _MemberTileSkeleton extends StatelessWidget {
             Expanded(
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: ShimmerBox(width: nameWidth, height: 13, borderRadius: 6),
+                child: ShimmerBox(
+                  width: nameWidth,
+                  height: 13,
+                  borderRadius: 6,
+                ),
               ),
             ),
             const SizedBox(width: 8),
