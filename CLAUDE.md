@@ -34,6 +34,7 @@ Aplicativo mobile para gerenciamento de **organizações**, **equipes** e **even
 | `.claude/riverpod-reference.md` | Referência completa de providers, Families e lifecycle — leia sob demanda ao criar/modificar providers |
 | `.claude/componentization.md` | Criar ou refatorar páginas e widgets (lista de widgets existentes) |
 | `.claude/visual.md` | UI/UX, tema, cores, tipografia, design system, sincronização do AppTheme |
+| `.claude/paginated-lists.md` | Telas com endpoint paginado: scroll infinito, loading inicial e reset por filtro/busca |
 
 ---
 

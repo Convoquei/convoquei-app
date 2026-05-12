@@ -3,7 +3,7 @@ class StateListPaged<T> {
     this.items = const [],
     this.page = 0,
     this.hasNextPage = true,
-    this.isInitialLoading = false,
+    this.isInitialLoading = true,
     this.isLoadingMore = false,
     this.error,
   });

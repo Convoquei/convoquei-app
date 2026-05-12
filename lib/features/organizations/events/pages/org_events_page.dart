@@ -1,7 +1,9 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/core/utils/date_locale_pt.dart';
+import 'package:convoquei_app/core/widgets/app_loading_info.dart';
+import 'package:convoquei_app/core/widgets/app_loading_screen.dart';
 import 'package:convoquei_app/core/widgets/date_range_filter_section.dart';
 import 'package:convoquei_app/core/widgets/error_retry_state.dart';
 import 'package:convoquei_app/core/widgets/filter_button.dart';
@@ -47,6 +49,7 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
   OrgEventsTab _selectedTab = OrgEventsTab.all;
 
   final _searchController = TextEditingController();
+  final _scrollController = ScrollController();
   String _searchQuery = '';
 
   List<OrganizationEventMembershipStatus>? _customStatus;
@@ -147,16 +150,30 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _applyFilter(_buildFilter());
+      if (mounted) _applyFilter(_buildFilter());
     });
   }
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    final pos = _scrollController.position;
+    if (pos.pixels < pos.maxScrollExtent - 200) return;
+
+    final s = ref.read(eventMembershipProvider);
+    if (s.isLoadingMore || s.isInitialLoading || !s.hasNextPage) return;
+
+    ref
+        .read(eventMembershipProvider.notifier)
+        .loadNextPage(widget.organizationId, _filter);
   }
 
   void _handleTabChange(OrgEventsTab newTab) {
@@ -261,6 +278,28 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
         .asData!
         .value;
     final canManageEvents = currentUser.hasPermission(OrganizationPermissionEnum.manageEvents);
+
+    if (eventsState.isInitialLoading) {
+      return const AppLoadingScreen(
+        skeleton: AppLoadingSkeleton.list,
+        content: AppLoadingInfo(
+          label: 'Carregando eventos...',
+          description: '',
+        ),
+      );
+    }
+
+    if (eventsState.error != null && eventsState.items.isEmpty) {
+      return Scaffold(
+        body: Center(
+          child: ErrorRetryState(
+            onRetry: _handleRetry,
+            message: 'Não foi possível carregar os eventos',
+          ),
+        ),
+      );
+    }
+
     final grouped = _groupByMonth(eventsState.items);
 
     return Scaffold(
@@ -269,181 +308,199 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
             .read(eventMembershipProvider.notifier)
             .resetAsync(widget.organizationId, _filter),
         child: CustomScrollView(
+          controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
-        slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          onChanged: _handleSearchChanged,
-                          decoration: const InputDecoration(
-                            hintText: 'Buscar por nome ou local...',
-                            prefixIcon: Icon(Icons.search_rounded, size: 20),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      FilterButton(
-                        isActive: _hasActiveFilters,
-                        onClear:  _handleClearFilters,
-                        onApply: () {
-                          setState(() {
-                            _customStatus             = _pendingStatus;
-                            _customAvailabilityStatus = _pendingAvailabilityStatus;
-                            _customEventStatus        = _pendingEventStatus;
-                            _customStartDate          = _pendingStartDate;
-                            _customEndDate            = _pendingEndDate;
-                          });
-                          _applyFilter(_buildFilter());
-                        },
-                        childrenBuilder: () {
-                          _pendingStatus             = _customStatus             ?? _membershipStatusForTab(_selectedTab);
-                          _pendingAvailabilityStatus = _customAvailabilityStatus ?? _availabilityStatusForTab(_selectedTab);
-                          _pendingEventStatus        = _customEventStatus        ?? _eventStatusForTab(_selectedTab);
-                          _pendingStartDate          = _customStartDate;
-                          _pendingEndDate            = _customEndDate;
-                          return [
-                            EventStatusFilterSection(
-                              selected: _pendingEventStatus,
-                              onChanged: (statuses) {
-                                setState(() => _pendingEventStatus = statuses);
-                              },
-                            ),
-                            AvailabilityStatusFilterSection(
-                              selected: _pendingAvailabilityStatus,
-                              onChanged: (statuses) {
-                                setState(() => _pendingAvailabilityStatus = statuses);
-                              },
-                            ),
-                            MembershipStatusFilterSection(
-                              selected: _pendingStatus,
-                              onChanged: (statuses) {
-                                setState(() => _pendingStatus = statuses);
-                              },
-                            ),
-                            DateRangeFilterSection(
-                              startDate: _pendingStartDate,
-                              endDate:   _pendingEndDate,
-                              onChanged: (start, end) {
-                                setState(() {
-                                  _pendingStartDate = start;
-                                  _pendingEndDate   = end;
-                                });
-                              },
-                            ),
-                          ];
-                        },
-                      ),                      if (canManageEvents) ...[  
-                        const SizedBox(width: 10),
-                        GestureDetector(
-                          onTap: _handleCreateEvent,
-                          child: Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: AppTheme.primaryColor,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.04),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.add_rounded,
-                              size: 22,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  EventsTabs(
-                    selected: _selectedTab,
-                    onChanged: _handleTabChange,
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ),
-          ),
-
-          if (eventsState.isInitialLoading)
-            const SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else if (eventsState.error != null)
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: ErrorRetryState(
-                onRetry: _handleRetry,
-                message: 'Não foi possível carregar os eventos',
-              ),
-            )
-          else if (eventsState.isEmpty)
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: EmptyEventsState(
-                tab:        _selectedTab,
-                membership: currentUser,
-                onCreateEvent: canManageEvents ? _handleCreateEvent : null,
-              ),
-            )
-          else
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final entry  = grouped.entries.elementAt(index);
-                    final month  = entry.key;
-                    final events = entry.value;
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                          MonthDivider(month: month),
-                        const SizedBox(height: 12),
-                        ...events.map(
-                          (membership) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: EventCard(
-                              key: ValueKey(membership.id),
-                              event: membership,
-                              onTap: () => context.pushNamed(
-                                AppRoutes.orgEventDetail,
-                                pathParameters: {
-                                  'orgId':   widget.organizationId,
-                                  'eventId': membership.id,
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            onChanged: _handleSearchChanged,
+                            decoration: const InputDecoration(
+                              hintText: 'Buscar por nome ou local...',
+                              prefixIcon: Icon(Icons.search_rounded, size: 20),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        FilterButton(
+                          isActive: _hasActiveFilters,
+                          onClear:  _handleClearFilters,
+                          onApply: () {
+                            setState(() {
+                              _customStatus             = _pendingStatus;
+                              _customAvailabilityStatus = _pendingAvailabilityStatus;
+                              _customEventStatus        = _pendingEventStatus;
+                              _customStartDate          = _pendingStartDate;
+                              _customEndDate            = _pendingEndDate;
+                            });
+                            _applyFilter(_buildFilter());
+                          },
+                          childrenBuilder: () {
+                            _pendingStatus             = _customStatus             ?? _membershipStatusForTab(_selectedTab);
+                            _pendingAvailabilityStatus = _customAvailabilityStatus ?? _availabilityStatusForTab(_selectedTab);
+                            _pendingEventStatus        = _customEventStatus        ?? _eventStatusForTab(_selectedTab);
+                            _pendingStartDate          = _customStartDate;
+                            _pendingEndDate            = _customEndDate;
+                            return [
+                              EventStatusFilterSection(
+                                selected: _pendingEventStatus,
+                                onChanged: (statuses) {
+                                  setState(() => _pendingEventStatus = statuses);
                                 },
                               ),
-                              onAvailable:     () => _handleAvailability(membership, true),
-                              onUnavailable:   () => _handleAvailability(membership, false),
-                              onLeaveSchedule: () => _handleAvailability(membership, false),
+                              AvailabilityStatusFilterSection(
+                                selected: _pendingAvailabilityStatus,
+                                onChanged: (statuses) {
+                                  setState(() => _pendingAvailabilityStatus = statuses);
+                                },
+                              ),
+                              MembershipStatusFilterSection(
+                                selected: _pendingStatus,
+                                onChanged: (statuses) {
+                                  setState(() => _pendingStatus = statuses);
+                                },
+                              ),
+                              DateRangeFilterSection(
+                                startDate: _pendingStartDate,
+                                endDate:   _pendingEndDate,
+                                onChanged: (start, end) {
+                                  setState(() {
+                                    _pendingStartDate = start;
+                                    _pendingEndDate   = end;
+                                  });
+                                },
+                              ),
+                            ];
+                          },
+                        ),
+                        if (canManageEvents) ...[
+                          const SizedBox(width: 10),
+                          GestureDetector(
+                            onTap: _handleCreateEvent,
+                            child: Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryColor,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.04),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.add_rounded,
+                                size: 22,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
+                        ],
                       ],
-                    );
-                  },
-                  childCount: grouped.length,
+                    ),
+                    const SizedBox(height: 14),
+                    EventsTabs(
+                      selected: _selectedTab,
+                      onChanged: _handleTabChange,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                 ),
               ),
             ),
-        ],
+
+            if (eventsState.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: EmptyEventsState(
+                  tab:        _selectedTab,
+                  membership: currentUser,
+                  onCreateEvent: canManageEvents ? _handleCreateEvent : null,
+                ),
+              )
+            else ...[
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final entry  = grouped.entries.elementAt(index);
+                      final month  = entry.key;
+                      final events = entry.value;
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          MonthDivider(month: month),
+                          const SizedBox(height: 12),
+                          ...events.map(
+                            (membership) => Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: EventCard(
+                                key: ValueKey(membership.id),
+                                event: membership,
+                                onTap: () => context.pushNamed(
+                                  AppRoutes.orgEventDetail,
+                                  pathParameters: {
+                                    'orgId':   widget.organizationId,
+                                    'eventId': membership.id,
+                                  },
+                                ),
+                                onAvailable:     () => _handleAvailability(membership, true),
+                                onUnavailable:   () => _handleAvailability(membership, false),
+                                onLeaveSchedule: () => _handleAvailability(membership, false),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                      );
+                    },
+                    childCount: grouped.length,
+                  ),
+                ),
+              ),
+
+              if (eventsState.isLoadingMore)
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                ),
+
+              if (eventsState.error != null && eventsState.items.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                    child: Center(
+                      child: TextButton.icon(
+                        onPressed: () => ref
+                            .read(eventMembershipProvider.notifier)
+                            .loadNextPage(widget.organizationId, _filter),
+                        icon: const Icon(Icons.refresh_rounded, size: 16),
+                        label: const Text('Tentar novamente'),
+                      ),
+                    ),
+                  ),
+                ),
+
+              if (!eventsState.hasNextPage && !eventsState.isLoadingMore)
+                const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            ],
+          ],
         ),
       ),
     );

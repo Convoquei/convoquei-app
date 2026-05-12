@@ -18,7 +18,7 @@ class EventMembershipNotifier extends _$EventMembershipNotifier {
   }
 
   Future<void> loadNextPage(String organizationId, EventsFilter filter) async {
-    if (!state.hasNextPage || state.isLoadingMore || state.isInitialLoading) return;
+    if (!state.hasNextPage || state.isLoadingMore) return;
 
     final currentGeneration = _generation;
 
