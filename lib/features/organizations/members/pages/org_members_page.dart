@@ -1,168 +1,169 @@
+import 'dart:async';
+
 import 'package:convoquei_app/app/router.dart';
 import 'package:convoquei_app/core/network/exceptions/api_exception.dart';
 import 'package:convoquei_app/core/services/toast_feedback_service.dart';
 import 'package:convoquei_app/core/services/user_feedback_service.dart';
 import 'package:convoquei_app/core/theme/app_theme.dart';
+import 'package:convoquei_app/core/widgets/app_loading_info.dart';
+import 'package:convoquei_app/core/widgets/app_loading_screen.dart';
+import 'package:convoquei_app/core/widgets/error_retry_state.dart';
 import 'package:convoquei_app/features/organizations/members/models/enums/manage_member_action.dart';
 import 'package:convoquei_app/features/organizations/members/providers/invite_member_provider.dart';
 import 'package:convoquei_app/features/organizations/members/providers/kick_member_provider.dart';
-import 'package:convoquei_app/features/organizations/members/widgets/modals/create_group_modal.dart';
-import 'package:convoquei_app/features/organizations/members/widgets/group_list.dart';
+import 'package:convoquei_app/features/organizations/members/providers/list_all_members_query_provider.dart';
+import 'package:convoquei_app/features/organizations/members/widgets/member_list_tile.dart';
+import 'package:convoquei_app/features/organizations/members/widgets/member_list_tile_skeleton.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/modals/invite_member_by_email_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/modals/manage_functions_member_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/modals/manage_groups_member_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/modals/manage_member_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/modals/manage_roles_member_modal.dart';
-import 'package:convoquei_app/features/organizations/members/widgets/member_list.dart';
 import 'package:convoquei_app/features/organizations/shared/models/enums/organization_permission.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_member_model.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/organization_providers.dart';
-import 'package:convoquei_app/features/organizations/home/widgets/team_toggle_widget.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/selected_organization_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:async';
-
-enum OrgMembersTab { membros, grupos }
 
 class OrgMembersPage extends ConsumerStatefulWidget {
-  final OrgMembersTab initialTab;
-
-  const OrgMembersPage({
-    super.key,
-    this.initialTab = OrgMembersTab.membros,
-  });
+  const OrgMembersPage({super.key});
 
   @override
   ConsumerState<OrgMembersPage> createState() => _OrgMembersPageState();
 }
 
 class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
-  late OrgMembersTab _tab = widget.initialTab;
+  final _scrollController = ScrollController();
   final _searchController = TextEditingController();
-  String? _searchQuery;
   Timer? _debounce;
+  bool _hasLoadedOnce = false;
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ref.read(membersPagedProvider.notifier).reset();
+    });
   }
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _searchController.dispose();
     _debounce?.cancel();
     super.dispose();
   }
 
-  void _onSearchChanged(String value) {
-    if (value.length < 3 && value.isNotEmpty) return;
+  void _onScroll() {
+    final pos = _scrollController.position;
+    if (pos.pixels < pos.maxScrollExtent - 200) return;
 
+    final s = ref.read(membersPagedProvider);
+    if (s.isLoadingMore || s.isInitialLoading || !s.hasNextPage) return;
+
+    ref.read(membersPagedProvider.notifier).loadNextPage();
+  }
+
+  void _handleSearchChanged(String value) {
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 400), () {
-      if (!mounted) return;
-      setState(() => _searchQuery = value.isEmpty ? null : value);
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      final name = value.trim().isEmpty ? null : value.trim();
+      ref.read(membersPagedProvider.notifier).reset(name: name);
     });
+  }
+
+  String? get _currentName {
+    final text = _searchController.text.trim();
+    return text.isEmpty ? null : text;
   }
 
   void _handleActionManageMember(
     ManageMemberActionEnum action,
     OrganizationMemberModel member,
-  ) async {
+  ) {
+    final orgId = ref.read(selectedOrganizationProvider)?.id;
+    if (orgId == null) return;
+
     switch (action) {
       case ManageMemberActionEnum.kickMember:
-        {
-          final organizationId = ref.watch(selectedOrganizationProvider)?.id;
-
-          try {
-            await ref
-                .read(kickOrganizationMemberProvider.notifier)
-                .kick(organizationId: organizationId!, memberId: member.id);
-
-            if (!mounted) return;
-            ToastFeedbackService.showToast(
-              context,
-              "${member.name} foi expulsado com sucesso!",
-              ToastType.success,
-            );
-          } catch (e) {
-            if (!mounted) return;
-
-            if (e is ApiException) {
-              UserFeedbackService.error(context, message: e.message);
-              return;
-            }
-          }
-        }
+        _kickMember(member, orgId);
       case ManageMemberActionEnum.manageGroups:
-        {
-          final organizationId = ref.read(selectedOrganizationProvider)?.id;
-          if (organizationId == null) break;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            ManageGroupsMemberModal.show(
-              context,
-              member,
-              organizationId,
-              onNavigateToSettings: () {
-                setState(() => _tab = OrgMembersTab.grupos);
-              },
-            );
-          });
-          break;
-        }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          ManageGroupsMemberModal.show(
+            context,
+            member,
+            orgId,
+            onNavigateToSettings: () {
+              if (!mounted) return;
+              context.pushNamed(
+                AppRoutes.orgSettingsGroups,
+                pathParameters: {'orgId': orgId},
+              );
+            },
+          );
+        });
       case ManageMemberActionEnum.manageFunctions:
-        {
-          final organizationId = ref.read(selectedOrganizationProvider)?.id;
-          if (organizationId == null) break;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            ManageFunctionsMemberModal.show(
-              context,
-              member,
-              organizationId,
-              onNavigateToSettings: () {
-                final org = ref.read(selectedOrganizationProvider);
-                if (org == null || !mounted) return;
-                context.goNamed(
-                  AppRoutes.orgSettingsFunctions,
-                  pathParameters: {'orgId': org.id},
-                );
-              },
-            );
-          });
-          break;
-        }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          ManageFunctionsMemberModal.show(
+            context,
+            member,
+            orgId,
+            onNavigateToSettings: () {
+              if (!mounted) return;
+              context.goNamed(
+                AppRoutes.orgSettingsFunctions,
+                pathParameters: {'orgId': orgId},
+              );
+            },
+          );
+        });
       case ManageMemberActionEnum.manageRoles:
-        {
-          final organizationId = ref.read(selectedOrganizationProvider)?.id;
-          if (organizationId == null) break;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            ManageRolesMemberModal.show(
-              context,
-              member,
-              organizationId,
-              onNavigateToSettings: () {
-                final org = ref.read(selectedOrganizationProvider);
-                if (org == null || !mounted) return;
-                context.goNamed(
-                  AppRoutes.orgSettingsRoles,
-                  pathParameters: {'orgId': org.id},
-                );
-              },
-            );
-          });
-          break;
-        }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          ManageRolesMemberModal.show(
+            context,
+            member,
+            orgId,
+            onNavigateToSettings: () {
+              if (!mounted) return;
+              context.goNamed(
+                AppRoutes.orgSettingsRoles,
+                pathParameters: {'orgId': orgId},
+              );
+            },
+          );
+        });
+    }
+  }
+
+  Future<void> _kickMember(OrganizationMemberModel member, String orgId) async {
+    try {
+      await ref
+          .read(kickOrganizationMemberProvider.notifier)
+          .kick(organizationId: orgId, memberId: member.id);
+
+      if (!mounted) return;
+      ToastFeedbackService.showToast(
+        context,
+        '${member.name} foi expulsado com sucesso!',
+        ToastType.success,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      if (e is ApiException) {
+        UserFeedbackService.error(context, message: e.message);
+      }
     }
   }
 
   Future<bool> _handleInviteMember(String email) async {
     try {
       final orgId = ref.read(selectedOrganizationProvider)!.id;
-
       await ref
           .read(inviteOrganizationMemberProvider.notifier)
           .invite(organizationId: orgId, email: email);
@@ -170,21 +171,17 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
       if (!mounted) return false;
       ToastFeedbackService.showToast(
         context,
-        "Convite enviado com sucesso!",
+        'Convite enviado com sucesso!',
         ToastType.success,
       );
       return true;
-    }
-    catch (e) {
+    } catch (e) {
       if (!mounted) return false;
-
       if (e is ApiException) {
         UserFeedbackService.error(context, message: e.message);
-        return false;
       }
+      return false;
     }
-
-    return false;
   }
 
   @override
@@ -194,76 +191,81 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
         ? ref.watch(currentUserMembershipOrganizationProvider(orgId)).asData?.value
         : null;
 
-    final canInviteMembers =
-        currentUser?.hasPermission(OrganizationPermissionEnum.inviteMembers) ??
-        false;
-    final canManageGroups =
-        currentUser?.hasPermission(OrganizationPermissionEnum.manageGroups) ??
-        false;
+    final canInvite =
+        currentUser?.hasPermission(OrganizationPermissionEnum.inviteMembers) ?? false;
+
+    final state = ref.watch(membersPagedProvider);
+
+    if (!state.isInitialLoading) _hasLoadedOnce = true;
+
+    if (state.isInitialLoading && !_hasLoadedOnce) {
+      return const AppLoadingScreen(
+        skeleton: AppLoadingSkeleton.list,
+        content: AppLoadingInfo(
+          label: 'Carregando membros...',
+          description: 'Buscando membros da organização',
+        ),
+      );
+    }
+
+    if (state.error != null && state.items.isEmpty && !state.isInitialLoading) {
+      return Scaffold(
+        body: Center(
+          child: ErrorRetryState(
+            onRetry: () =>
+                ref.read(membersPagedProvider.notifier).reset(name: _currentName),
+            message: state.error.toString(),
+          ),
+        ),
+      );
+    }
+
+    final isPartialLoading = state.isInitialLoading && _hasLoadedOnce;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-            child: Column(
-              children: [
-                ToggleTabs<OrgMembersTab>(
-                  selected: _tab,
-                  values: OrgMembersTab.values,
-                  onChanged: (tab) {
-                    setState(() {
-                      _tab = tab;
-                      _searchQuery = null;
-                    });
-                    _searchController.clear();
-                  },
-                  labelBuilder: (tab) => switch (tab) {
-                    OrgMembersTab.membros => 'Membros',
-                    OrgMembersTab.grupos => 'Grupos',
-                  },
-                ),
-                const SizedBox(height: 12),
-                Row(
+      body: RefreshIndicator(
+        onRefresh: () =>
+            ref.read(membersPagedProvider.notifier).resetAsync(name: _currentName),
+        child: CustomScrollView(
+          controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+                child: Row(
                   children: [
                     Expanded(
                       child: TextField(
                         controller: _searchController,
-                        onChanged: _onSearchChanged,
-                        decoration: InputDecoration(
-                          hintText: 'Procurar ${_tab.name}',
-                          prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                        onChanged: _handleSearchChanged,
+                        enabled: !isPartialLoading,
+                        decoration: const InputDecoration(
+                          hintText: 'Buscar membro...',
+                          prefixIcon: Icon(Icons.search_rounded, size: 20),
                         ),
                       ),
                     ),
-                    if ((_tab == OrgMembersTab.membros && canInviteMembers) ||
-                        (_tab == OrgMembersTab.grupos && canManageGroups)) ...[
+                    if (canInvite) ...[
                       const SizedBox(width: 12),
-                      Material(
-                        color: AppTheme.primaryColor,
-                        borderRadius: BorderRadius.circular(12),
-                        child: InkWell(
-                          onTap: () {
-                            if (_tab == OrgMembersTab.membros) {
-                              InviteMemberByEmailModal.show(
+                      Opacity(
+                        opacity: isPartialLoading ? 0.4 : 1.0,
+                        child: AbsorbPointer(
+                          absorbing: isPartialLoading,
+                          child: Material(
+                            color: AppTheme.primaryColor,
+                            borderRadius: BorderRadius.circular(6),
+                            child: InkWell(
+                              onTap: () => InviteMemberByEmailModal.show(
                                 context,
                                 _handleInviteMember,
-                              );
-                            }
-                            else if(_tab == OrgMembersTab.grupos) {
-                              CreateGroupModal.show(context, orgId!);
-                            }
-                          },
-                          borderRadius: BorderRadius.circular(12),
-                          child: SizedBox(
-                            width: 48,
-                            height: 48,
-                            child: Icon(
-                              _tab == OrgMembersTab.membros
-                                  ? Icons.person_add
-                                  : Icons.group_add,
-                              color: Colors.white,
+                              ),
+                              borderRadius: BorderRadius.circular(6),
+                              child: const SizedBox(
+                                height: 40,
+                                width: 40,
+                                child: Icon(Icons.person_add, color: Colors.white),
+                              ),
                             ),
                           ),
                         ),
@@ -271,28 +273,176 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
                     ],
                   ],
                 ),
-              ],
+              ),
+            ),
+
+            if (isPartialLoading)
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, _) => const Padding(
+                      padding: EdgeInsets.only(bottom: 4),
+                      child: MemberListTileSkeleton(),
+                    ),
+                    childCount: 5,
+                  ),
+                ),
+              )
+            else if (state.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Align(
+                  alignment: const Alignment(0, -0.2),
+                  child: _EmptyState(
+                    hasSearch: _searchController.text.isNotEmpty,
+                    canInvite: canInvite,
+                    onInvite: () => InviteMemberByEmailModal.show(
+                      context,
+                      _handleInviteMember,
+                    ),
+                  ),
+                ),
+              )
+            else ...[
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final m = state.items[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: MemberListTile(
+                          key: ValueKey(m.id),
+                          member: m,
+                          isCurrentUser: m.id == currentUser?.id,
+                          onOptionsPressed: currentUser != null
+                              ? () => ManageMemberModal.show(
+                                    context,
+                                    m,
+                                    currentUser,
+                                    (action) {
+                                      _handleActionManageMember(action, m);
+                                      return true;
+                                    },
+                                  )
+                              : null,
+                        ),
+                      );
+                    },
+                    childCount: state.items.length,
+                  ),
+                ),
+              ),
+
+              if (state.isLoadingMore)
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                ),
+
+              if (state.error != null && state.items.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 20,
+                    ),
+                    child: Center(
+                      child: TextButton.icon(
+                        onPressed: () =>
+                            ref.read(membersPagedProvider.notifier).loadNextPage(),
+                        icon: const Icon(Icons.refresh_rounded, size: 16),
+                        label: const Text('Tentar novamente'),
+                      ),
+                    ),
+                  ),
+                ),
+
+              if (!state.hasNextPage && !state.isLoadingMore)
+                const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({
+    required this.hasSearch,
+    required this.canInvite,
+    required this.onInvite,
+  });
+
+  final bool hasSearch;
+  final bool canInvite;
+  final VoidCallback onInvite;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceSubtle,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              hasSearch ? '🔍' : '👥',
+              style: const TextStyle(fontSize: 36),
             ),
           ),
-          Expanded(
-            child: _tab == OrgMembersTab.membros
-                ? MembersList(
-                    currentUserId: currentUser?.id ?? '',
-                    searchQuery: _searchQuery,
-                    onOptionsPressed: (m) {
-                      ManageMemberModal.show(context, m, currentUser!, (
-                        action,
-                      ) {
-                        _handleActionManageMember(action, m);
-                        return true;
-                      });
-                    },
-                  )
-                : GroupsList(
-                    organizationId: orgId ?? '',
-                    canManageGroups: canManageGroups,
-                  ),
+          const SizedBox(height: 16),
+          Text(
+            hasSearch ? 'Nenhum resultado encontrado' : 'Nenhum membro ainda',
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: AppTheme.textPrimary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
+          const SizedBox(height: 8),
+          Text(
+            hasSearch
+                ? 'Tente buscar por outro nome.'
+                : 'Convide membros para começar a organizar sua equipe.',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppTheme.textSecondary,
+              height: 1.5,
+            ),
+          ),
+          if (!hasSearch && canInvite) ...[
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: onInvite,
+                icon: const Icon(Icons.person_add_rounded, size: 18),
+                label: const Text('Convidar membro'),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

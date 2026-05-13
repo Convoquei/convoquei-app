@@ -13,22 +13,26 @@ final membersPagedProvider =
     );
 
 class MembersNotifier extends Notifier<StateListPaged<OrganizationMemberModel>> {
+  int _generation = 0;
+  String? _name;
+
   @override
   StateListPaged<OrganizationMemberModel> build() {
-    return StateListPaged();
+    return const StateListPaged();
   }
 
-  Future<void> loadNextPage({String? name}) async {
+  Future<void> loadNextPage() async {
     final organizationId = ref.read(selectedOrganizationProvider)?.id;
-
     if (organizationId == null) return;
+    if (!state.hasNextPage || state.isLoadingMore) return;
 
-    if (state.isLoadingMore || state.isInitialLoading) return;
+    final currentGeneration = _generation;
 
-    // Seta loading
-    state = state.page == 0
-        ? state.copyWith(isInitialLoading: true)
-        : state.copyWith(isLoadingMore: true);
+    state = state.copyWith(
+      isInitialLoading: state.page == 0,
+      isLoadingMore: state.page > 0,
+      clearError: true,
+    );
 
     try {
       final repo = ref.read(organizationMembersRepositoryProvider);
@@ -38,10 +42,13 @@ class MembersNotifier extends Notifier<StateListPaged<OrganizationMemberModel>> 
         FindAllOrganizationMembersRequest(
           page: state.page,
           size: 10,
-          name: name,
+          name: _name,
           status: 'ACTIVE',
         ),
       );
+
+      if (!ref.mounted) return;
+      if (_generation != currentGeneration) return;
 
       state = state.copyWith(
         items: [...state.items, ...result.items],
@@ -49,9 +56,11 @@ class MembersNotifier extends Notifier<StateListPaged<OrganizationMemberModel>> 
         hasNextPage: result.hasNextPage,
         isInitialLoading: false,
         isLoadingMore: false,
-        error: null,
       );
     } catch (e) {
+      if (!ref.mounted) return;
+      if (_generation != currentGeneration) return;
+
       state = state.copyWith(
         error: e,
         isInitialLoading: false,
@@ -61,8 +70,17 @@ class MembersNotifier extends Notifier<StateListPaged<OrganizationMemberModel>> 
   }
 
   void reset({String? name}) {
-    state = state.reset();
-    loadNextPage(name: name);
+    _generation++;
+    _name = name;
+    state = const StateListPaged();
+    loadNextPage();
+  }
+
+  Future<void> resetAsync({String? name}) {
+    _generation++;
+    _name = name;
+    state = const StateListPaged();
+    return loadNextPage();
   }
 
   void updateMemberGroups(String memberId, List<OrganizationMemberGroupModel> groups) {
