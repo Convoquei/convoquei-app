@@ -1,11 +1,11 @@
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/constants/app_breakpoints.dart';
 import '../../../core/services/user_feedback_service.dart';
-import '../../../core/widgets/action_button.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../providers/auth_providers.dart';
+import '../widgets/auth_page_shell.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
@@ -45,117 +45,103 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
-    final isLoading = authState.isRegistering;
-    final isWide = AppBreakpoints.isWide(context);
-
-    final formContent = Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Center(child: AppLogo.signature(size: 40)),
-          const SizedBox(height: 8),
-          Text(
-            'Crie sua conta para começar',
-            style: Theme.of(context).textTheme.bodyMedium,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 40),
-          TextFormField(
-            controller: _nameCtrl,
-            textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(
-              labelText: 'Nome',
-              prefixIcon: Icon(Icons.person_outline),
-            ),
-            validator: (v) =>
-                (v == null || v.isEmpty) ? 'Informe seu nome' : null,
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _emailCtrl,
-            keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(
-              labelText: 'E-mail',
-              prefixIcon: Icon(Icons.email_outlined),
-            ),
-            validator: (v) =>
-                (v == null || v.isEmpty) ? 'Informe o e-mail' : null,
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _passwordCtrl,
-            obscureText: _obscure,
-            decoration: InputDecoration(
-              labelText: 'Senha',
-              prefixIcon: const Icon(Icons.lock_outline),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscure
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
-                ),
-                onPressed: () => setState(() => _obscure = !_obscure),
-              ),
-            ),
-            validator: (v) {
-              if (v == null || v.isEmpty) return 'Informe a senha';
-              if (v.length < 8) return 'Mínimo 8 caracteres';
-              return null;
-            },
-          ),
-          const SizedBox(height: 24),
-          ActionButton(
-            label: 'Criar conta',
-            isLoading: isLoading,
-            onPressed: _submit,
-          ),
-          const SizedBox(height: 16),
-          TextButton(
-            onPressed: isLoading
-                ? null
-                : () => Navigator.of(context).pop(),
-            child: const Text('Já tenho conta'),
-          ),
-        ],
-      ),
-    );
+    final isLoading = ref.watch(authProvider.select((s) => s.isRegistering));
+    final colors = context.colors;
 
     return PopScope(
       canPop: false,
-      child: Scaffold(
-        body: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: isWide ? 0 : 24,
-                vertical: 32,
-              ),
-              child: isWide
-                  ? Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Container(
-                        width: 420,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 40,
-                          vertical: 40,
-                        ),
-                        child: formContent,
-                      ),
-                    )
-                  : formContent,
+      child: AuthPageShell(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Center(child: AppLogo.icon(size: 72)),
+            const SizedBox(height: DSSpacing.xl),
+            const DSText(
+              'Crie sua conta',
+              variant: DSTextVariant.displayMedium,
+              textAlign: TextAlign.center,
             ),
-          ),
+            const SizedBox(height: DSSpacing.sm),
+            const DSText(
+              'Junte-se ao Convoquei e simplifique\nsua organização.',
+              variant: DSTextVariant.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: DSSpacing.xxl + 8),
+            Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: _nameCtrl,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: const InputDecoration(
+                      hintText: 'Seu nome completo',
+                      prefixIcon: Icon(Icons.person_outline),
+                    ),
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Informe seu nome' : null,
+                  ),
+                  const SizedBox(height: DSSpacing.md),
+                  TextFormField(
+                    controller: _emailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      hintText: 'Endereço de e-mail',
+                      prefixIcon: Icon(Icons.email_outlined),
+                    ),
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Informe o e-mail' : null,
+                  ),
+                  const SizedBox(height: DSSpacing.md),
+                  TextFormField(
+                    controller: _passwordCtrl,
+                    obscureText: _obscure,
+                    decoration: InputDecoration(
+                      hintText: 'Senha (mínimo 8 caracteres)',
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscure
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                        ),
+                        onPressed: () => setState(() => _obscure = !_obscure),
+                      ),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Informe a senha';
+                      if (v.length < 8) return 'Mínimo 8 caracteres';
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: DSSpacing.xl),
+            DSButton(
+              label: 'Criar conta',
+              isLoading: isLoading,
+              onPressed: _submit,
+            ),
+            const SizedBox(height: DSSpacing.xxl),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const DSText('Já tem conta? ', variant: DSTextVariant.bodyMedium),
+                InkWell(
+                  onTap: isLoading ? null : () => Navigator.of(context).pop(),
+                  child: DSText(
+                    'Entrar',
+                    variant: DSTextVariant.labelLarge,
+                    color: colors.primary,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 }
-
-
-

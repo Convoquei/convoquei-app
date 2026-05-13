@@ -12,7 +12,13 @@
       "Bash(grep -E \"\\\\.dart$\")",
       "Bash(flutter analyze *)",
       "Bash(Rename-Item C:\\\\repo\\\\convoquei\\\\convoquei-app\\\\lib\\\\design_system\\\\foundtions *)",
-      "Bash(Test-Path *)"
+      "Bash(Test-Path *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\repo\\\\convoquei\\\\convoquei-app\\\\lib\\\\design_system\" -Recurse -File)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "Bash(Get-ChildItem -Path \"C:\\\\repo\\\\convoquei\\\\convoquei-app\\\\lib\\\\features\\\\auth\" -Recurse -Force)",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)"
     ]
   }
 }

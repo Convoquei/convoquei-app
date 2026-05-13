@@ -1,11 +1,11 @@
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/constants/app_breakpoints.dart';
 import '../../../core/services/user_feedback_service.dart';
-import '../../../core/widgets/action_button.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../providers/auth_providers.dart';
+import '../widgets/auth_page_shell.dart';
 import 'register_page.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -30,15 +30,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-
     await ref
         .read(authProvider.notifier)
         .login(_emailCtrl.text.trim(), _passwordCtrl.text);
-
     if (!mounted) return;
-
     final errorMsg = ref.read(authProvider).errorMessage;
-
     if (errorMsg != null) {
       await UserFeedbackService.error(context, message: errorMsg);
     }
@@ -46,98 +42,89 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
-    final isLoading = authState.isLoggingIn;
-    final isWide = AppBreakpoints.isWide(context);
+    final isLoading = ref.watch(authProvider.select((s) => s.isLoggingIn));
+    final colors = context.colors;
 
-    final formContent = Form(
-      key: _formKey,
+    return AuthPageShell(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
         children: [
-          const Center(child: AppLogo.signature(size: 40)),
-          const SizedBox(height: 8),
-          Text(
-            'Entre na sua conta',
-            style: Theme.of(context).textTheme.bodyMedium,
+          const Center(child: AppLogo.icon(size: 72)),
+          const SizedBox(height: DSSpacing.xl),
+          DSText(
+            'Bem-vindo(a) ao\nConvoquei',
+            variant: DSTextVariant.displayMedium,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 40),
-          TextFormField(
-            controller: _emailCtrl,
-            keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(
-              labelText: 'E-mail',
-              prefixIcon: Icon(Icons.email_outlined),
-            ),
-            validator: (v) =>
-                (v == null || v.isEmpty) ? 'Informe o e-mail' : null,
+          const SizedBox(height: DSSpacing.sm),
+          DSText(
+            'A plataforma para gerir escalas e equipes.',
+            variant: DSTextVariant.bodyMedium,
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _passwordCtrl,
-            obscureText: _obscure,
-            decoration: InputDecoration(
-              labelText: 'Senha',
-              prefixIcon: const Icon(Icons.lock_outline),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscure
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
+          const SizedBox(height: DSSpacing.xxl + 8),
+          Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: _emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    hintText: 'Endereço de e-mail',
+                    prefixIcon: Icon(Icons.email_outlined),
+                  ),
+                  validator: (v) =>
+                      (v == null || v.isEmpty) ? 'Informe o e-mail' : null,
                 ),
-                onPressed: () => setState(() => _obscure = !_obscure),
-              ),
+                const SizedBox(height: DSSpacing.md),
+                TextFormField(
+                  controller: _passwordCtrl,
+                  obscureText: _obscure,
+                  decoration: InputDecoration(
+                    hintText: 'Senha',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscure
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                      ),
+                      onPressed: () => setState(() => _obscure = !_obscure),
+                    ),
+                  ),
+                  validator: (v) =>
+                      (v == null || v.isEmpty) ? 'Informe a senha' : null,
+                ),
+              ],
             ),
-            validator: (v) =>
-                (v == null || v.isEmpty) ? 'Informe a senha' : null,
           ),
-          const SizedBox(height: 24),
-          ActionButton(
+          const SizedBox(height: DSSpacing.xl),
+          DSButton(
             label: 'Entrar',
             isLoading: isLoading,
             onPressed: _submit,
           ),
-          const SizedBox(height: 16),
-          TextButton(
-            onPressed: isLoading
-                ? null
-                : () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const RegisterPage()),
-                  ),
-            child: const Text('Não tem conta? Registre-se'),
+          const SizedBox(height: DSSpacing.xxl),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const DSText('Não tem conta? ', variant: DSTextVariant.bodyMedium),
+              InkWell(
+                onTap: isLoading
+                    ? null
+                    : () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const RegisterPage()),
+                      ),
+                child: DSText(
+                  'Registre-se',
+                  variant: DSTextVariant.labelLarge,
+                  color: colors.primary,
+                ),
+              ),
+            ],
           ),
         ],
-      ),
-    );
-
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(
-              horizontal: isWide ? 0 : 24,
-              vertical: 32,
-            ),
-            child: isWide
-                ? Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Container(
-                      width: 420,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 40,
-                        vertical: 40,
-                      ),
-                      child: formContent,
-                    ),
-                  )
-                : formContent,
-          ),
-        ),
       ),
     );
   }
