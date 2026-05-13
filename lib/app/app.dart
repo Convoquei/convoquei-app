@@ -2,7 +2,7 @@ import 'package:convoquei_app/app/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../core/theme/app_theme.dart';
+import '../design_system/ds.dart';
 
 class _NoStretchScrollBehavior extends ScrollBehavior {
   @override
@@ -23,7 +23,8 @@ class App extends ConsumerWidget {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'Convoquei',
-      theme: AppTheme.light,
+      theme: DSTheme.light,
+      darkTheme: DSTheme.dark,
       scrollBehavior: _NoStretchScrollBehavior(),
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,

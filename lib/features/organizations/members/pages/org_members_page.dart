@@ -100,7 +100,7 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
             onNavigateToSettings: () {
               if (!mounted) return;
               context.pushNamed(
-                AppRoutes.orgSettingsGroups,
+                AppRoutes.orgSettings,
                 pathParameters: {'orgId': orgId},
               );
             },
