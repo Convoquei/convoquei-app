@@ -11,7 +11,11 @@ import 'package:go_router/go_router.dart';
 /// Bottom sheet de troca de contexto: Visão Global (home) ou uma das
 /// organizações do usuário. Sempre mostra onde o usuário está no momento.
 class OrgSwitcherSheet extends DSBaseModal {
-  const OrgSwitcherSheet({super.key});
+  /// Localização atual do roteador (ex.: `/orgs/abc/events/123`).
+  /// Usada para manter a seção ativa ao trocar de organização.
+  final String currentLocation;
+
+  const OrgSwitcherSheet({super.key, required this.currentLocation});
 
   @override
   State<OrgSwitcherSheet> createState() => _OrgSwitcherSheetState();
@@ -66,6 +70,7 @@ class _OrgSwitcherSheetState extends DSBaseModalState<OrgSwitcherSheet> {
                           _OrgOption(
                             organization: org,
                             isCurrent: selected?.id == org.id,
+                            currentLocation: widget.currentLocation,
                           ),
                           if (org != orgs.last)
                             const SizedBox(height: DSSpacing.sm),
@@ -93,6 +98,18 @@ class _OrgSwitcherSheetState extends DSBaseModalState<OrgSwitcherSheet> {
       ),
     ];
   }
+}
+
+/// Mapeia a localização atual para o caminho-base da mesma seção na nova org.
+/// Garante que trocar de org mantém o contexto (eventos → eventos, etc.).
+String _resolveTargetPath(String currentLocation, String newOrgId) {
+  final match = RegExp(r'^/orgs/[^/]+/([^/]+)').firstMatch(currentLocation);
+  return switch (match?.group(1)) {
+    'events' => AppPaths.orgEvents(newOrgId),
+    'scales' => AppPaths.orgScales(newOrgId),
+    'team' => AppPaths.orgTeam(newOrgId),
+    _ => AppPaths.orgHome(newOrgId),
+  };
 }
 
 class _SectionLabel extends StatelessWidget {
@@ -141,8 +158,13 @@ class _HomeOption extends ConsumerWidget {
 class _OrgOption extends ConsumerWidget {
   final OrganizationModel organization;
   final bool isCurrent;
+  final String currentLocation;
 
-  const _OrgOption({required this.organization, required this.isCurrent});
+  const _OrgOption({
+    required this.organization,
+    required this.isCurrent,
+    required this.currentLocation,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -157,10 +179,7 @@ class _OrgOption extends ConsumerWidget {
       onTap: () {
         DSBaseModal.hide(context);
         ref.read(selectedOrganizationProvider.notifier).select(organization);
-        context.goNamed(
-          AppRoutes.orgHome,
-          pathParameters: {'orgId': organization.id},
-        );
+        context.go(_resolveTargetPath(currentLocation, organization.id));
       },
     );
   }

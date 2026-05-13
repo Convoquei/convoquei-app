@@ -119,7 +119,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/orgs/:orgId/home',
             name: AppRoutes.orgHome,
             pageBuilder: (_, state) => _noTransitionPage(
-              state.pageKey,
+              ValueKey('${AppRoutes.orgHome}-${state.pathParameters['orgId']}'),
               const OrgHomePage(),
             ),
           ),
@@ -127,7 +127,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/orgs/:orgId/events',
             name: AppRoutes.orgEvents,
             pageBuilder: (context, state) => _noTransitionPage(
-              state.pageKey,
+              ValueKey('${AppRoutes.orgEvents}-${state.pathParameters['orgId']}'),
               OrgEventsPage(organizationId: state.pathParameters['orgId']!),
             ),
             routes: [
@@ -162,7 +162,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/orgs/:orgId/scales',
             name: AppRoutes.orgScales,
             pageBuilder: (_, state) => _noTransitionPage(
-              state.pageKey,
+              ValueKey('${AppRoutes.orgScales}-${state.pathParameters['orgId']}'),
               const OrgScalesPage(),
             ),
           ),
@@ -170,7 +170,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/orgs/:orgId/team',
             name: AppRoutes.orgTeam,
             pageBuilder: (_, state) => _noTransitionPage(
-              state.pageKey,
+              ValueKey('${AppRoutes.orgTeam}-${state.pathParameters['orgId']}'),
               const OrgMembersPage(),
             ),
           ),

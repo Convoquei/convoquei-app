@@ -36,7 +36,10 @@ class AppHeader extends ConsumerWidget implements PreferredSizeWidget {
       onProfileTap: () {
         // TODO: navegar para /profile quando a tela de perfil existir.
       },
-      onContextTap: () => DSBaseModal.show(context, const OrgSwitcherSheet()),
+      onContextTap: () {
+        final location = GoRouterState.of(context).uri.toString();
+        DSBaseModal.show(context, OrgSwitcherSheet(currentLocation: location));
+      },
       onSettingsTap: currentOrg != null
           ? () => context.pushNamed(
                 AppRoutes.orgSettings,
