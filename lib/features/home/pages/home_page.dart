@@ -1,7 +1,7 @@
 import 'package:convoquei_app/app/router.dart';
 import 'package:convoquei_app/core/network/exceptions/api_exception.dart';
 import 'package:convoquei_app/core/services/user_feedback_service.dart';
-import 'package:convoquei_app/core/theme/app_theme.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/home/widgets/create_organization_modal.dart';
 import 'package:convoquei_app/features/home/widgets/my_invite_card.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_invite_model.dart';
@@ -68,7 +68,7 @@ class HomePage extends ConsumerWidget {
         }
         UserFeedbackService.error(
           context,
-          message: 'Erro ao responder o convite.',
+          message: 'Não foi possível responder ao convite.',
         );
       }
     }
@@ -103,7 +103,7 @@ class HomePage extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 12),
+                    const SizedBox(height: DSSpacing.md),
 
                     // ── Invites ──────────────────────────────
                     invitesAsync.when(
@@ -115,7 +115,7 @@ class HomePage extends ConsumerWidget {
                                 _SectionHeader(title: 'Convites Pendentes'),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
+                                    horizontal: DSSpacing.lg,
                                   ),
                                   child: Column(
                                     children: [
@@ -132,12 +132,12 @@ class HomePage extends ConsumerWidget {
                                               declineInvite(invites[i]),
                                         ),
                                         if (i < invites.length - 1)
-                                          const SizedBox(height: 12),
+                                          const SizedBox(height: DSSpacing.md),
                                       ],
                                     ],
                                   ),
                                 ),
-                                const SizedBox(height: 24),
+                                const SizedBox(height: DSSpacing.xl),
                               ],
                             ),
                       loading: () => const SizedBox.shrink(),
@@ -146,40 +146,34 @@ class HomePage extends ConsumerWidget {
 
                     // ── Aguardando Resposta ──────────────────────────────
                     _SectionHeader(title: 'Suas Pendências'),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: DSSpacing.lg),
                       child: _AllClearCard(),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: DSSpacing.xl),
 
                     // ── Organizações ─────────────────────────────────────
                     _SectionHeader(title: 'Organizações'),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DSSpacing.lg,
+                      ),
                       child: organizationsAsync.when(
                         loading: () => const Center(
                           child: Padding(
-                            padding: EdgeInsets.symmetric(vertical: 24),
-                            child: CircularProgressIndicator(),
+                            padding: EdgeInsets.symmetric(
+                              vertical: DSSpacing.xl,
+                            ),
+                            child: DSSpinner(size: 32),
                           ),
                         ),
-                        error: (error, _) => Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                error.toString(),
-                                textAlign: TextAlign.center,
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                              const SizedBox(height: 12),
-                              FilledButton(
-                                onPressed: () =>
-                                    ref.invalidate(userOrganizationsProvider),
-                                child: const Text('Tentar novamente'),
-                              ),
-                            ],
-                          ),
+                        error: (error, _) => DSErrorRetryState(
+                          message:
+                              'Não foi possível carregar as organizações.',
+                          description:
+                              'Verifique sua conexão e tente novamente.',
+                          onRetry: () =>
+                              ref.invalidate(userOrganizationsProvider),
                         ),
                         data: (organizations) => _OrganizationsGrid(
                           organizations: organizations,
@@ -202,28 +196,25 @@ class HomePage extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: DSSpacing.xl),
 
                     // ── Sua Semana ───────────────────────────────────────
                     _SectionHeader(
                       title: 'Sua Semana',
                       trailing: TextButton(
                         onPressed: () {},
-                        child: const Text(
+                        child: DSText(
                           'Ver calendário',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.primaryColor,
-                          ),
+                          variant: DSTextVariant.labelSmall,
+                          color: context.colors.primary,
                         ),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: DSSpacing.lg),
                       child: _FreeWeekCard(),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: DSSpacing.xxl),
                   ],
                 ),
               ),
@@ -248,17 +239,17 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 8, 10),
+      padding: const EdgeInsets.fromLTRB(
+        DSSpacing.lg,
+        0,
+        DSSpacing.sm,
+        DSSpacing.md,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            title,
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontSize: 18),
-          ),
+          DSText(title, variant: DSTextVariant.titleLarge),
           ?trailing,
         ],
       ),
@@ -276,60 +267,44 @@ class _AllClearCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(DSSpacing.lg),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFECFDF5), Color(0xFFF0FDF4)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        color: context.colors.successTint,
+        borderRadius: DSRadius.allLg,
+        border: Border.all(
+          color: context.colors.success.withValues(alpha: 0.3),
         ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFD1FAE5)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: DSElevation.sm,
       ),
       child: Row(
         children: [
           Container(
             width: 48,
             height: 48,
-            decoration: const BoxDecoration(
-              color: Color(0xFFD1FAE5),
+            decoration: BoxDecoration(
+              color: context.colors.success.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.check_circle_rounded,
-              color: Color(0xFF059669),
+              color: context.colors.success,
               size: 26,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: DSSpacing.lg),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              DSText(
                 'Tudo em dia!',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                  color: Color(0xFF065F46),
-                ),
+                variant: DSTextVariant.labelLarge,
+                color: context.colors.success,
               ),
               const SizedBox(height: 2),
-              Text(
+              DSText(
                 'Você não possui pendências no momento.',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF059669).withValues(alpha: 0.8),
-                ),
+                variant: DSTextVariant.bodySmall,
+                color: context.colors.success,
               ),
             ],
           ),
@@ -360,10 +335,9 @@ class _OrganizationsGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Real organization cards (each full-width)
         ...organizations.map(
           (org) => Padding(
-            padding: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.only(bottom: DSSpacing.md),
             child: _OrgListTile(
               organization: org,
               onTap: () => onOrganizationTap(org),
@@ -371,7 +345,6 @@ class _OrganizationsGrid extends StatelessWidget {
           ),
         ),
 
-        // Action buttons row
         Row(
           children: [
             Expanded(
@@ -381,7 +354,7 @@ class _OrganizationsGrid extends StatelessWidget {
                 onTap: onJoinWithLink,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: DSSpacing.md),
             Expanded(
               child: _ActionGridButton(
                 icon: Icons.add,
@@ -405,64 +378,34 @@ class _OrgListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade200),
-          ),
-          child: Row(
-            children: [
-              OrganizationAvatar(photoUrl: organization.photoUrl),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      organization.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Color(0xFF1E293B),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Text(
-                        'Membro',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF64748B),
-                        ),
-                      ),
-                    ),
-                  ],
+    return DSCard(
+      onTap: onTap,
+      child: Row(
+        children: [
+          OrganizationAvatar(photoUrl: organization.photoUrl),
+          const SizedBox(width: DSSpacing.lg),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DSText(
+                  organization.name,
+                  variant: DSTextVariant.labelLarge,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8)),
-            ],
+                const SizedBox(height: DSSpacing.xs),
+                DSBadge(
+                  label: 'Membro',
+                  color: context.colors.textSecondary,
+                  variant: DSBadgeVariant.soft,
+                  size: DSBadgeSize.sm,
+                ),
+              ],
+            ),
           ),
-        ),
+          DSIcon(Icons.chevron_right_rounded),
+        ],
       ),
     );
   }
@@ -484,23 +427,16 @@ class _ActionGridButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: dashed ? const Color(0xFFF8FAFC) : Colors.white,
-      borderRadius: BorderRadius.circular(16),
+      color: dashed ? context.colors.background : context.colors.surface,
+      borderRadius: DSRadius.allLg,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: DSRadius.allLg,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 18),
+          padding: const EdgeInsets.symmetric(vertical: DSSpacing.lg),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: dashed
-                ? Border.all(
-                    color: const Color(0xFFCBD5E1),
-                    strokeAlign: BorderSide.strokeAlignInside,
-                    style: BorderStyle.solid,
-                    width: 1.5,
-                  )
-                : Border.all(color: Colors.grey.shade200),
+            borderRadius: DSRadius.allLg,
+            border: Border.all(color: context.colors.border),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -509,38 +445,28 @@ class _ActionGridButton extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: dashed ? Colors.white : const Color(0xFFEFF6FF),
+                  color: dashed
+                      ? context.colors.surface
+                      : context.colors.primaryTint,
                   shape: BoxShape.circle,
-                  boxShadow: dashed
-                      ? [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.06),
-                            blurRadius: 4,
-                            offset: const Offset(0, 1),
-                          ),
-                        ]
-                      : null,
+                  boxShadow: dashed ? DSElevation.sm : null,
                 ),
                 child: Icon(
                   icon,
                   size: 20,
                   color: dashed
-                      ? const Color(0xFF94A3B8)
-                      : AppTheme.primaryColor,
+                      ? context.colors.textSecondary
+                      : context.colors.primary,
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
+              const SizedBox(height: DSSpacing.sm),
+              DSText(
                 label,
+                variant: DSTextVariant.labelSmall,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: dashed
-                      ? const Color(0xFF475569)
-                      : const Color(0xFF334155),
-                ),
+                color: dashed
+                    ? context.colors.textSecondary
+                    : context.colors.textPrimary,
               ),
             ],
           ),
@@ -559,53 +485,38 @@ class _FreeWeekCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 2,
-          style: BorderStyle.solid,
-        ),
+    return DSCard(
+      padding: const EdgeInsets.symmetric(
+        vertical: DSSpacing.xxl,
+        horizontal: DSSpacing.xl,
       ),
       child: Column(
         children: [
           Container(
             width: 56,
             height: 56,
-            decoration: const BoxDecoration(
-              color: Color(0xFFF8FAFC),
+            decoration: BoxDecoration(
+              color: context.colors.background,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.calendar_today_rounded,
-              color: Color(0xFFCBD5E1),
+              color: context.colors.border,
               size: 28,
             ),
           ),
-          const SizedBox(height: 16),
-          const Text(
+          const SizedBox(height: DSSpacing.lg),
+          DSText(
             'Semana Livre',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-              color: Color(0xFF475569),
-            ),
+            variant: DSTextVariant.labelLarge,
+            color: context.colors.textSecondary,
           ),
-          const SizedBox(height: 4),
-          const Text(
+          const SizedBox(height: DSSpacing.xs),
+          DSText(
             'Você não está escalado para nenhum evento nos próximos dias.',
+            variant: DSTextVariant.bodySmall,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 12,
-              color: Color(0xFF94A3B8),
-              height: 1.5,
-            ),
+            color: context.colors.textSecondary,
           ),
         ],
       ),
