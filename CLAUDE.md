@@ -30,11 +30,11 @@ Aplicativo mobile para gerenciamento de **organizações**, **equipes** e **even
 
 | Arquivo | Quando usar |
 |---|---|
-| `.claude/project.md` | Domínio, conceitos, nomenclatura, comportamento |
-| `.claude/riverpod-reference.md` | Referência completa de providers, Families e lifecycle — leia sob demanda ao criar/modificar providers |
-| `.claude/componentization.md` | Criar ou refatorar páginas e widgets (lista de widgets existentes) |
-| `.claude/visual.md` | UI/UX, tema, cores, tipografia, design system, sincronização do AppTheme |
-| `.claude/paginated-lists.md` | Telas com endpoint paginado: scroll infinito, loading inicial e reset por filtro/busca |
+| `.claude/rules/design-system.md` | Catálogo do DS: tokens, foundations, components, regras de import e proibições |
+| `.claude/rules/ui-patterns.md` | Padrões de UI: AppBar translúcido, inset grouped, bottom sheets, skeletons, paginação |
+| `.claude/rules/microcopy.md` | Tom de voz em pt-BR para textos da UI |
+| `.claude/rules/brand.md` | Identidade visual: logotipo, cores de marca, tipografia |
+| `.claude/riverpod-reference.md` | Providers, Families e lifecycle — leia sob demanda ao criar/modificar providers |
 
 ---
 
@@ -133,10 +133,10 @@ lib/
 - Widgets acoplados à feature → `lib/features/[feature]/widgets/`
 
 ### Tema e Cores
-- ✅ `AppTheme.primaryColor`, `Theme.of(context).colorScheme.primary`
-- ❌ `Color(0xFF1D4ED8)` hardcoded
-- Se precisar de um token que não existe no `AppTheme`, **pergunte antes de implementar**
-- Reuse os temas de componente do `AppTheme` — `elevatedButtonTheme`, `cardTheme`, `appBarTheme`, `inputDecorationTheme`. Inputs (`TextField`/`TextFormField`/`DropdownButtonFormField`) herdam automaticamente; **não crie wrappers customizados** de input.
+- ✅ `context.colors.primary`, `context.colors.surface`, `context.textStyles.titleLarge`
+- ❌ `Color(0xFF1D4ED8)` hardcoded, `TextStyle(fontSize: 16)` cru
+- Todos os tokens estão em `.claude/rules/design-system.md` — consultar antes de implementar qualquer UI
+- Inputs (`TextField`/`TextFormField`/`DropdownButtonFormField`) herdam `inputDecorationTheme` do `DSTheme` automaticamente; **não criar wrappers customizados** de input
 
 ### Domínio
 - Referencie sempre o **membro** (`OrganizationMember`), nunca o usuário diretamente

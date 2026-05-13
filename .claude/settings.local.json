@@ -18,7 +18,17 @@
       "Bash(Sort-Object)",
       "Bash(Get-ChildItem -Path \"C:\\\\repo\\\\convoquei\\\\convoquei-app\\\\lib\\\\features\\\\auth\" -Recurse -Force)",
       "Bash(Select-Object FullName)",
-      "Bash(Sort-Object FullName)"
+      "Bash(Sort-Object FullName)",
+      "Bash(Get-ChildItem -Path \"C:\\\\repo\\\\convoquei\\\\convoquei-app\\\\lib\\\\design_system\" -Force)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(mkdir -p 'C:\\\\repo\\\\convoquei\\\\convoquei-app\\\\.claude\\\\rules')",
+      "Bash(mkdir -p 'C:\\\\repo\\\\convoquei\\\\convoquei-app\\\\.claude\\\\skills\\\\ds-audit')",
+      "Bash(mkdir -p 'C:\\\\repo\\\\convoquei\\\\convoquei-app\\\\.claude\\\\skills\\\\ds-migrate')",
+      "Bash(mkdir -p 'C:\\\\repo\\\\convoquei\\\\convoquei-app\\\\.claude\\\\skills\\\\ds-scaffold')",
+      "Bash(mkdir -p 'C:\\\\repo\\\\convoquei\\\\convoquei-app\\\\.claude\\\\skills\\\\ds-component')",
+      "Bash(Get-ChildItem 'C:\\\\repo\\\\convoquei\\\\convoquei-app\\\\.claude\\\\rules')",
+      "Bash(Get-ChildItem 'C:\\\\repo\\\\convoquei\\\\convoquei-app\\\\.claude\\\\skills' -Recurse -Filter SKILL.md)"
     ]
   }
 }
