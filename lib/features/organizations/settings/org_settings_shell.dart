@@ -1,6 +1,5 @@
 import 'package:convoquei_app/app/router.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_model.dart';
-import 'package:convoquei_app/features/organizations/shared/widgets/organization_shell_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -48,19 +47,21 @@ class OrgSettingsShell extends StatelessWidget {
         }
       },
       child: Scaffold(
-        appBar: OrganizationShellAppBar(
-          organization: organization,
-          currentPage: title,
-          onBackTap: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.goNamed(
-                AppRoutes.orgHome,
-                pathParameters: {'orgId': organization.id},
-              );
-            }
-          },
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.goNamed(
+                  AppRoutes.orgHome,
+                  pathParameters: {'orgId': organization.id},
+                );
+              }
+            },
+          ),
+          title: Text(title),
         ),
         body: child,
       ),

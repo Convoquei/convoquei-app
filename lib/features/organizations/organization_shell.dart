@@ -5,7 +5,8 @@ import 'package:convoquei_app/features/organizations/shared/models/organization_
 import 'package:convoquei_app/features/organizations/organization_tab.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/organization_providers.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/selected_organization_provider.dart';
-import 'package:convoquei_app/features/organizations/shared/widgets/organization_shell_app_bar.dart';
+import 'package:convoquei_app/core/widgets/app_header.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/shared/widgets/organization_side_rail.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -160,13 +161,25 @@ class _OrganizationShellState extends ConsumerState<OrganizationShell> {
     final tabIndex = _tabIndexForPath(path);
 
     return Scaffold(
-      appBar: OrganizationShellAppBar(
-        organization: widget.organization,
-        currentPage: _titleForPath(path),
-        onBackTap: () => _handleBack(path),
-        onSettingsTap: showTabBar ? _openSettings : null,
-      ),
-      body: widget.child,
+      extendBodyBehindAppBar: showTabBar,
+      appBar: showTabBar
+          ? AppHeader()
+          : AppBar(
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_rounded),
+                onPressed: () => _handleBack(path),
+              ),
+              title: Text(_titleForPath(path)),
+            ),
+      body: showTabBar
+          ? Padding(
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top +
+                    DSAppHeader.kPreferredHeight,
+              ),
+              child: widget.child,
+            )
+          : widget.child,
       bottomNavigationBar: showTabBar
           ? _OrgNavigationBar(
               currentIndex: tabIndex,

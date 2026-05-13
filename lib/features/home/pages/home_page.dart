@@ -1,6 +1,7 @@
 import 'package:convoquei_app/app/router.dart';
 import 'package:convoquei_app/core/network/exceptions/api_exception.dart';
 import 'package:convoquei_app/core/services/user_feedback_service.dart';
+import 'package:convoquei_app/core/widgets/app_header.dart';
 import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/home/widgets/create_organization_modal.dart';
 import 'package:convoquei_app/features/home/widgets/my_invite_card.dart';
@@ -14,7 +15,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../auth/providers/auth_providers.dart';
 import '../../organizations/shared/providers/organization_providers.dart';
-import '../widgets/perfil_header.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -89,22 +89,20 @@ class HomePage extends ConsumerWidget {
     }
 
     return Scaffold(
-      body: Column(
-        children: [
-          SafeArea(
-            bottom: false,
-            child: PerfilHeader(user: user, onNotificationTap: () {}),
-          ),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: handleRefresh,
-              child: SingleChildScrollView(
+      extendBodyBehindAppBar: true,
+      appBar: AppHeader(),
+      body: RefreshIndicator(
+        onRefresh: handleRefresh,
+        child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top +
+                      DSAppHeader.kPreferredHeight +
+                      DSSpacing.md,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: DSSpacing.md),
-
                     // ── Invites ──────────────────────────────
                     invitesAsync.when(
                       data: (invites) => invites.isEmpty
@@ -168,8 +166,7 @@ class HomePage extends ConsumerWidget {
                           ),
                         ),
                         error: (error, _) => DSErrorRetryState(
-                          message:
-                              'Não foi possível carregar as organizações.',
+                          message: 'Não foi possível carregar as organizações.',
                           description:
                               'Verifique sua conexão e tente novamente.',
                           onRetry: () =>
@@ -219,10 +216,7 @@ class HomePage extends ConsumerWidget {
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
+        );
   }
 }
 

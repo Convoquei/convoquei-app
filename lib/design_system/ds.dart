@@ -51,3 +51,6 @@ export 'components/lists/ds_timeline_group.dart';
 export 'components/overlays/ds_modal.dart';
 export 'components/overlays/ds_modal_header.dart';
 export 'components/overlays/ds_multi_select_modal.dart';
+
+// ── Components: chrome ────────────────────────────────────────────────────────
+export 'components/chrome/ds_app_header.dart';
