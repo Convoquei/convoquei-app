@@ -1,5 +1,4 @@
-﻿import 'package:convoquei_app/core/theme/app_theme.dart';
-import 'package:convoquei_app/core/widgets/modals/multi_select_modal.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_assignment_mode.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_function_call_mode.dart';
 import 'package:convoquei_app/features/organizations/events/models/event_form_step3_data.dart';
@@ -38,7 +37,7 @@ class CreateEventStep3FinalRules extends ConsumerWidget {
   Future<void> _showAddFunctionSheet(BuildContext context, WidgetRef ref) async {
     final alreadyAdded = data.functionRules.map((r) => r.functionId).toSet();
 
-    await MultiSelectModal.show<OrganizationFunctionModel>(
+    await DSMultiSelectModal.show<OrganizationFunctionModel>(
       context,
       title: 'Selecionar Funções',
       fetcher: (r) async {
@@ -99,34 +98,33 @@ class CreateEventStep3FinalRules extends ConsumerWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.hourglass_top_rounded,
-                    color: Color(0xFFF59E0B), size: 20),
+                Icon(Icons.hourglass_top_rounded,
+                    color: context.colors.warning, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text('Bloqueio de Disponibilidade',
-                      style: Theme.of(context).textTheme.titleSmall),
+                      style: context.textStyles.titleSmall),
                 ),
                 if (!canUseAutoSchedule)
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE2E8F0),
-                      borderRadius: BorderRadius.circular(6),
+                      color: context.colors.border,
+                      borderRadius: DSRadius.all(6),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.lock_outline_rounded,
-                            size: 9, color: AppTheme.textSecondary),
-                        SizedBox(width: 3),
+                            size: 9, color: context.colors.textSecondary),
+                        const SizedBox(width: 3),
                         Text(
                           'Não disponível',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
+                          style: context.textStyles.labelSmall?.copyWith(
                             fontSize: 9,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.textSecondary,
+                            color: context.colors.textSecondary,
                           ),
                         ),
                       ],
@@ -136,7 +134,7 @@ class CreateEventStep3FinalRules extends ConsumerWidget {
             ),
             Text(
               'Com quanto tempo antes do evento a disponibilidade dos membros deve ser bloqueada e, se necessário, escalar os disponíveis?',
-              style: Theme.of(context).textTheme.bodySmall,
+              style: context.textStyles.bodySmall,
             ),
             Opacity(
               opacity: canUseAutoSchedule ? 1.0 : 0.45,
@@ -146,9 +144,9 @@ class CreateEventStep3FinalRules extends ConsumerWidget {
                   padding:
                       const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    color: context.colors.surfaceSubtle,
+                    borderRadius: DSRadius.allLg,
+                    border: Border.all(color: context.colors.border),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -166,10 +164,9 @@ class CreateEventStep3FinalRules extends ConsumerWidget {
                             bottom: 20, left: 6, right: 6),
                         child: Text(
                           ':',
-                          style: const TextStyle(
-                            fontSize: 24,
+                          style: context.textStyles.displayMedium?.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFFCBD5E1),
+                            color: context.colors.border,
                           ),
                         ),
                       ),
@@ -186,10 +183,9 @@ class CreateEventStep3FinalRules extends ConsumerWidget {
                             bottom: 20, left: 6, right: 6),
                         child: Text(
                           ':',
-                          style: const TextStyle(
-                            fontSize: 24,
+                          style: context.textStyles.displayMedium?.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFFCBD5E1),
+                            color: context.colors.border,
                           ),
                         ),
                       ),
@@ -222,17 +218,17 @@ class CreateEventStep3FinalRules extends ConsumerWidget {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.manage_accounts_rounded,
-                              color: AppTheme.primaryColor, size: 20),
+                          Icon(Icons.manage_accounts_rounded,
+                              color: context.colors.primary, size: 20),
                           const SizedBox(width: 8),
                           Text('Regras por Função',
-                              style: Theme.of(context).textTheme.titleSmall),
+                              style: context.textStyles.titleSmall),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Defina vagas, limites ou sorteios específicos por função.',
-                        style: Theme.of(context).textTheme.bodySmall,
+                        style: context.textStyles.bodySmall,
                       ),
                     ],
                   ),
@@ -250,20 +246,19 @@ class CreateEventStep3FinalRules extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  color: context.colors.surfaceSubtle,
+                  borderRadius: DSRadius.all(14),
+                  border: Border.all(color: context.colors.border),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'PARTICIPAÇÃO NO EVENTO',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
+                      style: context.textStyles.labelSmall?.copyWith(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.textSecondary,
+                        color: context.colors.textSecondary,
                         letterSpacing: 0.8,
                       ),
                     ),
@@ -273,9 +268,11 @@ class CreateEventStep3FinalRules extends ConsumerWidget {
                       description:
                           'Membros sem estas funções serão ignorados e não receberão a convocação.',
                       selected: data.functionCallMode ==
-                          OrganizationEventFunctionCallMode.onlyMembersWithListedFunctions,
+                          OrganizationEventFunctionCallMode
+                              .onlyMembersWithListedFunctions,
                       onTap: () => onChanged(data.copyWith(
-                          functionCallMode: OrganizationEventFunctionCallMode.onlyMembersWithListedFunctions)),
+                          functionCallMode: OrganizationEventFunctionCallMode
+                              .onlyMembersWithListedFunctions)),
                     ),
                     const SizedBox(height: 10),
                     FunctionRestrictionModeOption(
@@ -283,9 +280,11 @@ class CreateEventStep3FinalRules extends ConsumerWidget {
                       description:
                           'Todos serão convocados, mas as regras abaixo se aplicam às funções específicas.',
                       selected: data.functionCallMode ==
-                          OrganizationEventFunctionCallMode.allMembersWithFunctionLimits,
+                          OrganizationEventFunctionCallMode
+                              .allMembersWithFunctionLimits,
                       onTap: () => onChanged(data.copyWith(
-                          functionCallMode: OrganizationEventFunctionCallMode.allMembersWithFunctionLimits)),
+                          functionCallMode: OrganizationEventFunctionCallMode
+                              .allMembersWithFunctionLimits)),
                     ),
                   ],
                 ),
@@ -306,20 +305,18 @@ class CreateEventStep3FinalRules extends ConsumerWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                        color: const Color(0xFFCBD5E1),
-                        style: BorderStyle.solid),
+                    borderRadius: DSRadius.all(14),
+                    border: Border.all(color: context.colors.border),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.add_rounded,
-                          color: AppTheme.textSecondary, size: 18),
+                      Icon(Icons.add_rounded,
+                          color: context.colors.textSecondary, size: 18),
                       const SizedBox(width: 6),
                       Text(
                         'Adicionar Regra de Função',
-                        style: Theme.of(context).textTheme.labelMedium,
+                        style: context.textStyles.labelMedium,
                       ),
                     ],
                   ),

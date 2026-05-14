@@ -1,4 +1,4 @@
-import 'package:convoquei_app/core/theme/app_theme.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/core/utils/date_locale_pt.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_assignment_mode.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_status.dart';
@@ -15,34 +15,28 @@ class EventDetailHeroCard extends StatelessWidget {
 
   const EventDetailHeroCard({super.key, required this.details, this.onOptions});
 
-  Color get _accentColor => switch (details.status) {
-        OrganizationEventStatus.scheduled => AppTheme.secondaryColor,
-        OrganizationEventStatus.inProgress => AppTheme.infoColor,
-        OrganizationEventStatus.completed => AppTheme.successColor,
-        OrganizationEventStatus.canceled => AppTheme.errorColor,
+  Color _accentColor(BuildContext context) => switch (details.status) {
+        OrganizationEventStatus.scheduled => context.colors.warning,
+        OrganizationEventStatus.inProgress => context.colors.info,
+        OrganizationEventStatus.completed => context.colors.success,
+        OrganizationEventStatus.canceled => context.colors.danger,
       };
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: context.colors.surface,
+        borderRadius: DSRadius.all(24),
+        border: Border.all(color: context.colors.border),
+        boxShadow: DSElevation.sm,
       ),
       clipBehavior: Clip.hardEdge,
       child: IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(width: 6, color: _accentColor),
+            Container(width: 6, color: _accentColor(context)),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -53,18 +47,16 @@ class EventDetailHeroCard extends StatelessWidget {
                     const SizedBox(height: 10),
                     Text(
                       details.name,
-                      style:
-                          Theme.of(context).textTheme.displayMedium?.copyWith(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800,
-                              ),
+                      style: context.textStyles.displayMedium?.copyWith(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 14),
                     _InfoRow(
                       icon: Icons.calendar_today_rounded,
                       primaryText: _formatDate(details.startAt),
-                      secondaryText:
-                          _formatTime(details.startAt, details.endAt),
+                      secondaryText: _formatTime(details.startAt, details.endAt),
                     ),
                     const SizedBox(height: 8),
                     _InfoRow(
@@ -122,7 +114,7 @@ class _StatusRow extends StatelessWidget {
               onPressed: onOptions,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-              color: AppTheme.textSecondary,
+              color: context.colors.textSecondary,
             ),
           ),
       ],
@@ -135,42 +127,43 @@ class _EventStatusTag extends StatelessWidget {
 
   const _EventStatusTag({required this.status});
 
-  ({String label, Color bg, Color border, Color color}) get _config =>
+  ({String label, Color bg, Color border, Color color}) _config(
+          BuildContext context) =>
       switch (status) {
         OrganizationEventStatus.scheduled => (
           label: 'Em Aberto',
-          bg: const Color(0xFFFFF7ED),
-          border: const Color(0xFFFED7AA),
-          color: AppTheme.secondaryColor,
+          bg: context.colors.warningTint,
+          border: context.colors.warning.withValues(alpha: 0.4),
+          color: context.colors.warning,
         ),
         OrganizationEventStatus.inProgress => (
           label: 'Em Andamento',
-          bg: const Color(0xFFEFF6FF),
-          border: const Color(0xFFBFDBFE),
-          color: AppTheme.infoColor,
+          bg: context.colors.infoTint,
+          border: context.colors.info.withValues(alpha: 0.4),
+          color: context.colors.info,
         ),
         OrganizationEventStatus.completed => (
           label: 'Finalizado',
-          bg: const Color(0xFFECFDF5),
-          border: const Color(0xFFD1FAE5),
-          color: AppTheme.successColor,
+          bg: context.colors.successTint,
+          border: context.colors.success.withValues(alpha: 0.4),
+          color: context.colors.success,
         ),
         OrganizationEventStatus.canceled => (
           label: 'Cancelado',
-          bg: const Color(0xFFFEF2F2),
-          border: const Color(0xFFFECACA),
-          color: AppTheme.errorColor,
+          bg: context.colors.dangerTint,
+          border: context.colors.danger.withValues(alpha: 0.4),
+          color: context.colors.danger,
         ),
       };
 
   @override
   Widget build(BuildContext context) {
-    final c = _config;
+    final c = _config(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
         color: c.bg,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: DSRadius.allSm,
         border: Border.all(color: c.border),
       ),
       child: Row(
@@ -182,8 +175,7 @@ class _EventStatusTag extends StatelessWidget {
           ],
           Text(
             c.label.toUpperCase(),
-            style: TextStyle(
-              fontFamily: 'Inter',
+            style: context.textStyles.labelSmall?.copyWith(
               fontSize: 10,
               fontWeight: FontWeight.w700,
               color: c.color,
@@ -235,8 +227,7 @@ class _PulseDotState extends State<_PulseDot>
       child: Container(
         width: 6,
         height: 6,
-        decoration:
-            BoxDecoration(color: widget.color, shape: BoxShape.circle),
+        decoration: BoxDecoration(color: widget.color, shape: BoxShape.circle),
       ),
     );
   }
@@ -255,16 +246,16 @@ class _AssignmentModeTag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        color: context.colors.surfaceSubtle,
+        borderRadius: DSRadius.allSm,
+        border: Border.all(color: context.colors.border),
       ),
       child: Text(
         label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
-            ),
+        style: context.textStyles.labelSmall?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: context.colors.textPrimary,
+        ),
       ),
     );
   }
@@ -291,11 +282,11 @@ class _InfoRow extends StatelessWidget {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
+            color: context.colors.surfaceSubtle,
             shape: BoxShape.circle,
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: context.colors.border),
           ),
-          child: Icon(icon, size: 15, color: AppTheme.textSecondary),
+          child: Icon(icon, size: 15, color: context.colors.textSecondary),
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -304,14 +295,14 @@ class _InfoRow extends StatelessWidget {
             children: [
               Text(
                 primaryText,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: AppTheme.textPrimary,
-                    ),
+                style: context.textStyles.labelMedium?.copyWith(
+                  color: context.colors.textPrimary,
+                ),
               ),
               if (secondaryText != null)
                 Text(
                   secondaryText!,
-                  style: Theme.of(context).textTheme.labelSmall,
+                  style: context.textStyles.labelSmall,
                 ),
             ],
           ),

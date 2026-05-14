@@ -1,5 +1,4 @@
-import 'package:convoquei_app/core/theme/app_theme.dart';
-import 'package:convoquei_app/core/widgets/user_avatar.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/events/models/organization_event_details_model.dart';
 import 'package:flutter/material.dart';
 
@@ -33,7 +32,7 @@ class EventParticipantTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
         child: Row(
           children: [
-            UserAvatar(
+            DSAvatar(
               name: participant.name,
               avatarUrl: participant.avatarUrl,
               radius: 20,
@@ -45,7 +44,7 @@ class EventParticipantTile extends StatelessWidget {
                 children: [
                   Text(
                     participant.name,
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    style: context.textStyles.labelMedium?.copyWith(
                           decoration: strikethrough
                               ? TextDecoration.lineThrough
                               : null,
@@ -55,16 +54,16 @@ class EventParticipantTile extends StatelessWidget {
                   if (strikethrough)
                     Text(
                       'Informou indisponibilidade',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: AppTheme.errorColor,
+                      style: context.textStyles.labelSmall?.copyWith(
+                            color: context.colors.danger,
                           ),
                       overflow: TextOverflow.ellipsis,
                     )
                   else if (participant.function != null)
                     Text(
                       participant.function!,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: functionColor ?? AppTheme.textSecondary,
+                      style: context.textStyles.labelSmall?.copyWith(
+                            color: functionColor ?? context.colors.textSecondary,
                           ),
                       overflow: TextOverflow.ellipsis,
                     ),

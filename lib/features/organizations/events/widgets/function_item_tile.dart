@@ -1,4 +1,4 @@
-import 'package:convoquei_app/core/theme/app_theme.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/members/models/organization_function_model.dart';
 import 'package:flutter/material.dart';
 
@@ -20,11 +20,11 @@ class FunctionItemTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
+        duration: DSMotion.fast,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppTheme.primaryColor.withValues(alpha: 0.06)
+              ? context.colors.primary.withValues(alpha: 0.06)
               : Colors.transparent,
         ),
         child: Row(
@@ -33,8 +33,8 @@ class FunctionItemTile extends StatelessWidget {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(10),
+                color: context.colors.surfaceSubtle,
+                borderRadius: DSRadius.all(10),
               ),
               alignment: Alignment.center,
               child:
@@ -44,26 +44,26 @@ class FunctionItemTile extends StatelessWidget {
             Expanded(
               child: Text(
                 function.name,
-                style: Theme.of(context).textTheme.titleSmall,
+                style: context.textStyles.titleSmall,
               ),
             ),
             AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
+              duration: DSMotion.fast,
               width: 22,
               height: 22,
               decoration: BoxDecoration(
-                color: isSelected ? AppTheme.primaryColor : Colors.transparent,
-                borderRadius: BorderRadius.circular(6),
+                color: isSelected ? context.colors.primary : Colors.transparent,
+                borderRadius: DSRadius.all(6),
                 border: Border.all(
                   color: isSelected
-                      ? AppTheme.primaryColor
-                      : const Color(0xFFCBD5E1),
+                      ? context.colors.primary
+                      : context.colors.border,
                   width: 2,
                 ),
               ),
               child: isSelected
-                  ? const Icon(Icons.check_rounded,
-                      size: 14, color: Colors.white)
+                  ? Icon(Icons.check_rounded,
+                      size: 14, color: context.colors.onPrimary)
                   : null,
             ),
           ],

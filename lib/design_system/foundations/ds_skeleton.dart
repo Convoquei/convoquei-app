@@ -5,8 +5,8 @@
 //   DSSkeleton(width: 120, height: 14)
 import 'package:flutter/material.dart';
 
-import '../tokens/ds_colors_primitive.dart';
 import '../tokens/ds_radius.dart';
+import '../theme/ds_context_extensions.dart';
 
 class DSSkeleton extends StatefulWidget {
   final double? width;
@@ -27,7 +27,6 @@ class DSSkeleton extends StatefulWidget {
 class _DSSkeletonState extends State<DSSkeleton>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
-  late final Animation<Color?> _color;
 
   @override
   void initState() {
@@ -36,11 +35,6 @@ class _DSSkeletonState extends State<DSSkeleton>
       vsync: this,
       duration: const Duration(milliseconds: 1000),
     )..repeat(reverse: true);
-
-    _color = ColorTween(
-      begin: DSColorsPrimitive.slate100,
-      end: DSColorsPrimitive.slate200,
-    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
   }
 
   @override
@@ -51,13 +45,16 @@ class _DSSkeletonState extends State<DSSkeleton>
 
   @override
   Widget build(BuildContext context) {
+    final base = context.colors.surfaceSubtle;
+    final highlight = context.colors.border;
+
     return AnimatedBuilder(
-      animation: _color,
+      animation: _ctrl,
       builder: (_, _) => Container(
         width: widget.width,
         height: widget.height,
         decoration: BoxDecoration(
-          color: _color.value,
+          color: Color.lerp(base, highlight, _ctrl.value),
           borderRadius: BorderRadius.circular(widget.borderRadius),
         ),
       ),

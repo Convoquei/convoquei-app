@@ -1,4 +1,4 @@
-import 'package:convoquei_app/core/theme/app_theme.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_assignment_mode.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_call_mode.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_function_call_mode.dart';
@@ -31,7 +31,7 @@ class EventRulesReadView extends StatelessWidget {
               description:
                   'O membro diz que está disponível, mas você decide quem entra e aprova a escala final.',
               icon: Icons.shield_rounded,
-              iconColor: AppTheme.primaryColor,
+              iconColor: context.colors.primary,
             ),
             AssignmentModeCard(
               mode: OrganizationEventAssignmentMode.automatic,
@@ -41,7 +41,7 @@ class EventRulesReadView extends StatelessWidget {
               description:
                   'Os membros que aceitarem a convocação serão escalados automaticamente.',
               icon: Icons.rocket_launch_rounded,
-              iconColor: AppTheme.successColor,
+              iconColor: context.colors.success,
             ),
           ],
         ),
@@ -64,13 +64,13 @@ class EventRulesReadView extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.hourglass_top_rounded,
-                    color: AppTheme.warningColor, size: 20),
+                Icon(Icons.hourglass_top_rounded,
+                    color: context.colors.warning, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Bloqueio de Disponibilidade',
-                    style: Theme.of(context).textTheme.titleSmall,
+                    style: context.textStyles.titleSmall,
                   ),
                 ),
               ],
@@ -116,12 +116,12 @@ class _ScopeDisplay extends StatelessWidget {
       return _InfoChip(
         icon: Icons.groups_rounded,
         label: 'Toda a organização',
-        color: AppTheme.primaryColor,
+        color: context.colors.primary,
       );
     }
     if (calledGroups.isEmpty) {
       return Text('Nenhum grupo especificado.',
-          style: Theme.of(context).textTheme.bodySmall);
+          style: context.textStyles.bodySmall);
     }
     return GridView.builder(
       shrinkWrap: true,
@@ -138,9 +138,9 @@ class _ScopeDisplay extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            color: context.colors.surface,
+            borderRadius: DSRadius.allMd,
+            border: Border.all(color: context.colors.border),
           ),
           child: Row(
             children: [
@@ -149,10 +149,10 @@ class _ScopeDisplay extends StatelessWidget {
               Expanded(
                 child: Text(
                   g.name,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: AppTheme.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  style: context.textStyles.labelSmall?.copyWith(
+                    color: context.colors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -186,7 +186,7 @@ class _DeadlineDisplay extends StatelessWidget {
     return _InfoChip(
       icon: Icons.access_time_rounded,
       label: _formatted,
-      color: AppTheme.warningColor,
+      color: context.colors.warning,
     );
   }
 }
@@ -203,16 +203,16 @@ class _InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        color: context.colors.surfaceSubtle,
+        borderRadius: DSRadius.allMd,
+        border: Border.all(color: context.colors.border),
       ),
       child: Row(
         children: [
           Icon(icon, size: 16, color: color),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(label, style: Theme.of(context).textTheme.labelMedium),
+            child: Text(label, style: context.textStyles.labelMedium),
           ),
         ],
       ),
@@ -234,11 +234,11 @@ class _FunctionCallModeInfo extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        color: context.colors.surfaceSubtle,
+        borderRadius: DSRadius.all(10),
+        border: Border.all(color: context.colors.border),
       ),
-      child: Text(label, style: Theme.of(context).textTheme.bodySmall),
+      child: Text(label, style: context.textStyles.bodySmall),
     );
   }
 }
@@ -259,9 +259,9 @@ class _FunctionRuleDisplayCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        color: context.colors.surface,
+        borderRadius: DSRadius.all(14),
+        border: Border.all(color: context.colors.border),
       ),
       clipBehavior: Clip.hardEdge,
       child: Column(
@@ -274,28 +274,28 @@ class _FunctionRuleDisplayCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(function.functionName,
-                      style: Theme.of(context).textTheme.titleSmall),
+                      style: context.textStyles.titleSmall),
                 ),
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
-                    borderRadius: BorderRadius.circular(8),
+                    color: context.colors.primaryTint,
+                    borderRadius: DSRadius.allSm,
                   ),
                   child: Text(
                     modeLabel,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppTheme.primaryColor,
-                          fontWeight: FontWeight.w700,
-                        ),
+                    style: context.textStyles.labelSmall?.copyWith(
+                      color: context.colors.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
           Container(
-            color: const Color(0xFFF8FAFC),
+            color: context.colors.surfaceSubtle,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             child: Row(
               children: [
@@ -305,8 +305,7 @@ class _FunctionRuleDisplayCard extends StatelessWidget {
                         value: '${function.minMembers}')),
                 const SizedBox(width: 12),
                 Expanded(
-                    child:
-                        _MinMaxLabel(label: 'Máximo', value: maxLabel)),
+                    child: _MinMaxLabel(label: 'Máximo', value: maxLabel)),
               ],
             ),
           ),
@@ -327,9 +326,8 @@ class _MinMaxLabel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label.toUpperCase(),
-            style: Theme.of(context).textTheme.labelSmall),
-        Text(value, style: Theme.of(context).textTheme.titleSmall),
+        Text(label.toUpperCase(), style: context.textStyles.labelSmall),
+        Text(value, style: context.textStyles.titleSmall),
       ],
     );
   }

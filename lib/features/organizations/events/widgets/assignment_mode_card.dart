@@ -1,4 +1,4 @@
-import 'package:convoquei_app/core/theme/app_theme.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_assignment_mode.dart';
 import 'package:flutter/material.dart';
 
@@ -35,15 +35,15 @@ class AssignmentModeCard extends StatelessWidget {
     return GestureDetector(
       onTap: (locked || onTap == null) ? null : onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+        duration: DSMotion.fast,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: locked ? const Color(0xFFF8FAFC) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          color: locked ? context.colors.surfaceSubtle : context.colors.surface,
+          borderRadius: DSRadius.allLg,
           border: Border.all(
             color: !locked && selected
-                ? AppTheme.primaryColor
-                : const Color(0xFFE2E8F0),
+                ? context.colors.primary
+                : context.colors.border,
             width: !locked && selected ? 2 : 1,
           ),
         ),
@@ -60,7 +60,7 @@ class AssignmentModeCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: const Color(0xFFCBD5E1),
+                      color: context.colors.border,
                       width: 2,
                     ),
                   ),
@@ -74,8 +74,8 @@ class AssignmentModeCard extends StatelessWidget {
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: selected
-                          ? AppTheme.primaryColor
-                          : const Color(0xFFCBD5E1),
+                          ? context.colors.primary
+                          : context.colors.border,
                       width: 2,
                     ),
                   ),
@@ -84,8 +84,8 @@ class AssignmentModeCard extends StatelessWidget {
                           child: Container(
                             width: 8,
                             height: 8,
-                            decoration: const BoxDecoration(
-                              color: AppTheme.primaryColor,
+                            decoration: BoxDecoration(
+                              color: context.colors.primary,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -104,7 +104,7 @@ class AssignmentModeCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             title,
-                            style: Theme.of(context).textTheme.titleSmall,
+                            style: context.textStyles.titleSmall,
                           ),
                         ),
                         if (locked)
@@ -112,23 +112,22 @@ class AssignmentModeCard extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFE2E8F0),
-                              borderRadius: BorderRadius.circular(6),
+                              color: context.colors.border,
+                              borderRadius: DSRadius.all(6),
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(Icons.lock_outline_rounded,
                                     size: 9,
-                                    color: AppTheme.textSecondary),
-                                SizedBox(width: 3),
+                                    color: context.colors.textSecondary),
+                                const SizedBox(width: 3),
                                 Text(
                                   'Não disponível',
-                                  style: TextStyle(
-                                    fontFamily: 'Inter',
+                                  style: context.textStyles.labelSmall?.copyWith(
                                     fontSize: 9,
                                     fontWeight: FontWeight.w600,
-                                    color: AppTheme.textSecondary,
+                                    color: context.colors.textSecondary,
                                   ),
                                 ),
                               ],
@@ -139,7 +138,7 @@ class AssignmentModeCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       description,
-                      style: Theme.of(context).textTheme.bodySmall,
+                      style: context.textStyles.bodySmall,
                     ),
                   ],
                 ),

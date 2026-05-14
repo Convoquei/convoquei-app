@@ -31,7 +31,10 @@
       "Bash(Get-ChildItem 'C:\\\\repo\\\\convoquei\\\\convoquei-app\\\\.claude\\\\skills' -Recurse -Filter SKILL.md)",
       "Bash(xargs grep -l \"Scaffold.*appBar\")",
       "Bash(xargs grep -l \"scale\\\\|escalado\\\\|assigned\" -i)",
-      "Skill(ds-component)"
+      "Skill(ds-component)",
+      "Bash(Remove-Item \"C:\\\\repo\\\\convoquei\\\\convoquei-app\\\\lib\\\\features\\\\organizations\\\\events\\\\widgets\\\\participants_chip.dart\" -Force)",
+      "Bash(Remove-Item \"C:\\\\repo\\\\convoquei\\\\convoquei-app\\\\lib\\\\features\\\\organizations\\\\events\\\\widgets\\\\empty_event_state.dart\" -Force)",
+      "Bash(Write-Host \"Deleted\")"
     ]
   }
 }

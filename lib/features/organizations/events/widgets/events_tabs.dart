@@ -1,3 +1,4 @@
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/org_events_tab.dart';
 import 'package:flutter/material.dart';
 
@@ -26,39 +27,31 @@ class EventsTabs extends StatelessWidget {
             child: GestureDetector(
               onTap: () => onChanged(tab),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
+                duration: DSMotion.fast,
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFF1D4ED8) : Colors.white,
-                  borderRadius: BorderRadius.circular(99),
+                  color: isSelected ? context.colors.primary : context.colors.surface,
+                  borderRadius: DSRadius.all(99),
                   border: Border.all(
                     color: isSelected
-                        ? const Color(0xFF1D4ED8)
-                        : const Color(0xFFE2E8F0),
+                        ? context.colors.primary
+                        : context.colors.border,
                   ),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: const Color(0xFF1D4ED8).withValues(alpha: 0.2),
+                            color: context.colors.primary.withValues(alpha: 0.2),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
                         ]
-                      : [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 4,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
+                      : DSElevation.sm,
                 ),
                 child: Text(
                   _labels[tab]!,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 13,
+                  style: context.textStyles.labelMedium?.copyWith(
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected ? Colors.white : const Color(0xFF64748B),
+                    color: isSelected ? context.colors.onPrimary : context.colors.textSecondary,
                   ),
                 ),
               ),

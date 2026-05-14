@@ -1,7 +1,4 @@
-import 'package:convoquei_app/core/theme/app_theme.dart';
-import 'package:convoquei_app/core/widgets/action_button.dart';
-import 'package:convoquei_app/core/widgets/modals/app_modal.dart';
-import 'package:convoquei_app/core/widgets/selectable_tile.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/events/models/orgnaization_event_membership_model.dart';
 import 'package:flutter/material.dart';
 
@@ -29,7 +26,7 @@ class FunctionSelectionModal extends StatefulWidget {
     required List<EventCalledFunctionModel> calledFunctions,
     required bool allowNoFunction,
   }) {
-    return AppModal.show<({String? functionId})>(
+    return DSModal.show<({String? functionId})>(
       context,
       FunctionSelectionModal._(
         calledFunctions: calledFunctions,
@@ -54,7 +51,7 @@ class _FunctionSelectionModalState extends State<FunctionSelectionModal> {
   }
 
   void _confirm() {
-    AppModal.hide<({String? functionId})>(
+    DSModal.hide<({String? functionId})>(
       context,
       (functionId: _selectedId == _kNoFunction ? null : _selectedId),
     );
@@ -63,9 +60,9 @@ class _FunctionSelectionModalState extends State<FunctionSelectionModal> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SafeArea(
         child: Padding(
@@ -86,23 +83,23 @@ class _FunctionSelectionModalState extends State<FunctionSelectionModal> {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 20),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE2E8F0),
-                    borderRadius: BorderRadius.circular(2),
+                    color: context.colors.border,
+                    borderRadius: DSRadius.all(2),
                   ),
                 ),
               ),
               Text(
                 'Escolha sua função',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppTheme.textPrimary,
+                style: context.textStyles.titleMedium?.copyWith(
+                      color: context.colors.textPrimary,
                       fontWeight: FontWeight.w600,
                     ),
               ),
               const SizedBox(height: 4),
               Text(
                 'Selecione a função com a qual vai participar deste evento.',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textSecondary,
+                style: context.textStyles.bodySmall?.copyWith(
+                      color: context.colors.textSecondary,
                     ),
               ),
               const SizedBox(height: 20),
@@ -114,7 +111,7 @@ class _FunctionSelectionModalState extends State<FunctionSelectionModal> {
                   child: Column(
                     children: [
                       ...widget.calledFunctions.map(
-                        (fn) => SelectableTile(
+                        (fn) => DSSelectableTile(
                           title: '${fn.emoji}  ${fn.name}',
                           description: _limitLabel(fn),
                           isSelected: _selectedId == fn.id,
@@ -122,7 +119,7 @@ class _FunctionSelectionModalState extends State<FunctionSelectionModal> {
                         ),
                       ),
                       if (widget.allowNoFunction)
-                        SelectableTile(
+                        DSSelectableTile(
                           title: 'Participar sem função',
                           isSelected: _selectedId == _kNoFunction,
                           onTap: () =>
@@ -136,16 +133,16 @@ class _FunctionSelectionModalState extends State<FunctionSelectionModal> {
               Row(
                 children: [
                   Expanded(
-                    child: ActionButton(
+                    child: DSButton(
                       label: 'Cancelar',
-                      schema: ActionButtonSchema.ghost,
+                      schema: DSButtonSchema.ghost,
                       outlined: true,
-                      onPressed: () => AppModal.hide(context),
+                      onPressed: () => DSModal.hide(context),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: ActionButton(
+                    child: DSButton(
                       label: 'Confirmar',
                       onPressed: _selectedId != null ? _confirm : null,
                     ),

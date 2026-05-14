@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_assignment_mode.dart';
 import 'package:convoquei_app/features/organizations/events/models/orgnaization_event_membership_model.dart';
 import 'package:flutter/material.dart';
@@ -97,28 +98,26 @@ class _UrgentBadgeState extends State<UrgentBadge> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFFFEF2F2),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFFEE2E2)),
+        color: context.colors.dangerTint,
+        borderRadius: DSRadius.allSm,
+        border: Border.all(color: context.colors.danger.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.warning_amber_rounded,
             size: 11,
-            color: Color(0xFFDC2626),
+            color: context.colors.danger,
           ),
           const SizedBox(width: 4),
           Flexible(
             child: Text(
               _buildText(),
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 10,
+              style: context.textStyles.labelSmall?.copyWith(
                 fontWeight: FontWeight.w700,
-                color: Color(0xFFDC2626),
+                color: context.colors.danger,
               ),
             ),
           ),

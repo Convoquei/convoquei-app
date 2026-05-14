@@ -1,13 +1,9 @@
-import 'package:convoquei_app/core/theme/app_theme.dart';
-import 'package:convoquei_app/core/widgets/action_button.dart';
-import 'package:convoquei_app/core/widgets/info_banner.dart';
-import 'package:convoquei_app/core/widgets/status_circle.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_availability_status.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_status.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_status.dart';
 import 'package:convoquei_app/features/organizations/events/models/orgnaization_event_membership_model.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/event_status_badge.dart';
-import 'package:convoquei_app/features/organizations/events/widgets/participants_chip.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/urgent_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -49,22 +45,22 @@ class _EventCardState extends State<EventCard> {
       _isLoadingAvailable || _isLoadingUnavailable || _isLoadingLeave;
 
   // ── Accent color by membership status ────────────────────────────
-  Color get _accentColor => switch (widget.event!.membershipStatus) {
-        OrganizationEventMembershipStatus.assigned => AppTheme.primaryColor,
+  Color _accentColor(BuildContext context) => switch (widget.event!.membershipStatus) {
+        OrganizationEventMembershipStatus.assigned => context.colors.primary,
         OrganizationEventMembershipStatus.pending =>
           switch (widget.event!.membershipAvailabilityStatus) {
             OrganizationEventMembershipAvailabilityStatus.available =>
-              const Color(0xFF059669),
+              context.colors.success,
             OrganizationEventMembershipAvailabilityStatus.unavailable =>
-              const Color(0xFFDC2626),
+              context.colors.danger,
             OrganizationEventMembershipAvailabilityStatus.notAnswered ||
             null =>
-              AppTheme.secondaryColor,
+              context.colors.warning,
           },
         OrganizationEventMembershipStatus.notAssigned ||
         OrganizationEventMembershipStatus.expired ||
         null =>
-          const Color(0xFFCBD5E1),
+          context.colors.border,
         OrganizationEventMembershipStatus.awaitingAssignment ||
             OrganizationEventMembershipStatus.awaitingDraw =>
           const Color(0xFF8B5CF6),
@@ -73,7 +69,7 @@ class _EventCardState extends State<EventCard> {
   // ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    if (widget.skeleton) return const _EventCardSkeleton();
+    if (widget.skeleton) return _EventCardSkeleton();
 
     final event      = widget.event!;
     final isCanceled = event.status == OrganizationEventStatus.canceled;
@@ -91,16 +87,10 @@ class _EventCardState extends State<EventCard> {
         onTap: widget.onTap,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            color: context.colors.surface,
+            borderRadius: DSRadius.allLg,
+            border: Border.all(color: context.colors.border),
+            boxShadow: DSElevation.sm,
           ),
           clipBehavior: Clip.hardEdge,
           child: IntrinsicHeight(
@@ -108,7 +98,7 @@ class _EventCardState extends State<EventCard> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // ── Barra de status colorida ──────────────────────
-                Container(width: 5, color: _accentColor),
+                Container(width: 5, color: _accentColor(context)),
 
                 // ── Coluna de data ────────────────────────────────
                 Container(
@@ -120,21 +110,19 @@ class _EventCardState extends State<EventCard> {
                       const SizedBox(height: 2),
                       Text(
                         _weekdayAbbr[event.startTime.weekday - 1].toUpperCase(),
-                        style: const TextStyle(
-                          fontFamily: 'Inter',
+                        style: context.textStyles.labelSmall?.copyWith(
                           fontSize: 9,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF94A3B8),
+                          color: context.colors.textSecondary,
                           letterSpacing: 0.5,
                         ),
                       ),
                       Text(
                         '${event.startTime.day}',
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
+                        style: context.textStyles.displayMedium?.copyWith(
                           fontSize: 28,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF1E293B),
+                          color: context.colors.textPrimary,
                           height: 1.1,
                         ),
                       ),
@@ -146,7 +134,7 @@ class _EventCardState extends State<EventCard> {
                 Container(
                   width: 1,
                   margin: const EdgeInsets.symmetric(vertical: 12),
-                  color: const Color(0xFFF1F5F9),
+                  color: context.colors.surfaceSubtle,
                 ),
 
                 // ── Conteúdo principal ────────────────────────────
@@ -161,11 +149,7 @@ class _EventCardState extends State<EventCard> {
                           Row(
                             children: [
                               if (showUrgent) ...[
-                                Flexible(
-                                  child: UrgentBadge(
-                                    event: event,
-                                  ),
-                                ),
+                                Flexible(child: UrgentBadge(event: event)),
                                 const SizedBox(width: 6),
                               ],
                               if (showInProgress) EventStatusBadge(event.status),
@@ -181,14 +165,11 @@ class _EventCardState extends State<EventCard> {
                             Expanded(
                               child: Text(
                                 event.name,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleSmall
-                                    ?.copyWith(
-                                      decoration: isCanceled
-                                          ? TextDecoration.lineThrough
-                                          : null,
-                                    ),
+                                style: context.textStyles.titleSmall?.copyWith(
+                                  decoration: isCanceled
+                                      ? TextDecoration.lineThrough
+                                      : null,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -196,18 +177,15 @@ class _EventCardState extends State<EventCard> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 7, vertical: 3),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF8FAFC),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                    color: const Color(0xFFE2E8F0)),
+                                color: context.colors.surfaceSubtle,
+                                borderRadius: DSRadius.allSm,
+                                border: Border.all(color: context.colors.border),
                               ),
                               child: Text(
                                 '${DateFormat('HH:mm').format(event.startTime)} – ${DateFormat('HH:mm').format(event.endTime)}',
-                                style: const TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 10,
+                                style: context.textStyles.labelSmall?.copyWith(
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF334155),
+                                  color: context.colors.textPrimary,
                                 ),
                               ),
                             ),
@@ -219,13 +197,13 @@ class _EventCardState extends State<EventCard> {
                         // ── Localização ───────────────────────────
                         Row(
                           children: [
-                            const Icon(Icons.location_on_rounded,
-                                size: 12, color: Color(0xFF94A3B8)),
+                            Icon(Icons.location_on_rounded,
+                                size: 12, color: context.colors.textSecondary),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
                                 event.location,
-                                style: Theme.of(context).textTheme.bodySmall,
+                                style: context.textStyles.bodySmall,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -233,7 +211,7 @@ class _EventCardState extends State<EventCard> {
                         ),
 
                         const SizedBox(height: 10),
-                        const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                        Divider(height: 1, color: context.colors.surfaceSubtle),
                         const SizedBox(height: 10),
 
                         // ── Footer de status ──────────────────────
@@ -279,22 +257,22 @@ class _EventCardState extends State<EventCard> {
       children: [
         Text(
           'Confirme sua disponibilidade',
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textPrimary,
-                fontSize: 11,
-              ),
+          style: context.textStyles.labelSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: context.colors.textPrimary,
+            fontSize: 11,
+          ),
         ),
         const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
-              child: ActionButton(
+              child: DSButton(
                 label: 'Disponível',
                 icon: Icons.check_rounded,
                 outlined: true,
-                schema: ActionButtonSchema.success,
-                size: ActionButtonSize.sm,
+                schema: DSButtonSchema.success,
+                size: DSButtonSize.sm,
                 isLoading: _isLoadingAvailable,
                 onPressed: (widget.onAvailable == null ||
                         (_isAnyLoading && !_isLoadingAvailable))
@@ -311,12 +289,12 @@ class _EventCardState extends State<EventCard> {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: ActionButton(
+              child: DSButton(
                 label: 'Indisponível',
                 icon: Icons.close_rounded,
                 outlined: true,
-                schema: ActionButtonSchema.ghost,
-                size: ActionButtonSize.sm,
+                schema: DSButtonSchema.ghost,
+                size: DSButtonSize.sm,
                 isLoading: _isLoadingUnavailable,
                 onPressed: (widget.onUnavailable == null ||
                         (_isAnyLoading && !_isLoadingUnavailable))
@@ -342,11 +320,11 @@ class _EventCardState extends State<EventCard> {
   Widget _buildAvailableConfirmed(BuildContext context) {
     return Row(
       children: [
-        StatusCircle(
-          bgColor: const Color(0xFFECFDF5),
-          borderColor: const Color(0xFFD1FAE5),
+        _StatusCircle(
+          bgColor: context.colors.successTint,
+          borderColor: context.colors.success.withValues(alpha: 0.3),
           icon: Icons.check_rounded,
-          iconColor: const Color(0xFF059669),
+          iconColor: context.colors.success,
         ),
         const SizedBox(width: 8),
         Expanded(
@@ -355,30 +333,27 @@ class _EventCardState extends State<EventCard> {
             children: [
               Text(
                 'Você está disponível',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textPrimary,
-                      fontSize: 11,
-                    ),
+                style: context.textStyles.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: context.colors.textPrimary,
+                  fontSize: 11,
+                ),
               ),
               Text(
                 widget.event!.membershipFunctionName != null
                     ? 'Você se disponibilizou para ${widget.event!.membershipFunctionName}'
                     : 'Você se disponibilizou para este evento',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(fontSize: 10),
+                style: context.textStyles.bodySmall?.copyWith(fontSize: 10),
               ),
             ],
           ),
         ),
-        ActionButton(
+        DSButton(
           label: 'Indisponível',
           icon: Icons.close_rounded,
           outlined: true,
-          schema: ActionButtonSchema.danger,
-          size: ActionButtonSize.xs,
+          schema: DSButtonSchema.danger,
+          size: DSButtonSize.xs,
           isLoading: _isLoadingUnavailable,
           fullWidth: false,
           onPressed: (widget.onUnavailable == null || _isAnyLoading)
@@ -399,11 +374,11 @@ class _EventCardState extends State<EventCard> {
   Widget _buildUnavailableConfirmed(BuildContext context) {
     return Row(
       children: [
-        StatusCircle(
-          bgColor: const Color(0xFFFEF2F2),
-          borderColor: const Color(0xFFFEE2E2),
+        _StatusCircle(
+          bgColor: context.colors.dangerTint,
+          borderColor: context.colors.danger.withValues(alpha: 0.3),
           icon: Icons.close_rounded,
-          iconColor: const Color(0xFFDC2626),
+          iconColor: context.colors.danger,
         ),
         const SizedBox(width: 8),
         Expanded(
@@ -412,28 +387,25 @@ class _EventCardState extends State<EventCard> {
             children: [
               Text(
                 'Você está indisponível',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textPrimary,
-                      fontSize: 11,
-                    ),
+                style: context.textStyles.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: context.colors.textPrimary,
+                  fontSize: 11,
+                ),
               ),
               Text(
                 'Toque para ficar disponível',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(fontSize: 10),
+                style: context.textStyles.bodySmall?.copyWith(fontSize: 10),
               ),
             ],
           ),
         ),
-        ActionButton(
+        DSButton(
           label: 'Disponível',
           icon: Icons.check_rounded,
           outlined: true,
-          schema: ActionButtonSchema.success,
-          size: ActionButtonSize.xs,
+          schema: DSButtonSchema.success,
+          size: DSButtonSize.xs,
           isLoading: _isLoadingAvailable,
           fullWidth: false,
           onPressed: (widget.onAvailable == null || _isAnyLoading)
@@ -455,11 +427,11 @@ class _EventCardState extends State<EventCard> {
     final event = widget.event!;
 
     if (event.status == OrganizationEventStatus.canceled) {
-      return const InfoBanner(
-        bgColor: Color(0xFFFEF2F2),
-        borderColor: Color(0xFFFEE2E2),
+      return DSInfoBanner(
+        bgColor: context.colors.dangerTint,
+        borderColor: context.colors.danger.withValues(alpha: 0.3),
         icon: Icons.close_rounded,
-        iconColor: Color(0xFFDC2626),
+        iconColor: context.colors.danger,
         label: 'Evento Cancelado',
         sublabel: 'Este evento foi cancelado pelo admin.',
       );
@@ -468,67 +440,67 @@ class _EventCardState extends State<EventCard> {
     if (event.status == OrganizationEventStatus.completed) {
       final formattedDate =
           DateFormat("d 'de' MMMM 'às' HH:mm", 'pt_BR').format(event.endTime);
-      return InfoBanner(
-        bgColor: const Color(0xFFF8FAFC),
-        borderColor: const Color(0xFFE2E8F0),
+      return DSInfoBanner(
+        bgColor: context.colors.surfaceSubtle,
+        borderColor: context.colors.border,
         icon: Icons.check_circle_outline_rounded,
-        iconColor: const Color(0xFF64748B),
+        iconColor: context.colors.textSecondary,
         label: 'Evento Concluído',
         sublabel: 'Finalizado em $formattedDate',
-        labelColor: AppTheme.textSecondary,
+        labelColor: context.colors.textSecondary,
       );
     }
 
     if (!event.allowAssignment) {
       if (event.membershipStatus == OrganizationEventMembershipStatus.assigned) {
-        return const InfoBanner(
-          bgColor: Color(0xFFECFDF5),
-          borderColor: Color(0xFFD1FAE5),
+        return DSInfoBanner(
+          bgColor: context.colors.successTint,
+          borderColor: context.colors.success.withValues(alpha: 0.3),
           icon: Icons.check_rounded,
-          iconColor: Color(0xFF059669),
+          iconColor: context.colors.success,
           label: 'Você está escalado',
           sublabel: 'Este evento não aceita mais respostas.',
         );
       }
-      return const InfoBanner(
-        bgColor: Color(0xFFF8FAFC),
-        borderColor: Color(0xFFE2E8F0),
+      return DSInfoBanner(
+        bgColor: context.colors.surfaceSubtle,
+        borderColor: context.colors.border,
         icon: Icons.lock_outline_rounded,
-        iconColor: Color(0xFF94A3B8),
+        iconColor: context.colors.textSecondary,
         label: 'Não escalado',
         sublabel: 'Este evento não aceita mais respostas.',
-        labelColor: AppTheme.textSecondary,
+        labelColor: context.colors.textSecondary,
       );
     }
 
     return switch (event.membershipStatus) {
       OrganizationEventMembershipStatus.assigned => Row(
           children: [
-            StatusCircle(
-              bgColor: const Color(0xFFECFDF5),
-              borderColor: const Color(0xFFD1FAE5),
+            _StatusCircle(
+              bgColor: context.colors.successTint,
+              borderColor: context.colors.success.withValues(alpha: 0.3),
               icon: Icons.check_rounded,
-              iconColor: const Color(0xFF059669),
+              iconColor: context.colors.success,
             ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 'Você está escalado',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textPrimary,
-                      fontSize: 11,
-                    ),
+                style: context.textStyles.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: context.colors.textPrimary,
+                  fontSize: 11,
+                ),
               ),
             ),
             if (event.membershipAvailabilityStatus ==
                 OrganizationEventMembershipAvailabilityStatus.available)
-              ActionButton(
+              DSButton(
                 label: 'Sair',
                 icon: Icons.logout_rounded,
                 outlined: true,
-                schema: ActionButtonSchema.ghost,
-                size: ActionButtonSize.xs,
+                schema: DSButtonSchema.ghost,
+                size: DSButtonSize.xs,
                 isLoading: _isLoadingLeave,
                 fullWidth: false,
                 onPressed: (widget.onLeaveSchedule == null || _isAnyLoading)
@@ -543,42 +515,42 @@ class _EventCardState extends State<EventCard> {
                       },
               )
             else
-              ParticipantsChip(count: event.participantsCount),
+              _ParticipantsChip(count: event.participantsCount),
           ],
         ),
-      OrganizationEventMembershipStatus.awaitingAssignment => const InfoBanner(
-          bgColor: Color(0xFFF5F3FF),
-          borderColor: Color(0xFFEDE9FE),
+      OrganizationEventMembershipStatus.awaitingAssignment => DSInfoBanner(
+          bgColor: context.colors.infoTint,
+          borderColor: context.colors.info.withValues(alpha: 0.3),
           icon: Icons.hourglass_top_rounded,
-          iconColor: Color(0xFF7C3AED),
+          iconColor: context.colors.info,
           label: 'Aguardando escalação',
           sublabel: 'Aguardando a aprovação da sua escala',
         ),
-      OrganizationEventMembershipStatus.awaitingDraw => const InfoBanner(
-          bgColor: Color(0xFFF5F3FF),
-          borderColor: Color(0xFFEDE9FE),
+      OrganizationEventMembershipStatus.awaitingDraw => DSInfoBanner(
+          bgColor: context.colors.infoTint,
+          borderColor: context.colors.info.withValues(alpha: 0.3),
           icon: Icons.casino_rounded,
-          iconColor: Color(0xFF7C3AED),
+          iconColor: context.colors.info,
           label: 'Aguardando sorteio',
           sublabel: 'Escalação será definida por sorteio',
         ),
-      OrganizationEventMembershipStatus.notAssigned || null => const InfoBanner(
-          bgColor: Color(0xFFF8FAFC),
-          borderColor: Color(0xFFE2E8F0),
+      OrganizationEventMembershipStatus.notAssigned || null => DSInfoBanner(
+          bgColor: context.colors.surfaceSubtle,
+          borderColor: context.colors.border,
           icon: Icons.close_rounded,
-          iconColor: Color(0xFF94A3B8),
+          iconColor: context.colors.textSecondary,
           label: 'Não escalado',
           sublabel: 'Você não está nesta escala.',
-          labelColor: AppTheme.textSecondary,
+          labelColor: context.colors.textSecondary,
         ),
-      OrganizationEventMembershipStatus.expired => const InfoBanner(
-          bgColor: Color(0xFFFEF2F2),
-          borderColor: Color(0xFFFECACA),
+      OrganizationEventMembershipStatus.expired => DSInfoBanner(
+          bgColor: context.colors.dangerTint,
+          borderColor: context.colors.danger.withValues(alpha: 0.3),
           icon: Icons.timer_off_rounded,
-          iconColor: Color(0xFFDC2626),
+          iconColor: context.colors.danger,
           label: 'Resposta expirada',
           sublabel: 'O prazo para responder passou.',
-          labelColor: AppTheme.textSecondary,
+          labelColor: context.colors.textSecondary,
         ),
       OrganizationEventMembershipStatus.pending => const SizedBox.shrink(),
     };
@@ -596,23 +568,17 @@ class _EventCardSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: context.colors.surface,
+        borderRadius: DSRadius.allLg,
+        border: Border.all(color: context.colors.border),
+        boxShadow: DSElevation.sm,
       ),
       clipBehavior: Clip.hardEdge,
       child: IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const _SkeletonBox(width: 5, borderRadius: 0),
+            Container(width: 5, color: context.colors.border),
             Container(
               width: 52,
               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -620,16 +586,16 @@ class _EventCardSkeleton extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   SizedBox(height: 4),
-                  _SkeletonBox(width: 28, height: 10, borderRadius: 4),
+                  DSSkeleton(width: 28, height: 10, borderRadius: DSRadius.sm),
                   SizedBox(height: 4),
-                  _SkeletonBox(width: 32, height: 28, borderRadius: 6),
+                  DSSkeleton(width: 32, height: 28, borderRadius: DSRadius.sm),
                 ],
               ),
             ),
             Container(
               width: 1,
               margin: const EdgeInsets.symmetric(vertical: 12),
-              color: const Color(0xFFF1F5F9),
+              color: context.colors.surfaceSubtle,
             ),
             Expanded(
               child: Padding(
@@ -639,17 +605,17 @@ class _EventCardSkeleton extends StatelessWidget {
                   children: [
                     Row(
                       children: const [
-                        Expanded(child: _SkeletonBox(height: 16, borderRadius: 6)),
+                        Expanded(child: DSSkeleton(height: 16, borderRadius: DSRadius.sm)),
                         SizedBox(width: 8),
-                        _SkeletonBox(width: 72, height: 22, borderRadius: 8),
+                        DSSkeleton(width: 72, height: 22, borderRadius: DSRadius.sm),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    const _SkeletonBox(width: 130, height: 12, borderRadius: 4),
+                    const DSSkeleton(width: 130, height: 12, borderRadius: DSRadius.sm),
                     const SizedBox(height: 10),
-                    const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                    Divider(height: 1, color: context.colors.surfaceSubtle),
                     const SizedBox(height: 10),
-                    const _SkeletonBox(height: 32, borderRadius: 8),
+                    const DSSkeleton(height: 32, borderRadius: DSRadius.sm),
                   ],
                 ),
               ),
@@ -661,60 +627,65 @@ class _EventCardSkeleton extends StatelessWidget {
   }
 }
 
-class _SkeletonBox extends StatefulWidget {
-  final double? width;
-  final double? height;
-  final double borderRadius;
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
 
-  const _SkeletonBox({this.width, this.height, this.borderRadius = 8});
+class _StatusCircle extends StatelessWidget {
+  final Color bgColor;
+  final Color borderColor;
+  final IconData icon;
+  final Color iconColor;
 
-  @override
-  State<_SkeletonBox> createState() => _SkeletonBoxState();
-}
-
-class _SkeletonBoxState extends State<_SkeletonBox>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<Color?> _color;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    )..repeat(reverse: true);
-    _color = ColorTween(
-      begin: const Color(0xFFF1F5F9),
-      end: const Color(0xFFE2E8F0),
-    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
+  const _StatusCircle({
+    required this.bgColor,
+    required this.borderColor,
+    required this.icon,
+    required this.iconColor,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _color,
-      builder: (_, _) => Container(
-        width: widget.width,
-        height: widget.height,
-        decoration: BoxDecoration(
-          color: _color.value,
-          borderRadius: BorderRadius.circular(widget.borderRadius),
-        ),
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color: bgColor,
+        shape: BoxShape.circle,
+        border: Border.all(color: borderColor),
       ),
+      child: Icon(icon, size: 14, color: iconColor),
     );
   }
 }
 
+class _ParticipantsChip extends StatelessWidget {
+  final int count;
 
+  const _ParticipantsChip({required this.count});
 
-
-
-
-
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: context.colors.surfaceSubtle,
+        borderRadius: DSRadius.allSm,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.people_rounded, size: 12, color: context.colors.textSecondary),
+          const SizedBox(width: 4),
+          Text(
+            '$count membros',
+            style: context.textStyles.labelSmall?.copyWith(
+              color: context.colors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

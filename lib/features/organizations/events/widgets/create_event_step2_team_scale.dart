@@ -1,5 +1,4 @@
-﻿import 'package:convoquei_app/core/theme/app_theme.dart';
-import 'package:convoquei_app/core/widgets/modals/multi_select_modal.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_assignment_mode.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_call_mode.dart';
 import 'package:convoquei_app/features/organizations/events/models/event_form_step2_data.dart';
@@ -47,7 +46,7 @@ class CreateEventStep2TeamScale extends ConsumerWidget {
   }
 
   Future<void> _showAddGroupSheet(BuildContext context, WidgetRef ref) async {
-    await MultiSelectModal.show<OrganizationGroupModel>(
+    await DSMultiSelectModal.show<OrganizationGroupModel>(
       context,
       title: 'Selecionar Grupos',
       fetcher: (r) async {
@@ -92,15 +91,16 @@ class CreateEventStep2TeamScale extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFFFFF7ED),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFFED7AA)),
+            color: context.colors.warningTint,
+            borderRadius: DSRadius.allLg,
+            border: Border.all(
+                color: context.colors.warning.withValues(alpha: 0.4)),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.groups_rounded,
-                  color: AppTheme.secondaryColor, size: 22),
+              Icon(Icons.groups_rounded,
+                  color: context.colors.warning, size: 22),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -108,12 +108,12 @@ class CreateEventStep2TeamScale extends ConsumerWidget {
                   children: [
                     Text(
                       'Como a equipe será formada?',
-                      style: Theme.of(context).textTheme.titleSmall,
+                      style: context.textStyles.titleSmall,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Defina quem será convocado e a regra padrão de aprovação para este evento.',
-                      style: Theme.of(context).textTheme.bodySmall,
+                      style: context.textStyles.bodySmall,
                     ),
                   ],
                 ),
@@ -129,26 +129,27 @@ class CreateEventStep2TeamScale extends ConsumerWidget {
             const FieldLabel(label: 'Regra de Aprovação Padrão'),
             AssignmentModeCard(
               mode: OrganizationEventAssignmentMode.manual,
-              selected: data.assignmentMode == OrganizationEventAssignmentMode.manual,
+              selected:
+                  data.assignmentMode == OrganizationEventAssignmentMode.manual,
               locked: false,
               title: 'Aprovação Manual',
               description:
                   'O membro diz que está disponível, mas você decide quem entra e aprova a escala final.',
               icon: Icons.shield_rounded,
-              iconColor: AppTheme.primaryColor,
-              onTap: () => onChanged(
-                  data.copyWith(assignmentMode: OrganizationEventAssignmentMode.manual)),
+              iconColor: context.colors.primary,
+              onTap: () => onChanged(data.copyWith(
+                  assignmentMode: OrganizationEventAssignmentMode.manual)),
             ),
             AssignmentModeCard(
               mode: OrganizationEventAssignmentMode.automatic,
-              selected:
-                  data.assignmentMode == OrganizationEventAssignmentMode.automatic,
+              selected: data.assignmentMode ==
+                  OrganizationEventAssignmentMode.automatic,
               locked: !canUseAutoSchedule,
               title: 'Escala Automática',
               description:
                   'Os membros que aceitarem a convocação serão escalados automaticamente, e a escala será encerrada no tempo configurado.',
               icon: Icons.rocket_launch_rounded,
-              iconColor: AppTheme.successColor,
+              iconColor: context.colors.success,
               onTap: () => onChanged(data.copyWith(
                   assignmentMode: OrganizationEventAssignmentMode.automatic)),
             ),
@@ -165,7 +166,8 @@ class CreateEventStep2TeamScale extends ConsumerWidget {
               callMode: data.callMode,
               onChanged: (v) => onChanged(data.copyWith(callMode: v)),
             ),
-            if (data.callMode == OrganizationEventCallMode.onlySpecifiedGroupMembers) ...[
+            if (data.callMode ==
+                OrganizationEventCallMode.onlySpecifiedGroupMembers) ...[
               EventSelectedGroupsGrid(
                 selected: data.selectedGroups,
                 onRemove: _toggleGroup,
@@ -180,4 +182,3 @@ class CreateEventStep2TeamScale extends ConsumerWidget {
     );
   }
 }
-

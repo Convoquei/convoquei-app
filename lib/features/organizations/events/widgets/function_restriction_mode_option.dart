@@ -1,4 +1,4 @@
-import 'package:convoquei_app/core/theme/app_theme.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:flutter/material.dart';
 
 class FunctionRestrictionModeOption extends StatelessWidget {
@@ -31,8 +31,8 @@ class FunctionRestrictionModeOption extends StatelessWidget {
               shape: BoxShape.circle,
               border: Border.all(
                 color: selected
-                    ? AppTheme.primaryColor
-                    : const Color(0xFFCBD5E1),
+                    ? context.colors.primary
+                    : context.colors.border,
                 width: 2,
               ),
             ),
@@ -41,8 +41,8 @@ class FunctionRestrictionModeOption extends StatelessWidget {
                     child: Container(
                       width: 8,
                       height: 8,
-                      decoration: const BoxDecoration(
-                        color: AppTheme.primaryColor,
+                      decoration: BoxDecoration(
+                        color: context.colors.primary,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -54,10 +54,9 @@ class FunctionRestrictionModeOption extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: Theme.of(context).textTheme.titleSmall),
+                Text(label, style: context.textStyles.titleSmall),
                 const SizedBox(height: 2),
-                Text(description,
-                    style: Theme.of(context).textTheme.bodySmall),
+                Text(description, style: context.textStyles.bodySmall),
               ],
             ),
           ),

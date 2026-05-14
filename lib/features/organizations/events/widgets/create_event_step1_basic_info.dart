@@ -1,4 +1,4 @@
-import 'package:convoquei_app/core/theme/app_theme.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/create_event_shared_widgets.dart';
 import 'package:flutter/material.dart';
 
@@ -208,7 +208,7 @@ class _CreateEventStep1BasicInfoState
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: AppTheme.errorColor,
+        backgroundColor: context.colors.danger,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 3),
       ),
@@ -219,8 +219,6 @@ class _CreateEventStep1BasicInfoState
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context).textTheme;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -273,7 +271,7 @@ class _CreateEventStep1BasicInfoState
         const SizedBox(height: 16),
         StepCard(
           children: [
-            Text('Quando?', style: theme.titleSmall),
+            Text('Quando?', style: context.textStyles.titleSmall),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

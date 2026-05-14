@@ -1,3 +1,4 @@
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_status.dart';
 import 'package:flutter/material.dart';
 
@@ -14,22 +15,11 @@ class EventStatusBadge extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFECFDF5),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFD1FAE5)),
-      ),
-      child: const Text(
-        'Em andamento',
-        style: TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          color: Color(0xFF059669),
-        ),
-      ),
+    return DSBadge(
+      label: 'Em andamento',
+      color: context.colors.success,
+      variant: DSBadgeVariant.soft,
+      size: DSBadgeSize.sm,
     );
   }
 }

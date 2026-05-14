@@ -1,7 +1,6 @@
 import 'package:convoquei_app/core/network/exceptions/api_exception.dart';
 import 'package:convoquei_app/core/services/toast_feedback_service.dart';
-import 'package:convoquei_app/core/theme/app_theme.dart';
-import 'package:convoquei_app/core/widgets/action_button.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/create_event_step1_basic_info.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/create_event_step2_team_scale.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/create_event_step3_final_rules.dart';
@@ -160,7 +159,7 @@ class _OrgEventFormPageState extends ConsumerState<OrgEventFormPage> {
               top: false,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: ActionButton(
+                child: DSButton(
                   label: widget.finishLabel,
                   icon: Icons.check_rounded,
                   isLoading: _isLoading,
@@ -183,33 +182,10 @@ class _ReadOnlyBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF7ED),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFED7AA)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(
-            Icons.lock_outline_rounded,
-            size: 16,
-            color: AppTheme.warningColor,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              message,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppTheme.secondaryColor,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
+    return DSAlertBanner(
+      text: message,
+      icon: Icons.lock_outline_rounded,
+      color: context.colors.warning,
     );
   }
 }
@@ -226,12 +202,12 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: AppTheme.primaryColor),
+        Icon(icon, size: 16, color: context.colors.primary),
         const SizedBox(width: 8),
         Text(
           label,
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: AppTheme.textSecondary,
+            color: context.colors.textSecondary,
             fontWeight: FontWeight.w700,
           ),
         ),

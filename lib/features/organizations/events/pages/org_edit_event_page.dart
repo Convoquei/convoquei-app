@@ -1,8 +1,6 @@
 import 'package:convoquei_app/core/network/exceptions/api_exception.dart';
 import 'package:convoquei_app/core/services/toast_feedback_service.dart';
-import 'package:convoquei_app/core/widgets/app_loading_info.dart';
-import 'package:convoquei_app/core/widgets/app_loading_screen.dart';
-import 'package:convoquei_app/core/widgets/error_retry_state.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_call_mode.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_function_call_mode.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_status.dart';
@@ -46,16 +44,14 @@ class OrgEditEventPage extends ConsumerWidget {
         false;
 
     return detailsAsync.when(
-      loading: () => const AppLoadingScreen(
-        content: AppLoadingInfo(
-          label: 'Carregando evento...',
-          description: 'Buscando dados para edição',
-        ),
-        skeleton: AppLoadingSkeleton.details,
+      loading: () => const DSLoadingScreen(
+        label: 'Carregando evento...',
+        description: 'Buscando dados para edição',
+        skeleton: DSLoadingSkeleton.details,
       ),
       error: (_, _) => Scaffold(
         appBar: AppBar(),
-        body: ErrorRetryState(
+        body: DSErrorRetryState(
           icon: Icons.event_busy_rounded,
           message: 'Não foi possível carregar o evento',
           description: 'Verifique sua conexão e tente novamente.',

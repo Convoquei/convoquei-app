@@ -1,8 +1,5 @@
 import 'package:convoquei_app/core/services/toast_feedback_service.dart';
-import 'package:convoquei_app/core/theme/app_theme.dart';
-import 'package:convoquei_app/core/widgets/action_button.dart';
-import 'package:convoquei_app/core/widgets/base_modal_stateful_widget.dart';
-import 'package:convoquei_app/core/widgets/header_modal_title_subtitle.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/home/widgets/action_tile.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_availability_status.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_status.dart';
@@ -179,8 +176,8 @@ class EventParticipantsView extends ConsumerWidget {
           icon: Icons.check_circle_rounded,
           label: 'Escalar membro',
           description: 'Confirmar disponibilidade e adicionar à escala',
-          iconColor: AppTheme.successColor,
-          iconBgColor: const Color(0xFFECFDF5),
+          iconColor: context.colors.success,
+          iconBgColor: context.colors.successTint,
           onTap: () => _handleApprove(context, ref, p.membershipId),
         ),
         _ParticipantAction(
@@ -221,8 +218,8 @@ class EventParticipantsView extends ConsumerWidget {
           icon: Icons.how_to_reg_rounded,
           label: 'Escalar membro',
           description: 'Adicionar manualmente à escala do evento',
-          iconColor: AppTheme.primaryColor,
-          iconBgColor: const Color(0xFFEFF6FF),
+          iconColor: context.colors.primary,
+          iconBgColor: context.colors.primaryTint,
           onTap: () => _handleAssign(context, ref, p.membershipId),
         ),
       ],
@@ -246,8 +243,8 @@ class EventParticipantsView extends ConsumerWidget {
         // ── 1. Aguardando Escalação ────────────────────────────────────────────
         ExpandedCard(
           leading: _SectionIcon(
-            bgColor: const Color(0xFFFFF7ED),
-            iconColor: AppTheme.secondaryColor,
+            bgColor: context.colors.warningTint,
+            iconColor: context.colors.warning,
             icon: Icons.pan_tool_rounded,
           ),
           title: 'Aguardando Escalação',
@@ -274,8 +271,8 @@ class EventParticipantsView extends ConsumerWidget {
         // ── 2. Escalados ──────────────────────────────────────────────────────
         ExpandedCard(
           leading: _SectionIcon(
-            bgColor: const Color(0xFFECFDF5),
-            iconColor: AppTheme.successColor,
+            bgColor: context.colors.successTint,
+            iconColor: context.colors.success,
             icon: Icons.check_circle_rounded,
           ),
           title: 'Escalados',
@@ -286,7 +283,7 @@ class EventParticipantsView extends ConsumerWidget {
               : assigned
                   .map((p) => EventParticipantTile(
                         participant: p,
-                        functionColor: AppTheme.successColor,
+                        functionColor: context.colors.success,
                         trailing: canManageEvents
                             ? _ManageButton(
                                 onTap: () => _showAssignedSheet(context, ref, p),
@@ -300,8 +297,8 @@ class EventParticipantsView extends ConsumerWidget {
         // ── 3. Não Escalados ──────────────────────────────────────────────────
         ExpandedCard(
           leading: _SectionIcon(
-            bgColor: const Color(0xFFF1F5F9),
-            iconColor: AppTheme.textSecondary,
+            bgColor: context.colors.surfaceSubtle,
+            iconColor: context.colors.textSecondary,
             icon: Icons.person_outline_rounded,
           ),
           title: 'Não Escalados',
@@ -325,8 +322,8 @@ class EventParticipantsView extends ConsumerWidget {
         // ── 4. Não Confirmados (não responderam + indisponíveis) ──────────────
         ExpandedCard(
           leading: _SectionIcon(
-            bgColor: const Color(0xFFF8FAFC),
-            iconColor: AppTheme.textSecondary,
+            bgColor: context.colors.surfaceSubtle,
+            iconColor: context.colors.textSecondary,
             icon: Icons.help_outline_rounded,
           ),
           title: 'Não Confirmados',
@@ -344,11 +341,11 @@ class EventParticipantsView extends ConsumerWidget {
             if (notAnsweredCount > 0 && canManageEvents)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
-                child: ActionButton(
+                child: DSButton(
                   label: 'Notificar Quem Não Respondeu',
                   icon: Icons.notifications_rounded,
-                  schema: ActionButtonSchema.secondary,
-                  size: ActionButtonSize.sm,
+                  schema: DSButtonSchema.secondary,
+                  size: DSButtonSize.sm,
                   onPressed: () => _handleNotify(context, ref),
                 ),
               ),
@@ -388,7 +385,7 @@ class _ParticipantAction {
   });
 }
 
-class _ParticipantManageModal extends BaseModalStatefulWidget {
+class _ParticipantManageModal extends DSBaseModal {
   final OrganizationEventParticipantModel participant;
   final List<_ParticipantAction> actions;
 
@@ -402,7 +399,7 @@ class _ParticipantManageModal extends BaseModalStatefulWidget {
     required OrganizationEventParticipantModel participant,
     required List<_ParticipantAction> actions,
   }) =>
-      BaseModalStatefulWidget.show(
+      DSBaseModal.show(
         context,
         _ParticipantManageModal(participant: participant, actions: actions),
       );
@@ -413,9 +410,9 @@ class _ParticipantManageModal extends BaseModalStatefulWidget {
 }
 
 class _ParticipantManageModalState
-    extends BaseModalState<_ParticipantManageModal> {
+    extends DSBaseModalState<_ParticipantManageModal> {
   @override
-  Widget? get titleWidget => HeaderModalTitleSubtitle(
+  Widget? get titleWidget => DSModalHeader(
         title: 'Gerenciar participante',
         subtitle: widget.participant.name,
       );
@@ -434,7 +431,7 @@ class _ParticipantManageModalState
             iconBgColor: action.iconBgColor,
             destructive: action.destructive,
             onTap: () {
-              BaseModalStatefulWidget.hide(context);
+              DSBaseModal.hide(context);
               action.onTap();
             },
           ),
@@ -462,13 +459,13 @@ class _ManageButton extends StatelessWidget {
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          color: context.colors.surfaceSubtle,
+          borderRadius: DSRadius.allSm,
+          border: Border.all(color: context.colors.border),
         ),
         child: Icon(
           Icons.more_vert_rounded,
-          color: AppTheme.textSecondary,
+          color: context.colors.textSecondary,
           size: 18,
         ),
       ),
@@ -488,14 +485,14 @@ class _LeaveButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: const Color(0xFFFEF2F2),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppTheme.errorColor.withValues(alpha: 0.3)),
+          color: context.colors.dangerTint,
+          borderRadius: DSRadius.allSm,
+          border: Border.all(color: context.colors.danger.withValues(alpha: 0.3)),
         ),
         child: Text(
           'Sair',
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: AppTheme.errorColor,
+          style: context.textStyles.labelSmall?.copyWith(
+                color: context.colors.danger,
                 fontWeight: FontWeight.w700,
               ),
         ),
@@ -526,7 +523,7 @@ class _SectionIcon extends StatelessWidget {
       height: 40,
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: DSRadius.allMd,
       ),
       child: Icon(icon, color: iconColor, size: 20),
     );
@@ -543,7 +540,7 @@ class _EmptySection extends StatelessWidget {
       child: Center(
         child: Text(
           'Nenhum membro nesta seção.',
-          style: Theme.of(context).textTheme.bodySmall,
+          style: context.textStyles.bodySmall,
         ),
       ),
     );

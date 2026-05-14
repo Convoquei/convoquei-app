@@ -1,4 +1,4 @@
-import 'package:convoquei_app/core/theme/app_theme.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:flutter/material.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -18,16 +18,10 @@ class StepCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
+        color: context.colors.surface,
+        borderRadius: DSRadius.allXl,
+        border: Border.all(color: context.colors.border),
+        boxShadow: DSElevation.sm,
       ),
       padding: padding ?? const EdgeInsets.all(20),
       child: Column(
@@ -55,11 +49,8 @@ class FieldLabel extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 6),
       child: Text(
         label.toUpperCase(),
-        style: const TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          color: AppTheme.textSecondary,
+        style: context.textStyles.labelSmall?.copyWith(
+          color: context.colors.textSecondary,
           letterSpacing: 0.8,
         ),
       ),
@@ -79,30 +70,24 @@ class StepToggle extends StatelessWidget {
     return GestureDetector(
       onTap: () => onChanged(!value),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: DSMotion.fast,
         width: 48,
         height: 26,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(13),
-          color: value ? AppTheme.primaryColor : const Color(0xFFCBD5E1),
+          borderRadius: DSRadius.all(13),
+          color: value ? context.colors.primary : context.colors.border,
         ),
         child: AnimatedAlign(
-          duration: const Duration(milliseconds: 200),
+          duration: DSMotion.fast,
           alignment: value ? Alignment.centerRight : Alignment.centerLeft,
           child: Container(
             margin: const EdgeInsets.all(3),
             width: 20,
             height: 20,
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: context.colors.surface,
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0x20000000),
-                  blurRadius: 4,
-                  offset: Offset(0, 1),
-                ),
-              ],
+              boxShadow: DSElevation.sm,
             ),
           ),
         ),
@@ -152,11 +137,10 @@ class NumberSpinner extends StatelessWidget {
             children: [
               Text(
                 value.toString().padLeft(2, '0'),
-                style: TextStyle(
-                  fontFamily: 'Poppins',
+                style: context.textStyles.displayMedium?.copyWith(
                   fontSize: fontSize,
                   fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
+                  color: context.colors.textPrimary,
                   height: 1,
                 ),
                 textAlign: TextAlign.center,
@@ -164,11 +148,10 @@ class NumberSpinner extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 label.toUpperCase(),
-                style: const TextStyle(
-                  fontFamily: 'Inter',
+                style: context.textStyles.labelSmall?.copyWith(
                   fontSize: 9,
                   fontWeight: FontWeight.w700,
-                  color: AppTheme.textSecondary,
+                  color: context.colors.textSecondary,
                   letterSpacing: 0.6,
                 ),
                 textAlign: TextAlign.center,
@@ -197,14 +180,12 @@ class _SpinButton extends StatelessWidget {
         width: 40,
         height: 32,
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-          boxShadow: const [
-            BoxShadow(color: Color(0x08000000), blurRadius: 4),
-          ],
+          color: context.colors.surface,
+          borderRadius: DSRadius.allSm,
+          border: Border.all(color: context.colors.border),
+          boxShadow: DSElevation.sm,
         ),
-        child: Icon(icon, size: 20, color: AppTheme.textSecondary),
+        child: Icon(icon, size: 20, color: context.colors.textSecondary),
       ),
     );
   }

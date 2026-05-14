@@ -1,4 +1,4 @@
-import 'package:convoquei_app/core/theme/app_theme.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_call_mode.dart';
 import 'package:flutter/material.dart';
 
@@ -17,9 +17,9 @@ class EventScopeToggle extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        color: context.colors.surfaceSubtle,
+        borderRadius: DSRadius.all(14),
+        border: Border.all(color: context.colors.border),
       ),
       child: Row(
         children: [
@@ -58,26 +58,22 @@ class _ToggleOption extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
+          duration: DSMotion.fast,
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: active ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(11),
+            color: active ? context.colors.surface : Colors.transparent,
+            borderRadius: DSRadius.all(11),
             border: Border.all(
-              color: active ? const Color(0xFFE2E8F0) : Colors.transparent,
+              color: active ? context.colors.border : Colors.transparent,
             ),
-            boxShadow: active
-                ? const [BoxShadow(color: Color(0x0A000000), blurRadius: 4)]
-                : null,
+            boxShadow: active ? DSElevation.sm : null,
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 12,
+            style: context.textStyles.bodySmall?.copyWith(
               fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-              color: active ? AppTheme.textPrimary : AppTheme.textSecondary,
+              color: active ? context.colors.textPrimary : context.colors.textSecondary,
             ),
           ),
         ),

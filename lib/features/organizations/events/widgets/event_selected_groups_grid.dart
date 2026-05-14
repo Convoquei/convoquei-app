@@ -1,4 +1,4 @@
-import 'package:convoquei_app/core/theme/app_theme.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/events/models/event_form_step2_data.dart';
 import 'package:flutter/material.dart';
 
@@ -19,14 +19,14 @@ class EventSelectedGroupsGrid extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          color: context.colors.surfaceSubtle,
+          borderRadius: DSRadius.allMd,
+          border: Border.all(color: context.colors.border),
         ),
         child: Text(
           'Nenhum grupo selecionado. Adicione abaixo.',
           textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodySmall,
+          style: context.textStyles.bodySmall,
         ),
       );
     }
@@ -46,12 +46,10 @@ class EventSelectedGroupsGrid extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-            boxShadow: const [
-              BoxShadow(color: Color(0x08000000), blurRadius: 4),
-            ],
+            color: context.colors.surface,
+            borderRadius: DSRadius.allMd,
+            border: Border.all(color: context.colors.border),
+            boxShadow: DSElevation.sm,
           ),
           child: Row(
             children: [
@@ -60,21 +58,19 @@ class EventSelectedGroupsGrid extends StatelessWidget {
               Expanded(
                 child: Text(
                   group.name,
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 12,
+                  style: context.textStyles.bodySmall?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimary,
+                    color: context.colors.textPrimary,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               GestureDetector(
                 onTap: () => onRemove(group),
-                child: const Icon(
+                child: Icon(
                   Icons.close_rounded,
                   size: 16,
-                  color: Color(0xFF94A3B8),
+                  color: context.colors.textSecondary,
                 ),
               ),
             ],

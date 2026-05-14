@@ -1,4 +1,4 @@
-import 'package:convoquei_app/core/widgets/filter_button.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_status.dart';
 import 'package:flutter/material.dart';
 
@@ -49,13 +49,13 @@ class _MembershipStatusFilterSectionState
 
   @override
   Widget build(BuildContext context) {
-    return FilterSection(
+    return DSFilterSection(
       title: 'Status da Escala',
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
         children: _options.entries.map((e) {
-          return FilterOptionChip(
+          return DSFilterChip(
             label: e.value,
             selected: _selected.contains(e.key),
             onSelected: (_) => _toggle(e.key),

@@ -1,12 +1,8 @@
 import 'dart:async';
 
-import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/core/utils/date_locale_pt.dart';
-import 'package:convoquei_app/core/widgets/app_loading_info.dart';
-import 'package:convoquei_app/core/widgets/app_loading_screen.dart';
 import 'package:convoquei_app/core/widgets/date_range_filter_section.dart';
-import 'package:convoquei_app/core/widgets/error_retry_state.dart';
-import 'package:convoquei_app/core/widgets/filter_button.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/org_events_tab.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_status.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_status.dart';
@@ -14,7 +10,6 @@ import 'package:convoquei_app/features/organizations/events/models/events_filter
 import 'package:convoquei_app/features/organizations/events/models/orgnaization_event_membership_model.dart';
 import 'package:convoquei_app/features/organizations/events/providers/answer_availability_provider.dart';
 import 'package:convoquei_app/features/organizations/events/providers/find_all_events_membership_provider.dart';
-import 'package:convoquei_app/features/organizations/events/widgets/empty_event_state.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/event_card.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/event_status_filter_section.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/events_tabs.dart';
@@ -283,19 +278,17 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
     if (!eventsState.isInitialLoading) _hasLoadedOnce = true;
 
     if (eventsState.isInitialLoading && !_hasLoadedOnce) {
-      return const AppLoadingScreen(
-        skeleton: AppLoadingSkeleton.list,
-        content: AppLoadingInfo(
-          label: 'Carregando eventos...',
-          description: '',
-        ),
+      return const DSLoadingScreen(
+        label: 'Carregando eventos...',
+        description: '',
+        skeleton: DSLoadingSkeleton.list,
       );
     }
 
     if (eventsState.error != null && eventsState.items.isEmpty && !eventsState.isInitialLoading) {
       return Scaffold(
         body: Center(
-          child: ErrorRetryState(
+          child: DSErrorRetryState(
             onRetry: _handleRetry,
             message: 'Não foi possível carregar os eventos',
           ),
@@ -339,7 +332,7 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
                           opacity: isPartialLoading ? 0.4 : 1.0,
                           child: AbsorbPointer(
                             absorbing: isPartialLoading,
-                            child: FilterButton(
+                            child: DSFilterButton(
                               isActive: _hasActiveFilters,
                               onClear:  _handleClearFilters,
                               onApply: () {
@@ -404,21 +397,15 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
                                   width: 48,
                                   height: 48,
                                   decoration: BoxDecoration(
-                                    color: AppTheme.primaryColor,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.04),
-                                        blurRadius: 6,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
+                                    color: context.colors.primary,
+                                    borderRadius: DSRadius.allMd,
+                                    border: Border.all(color: context.colors.border),
+                                    boxShadow: DSElevation.md,
                                   ),
-                                  child: const Icon(
+                                  child: Icon(
                                     Icons.add_rounded,
                                     size: 22,
-                                    color: Colors.white,
+                                    color: context.colors.onPrimary,
                                   ),
                                 ),
                               ),
@@ -460,10 +447,18 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
             else if (eventsState.isEmpty)
               SliverFillRemaining(
                 hasScrollBody: false,
-                child: EmptyEventsState(
-                  tab:        _selectedTab,
-                  membership: currentUser,
-                  onCreateEvent: canManageEvents ? _handleCreateEvent : null,
+                child: DSEmptyState(
+                  icon: Icons.event_busy_rounded,
+                  title: switch (_selectedTab) {
+                    OrgEventsTab.all         => 'Nenhum evento próximo encontrado',
+                    OrgEventsTab.pending     => 'Nenhum evento aguardando sua resposta',
+                    OrgEventsTab.mySchedules => 'Você não está escalado em nenhum evento',
+                  },
+                  description: canManageEvents
+                      ? 'Crie o primeiro evento da sua organização e convoque sua equipe.'
+                      : null,
+                  actionLabel: canManageEvents ? 'Criar evento' : null,
+                  onAction: canManageEvents ? _handleCreateEvent : null,
                 ),
               )
             else ...[
@@ -513,7 +508,7 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
                 const SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Center(child: CircularProgressIndicator()),
+                    child: Center(child: DSSpinner(size: 32)),
                   ),
                 ),
 

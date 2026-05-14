@@ -1,4 +1,4 @@
-import 'package:convoquei_app/core/theme/app_theme.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_assignment_mode.dart';
 import 'package:convoquei_app/features/organizations/events/models/event_form_step3_data.dart';
 import 'package:flutter/material.dart';
@@ -23,10 +23,10 @@ class FunctionRuleCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [BoxShadow(color: Color(0x08000000), blurRadius: 6)],
+        color: context.colors.surface,
+        borderRadius: DSRadius.allLg,
+        border: Border.all(color: context.colors.border),
+        boxShadow: DSElevation.sm,
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -40,12 +40,12 @@ class FunctionRuleCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(rule.name,
-                      style: Theme.of(context).textTheme.titleSmall),
+                      style: context.textStyles.titleSmall),
                 ),
                 IconButton(
                   onPressed: onRemove,
-                  icon: const Icon(Icons.delete_outline_rounded,
-                      color: Color(0xFFEF4444), size: 20),
+                  icon: Icon(Icons.delete_outline_rounded,
+                      color: context.colors.danger, size: 20),
                   padding: EdgeInsets.zero,
                   constraints:
                       const BoxConstraints(minWidth: 32, minHeight: 32),
@@ -53,7 +53,7 @@ class FunctionRuleCard extends StatelessWidget {
               ],
             ),
           ),
-          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+          Divider(height: 1, color: context.colors.surfaceSubtle),
 
           // ── Mín / Máx ──────────────────────────────────────────────────────
           Padding(
@@ -96,18 +96,17 @@ class FunctionRuleCard extends StatelessWidget {
 
           // ── Modo de escalação da função ─────────────────────────────────────
           Container(
-            color: const Color(0xFFF8FAFC),
+            color: context.colors.surfaceSubtle,
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'ESCALAÇÃO DESTA FUNÇÃO',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
+                  style: context.textStyles.labelSmall?.copyWith(
                     fontSize: 9,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.textSecondary,
+                    color: context.colors.textSecondary,
                     letterSpacing: 0.8,
                   ),
                 ),
@@ -116,7 +115,7 @@ class FunctionRuleCard extends StatelessWidget {
                   selected: rule.assignmentMode ==
                       OrganizationEventAssignmentMode.manual,
                   icon: Icons.shield_rounded,
-                  iconColor: AppTheme.primaryColor,
+                  iconColor: context.colors.primary,
                   title: 'Aprovação manual',
                   description:
                       'O líder decide quem entra nesta função, mesmo que o evento use escala automática para os demais.',
@@ -129,7 +128,7 @@ class FunctionRuleCard extends StatelessWidget {
                       OrganizationEventAssignmentMode.automatic,
                   locked: !canUseAutoSchedule,
                   icon: Icons.rocket_launch_rounded,
-                  iconColor: const Color(0xFF10B981),
+                  iconColor: context.colors.success,
                   title: 'Escala automática',
                   description: rule.max != null
                       ? 'No fecho da escala, os primeiros ${rule.max} disponíveis desta função serão escalados automaticamente.'
@@ -178,20 +177,18 @@ class _FunctionAssignmentOption extends StatelessWidget {
       child: Opacity(
         opacity: locked ? 0.55 : 1.0,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
+          duration: DSMotion.fast,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: !locked && selected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
+            color: !locked && selected ? context.colors.surface : Colors.transparent,
+            borderRadius: DSRadius.allMd,
             border: Border.all(
               color: !locked && selected
-                  ? AppTheme.primaryColor
-                  : const Color(0xFFE2E8F0),
+                  ? context.colors.primary
+                  : context.colors.border,
               width: !locked && selected ? 1.5 : 1,
             ),
-            boxShadow: !locked && selected
-                ? const [BoxShadow(color: Color(0x08000000), blurRadius: 4)]
-                : null,
+            boxShadow: !locked && selected ? DSElevation.sm : null,
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,8 +201,8 @@ class _FunctionAssignmentOption extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: !locked && selected
-                        ? AppTheme.primaryColor
-                        : const Color(0xFFCBD5E1),
+                        ? context.colors.primary
+                        : context.colors.border,
                     width: 2,
                   ),
                 ),
@@ -214,8 +211,8 @@ class _FunctionAssignmentOption extends StatelessWidget {
                         child: Container(
                           width: 8,
                           height: 8,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.primaryColor,
+                          decoration: BoxDecoration(
+                            color: context.colors.primary,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -234,13 +231,11 @@ class _FunctionAssignmentOption extends StatelessWidget {
                         Expanded(
                           child: Text(
                             title,
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 12,
+                            style: context.textStyles.bodySmall?.copyWith(
                               fontWeight: FontWeight.w700,
                               color: !locked && selected
-                                  ? AppTheme.textPrimary
-                                  : AppTheme.textSecondary,
+                                  ? context.colors.textPrimary
+                                  : context.colors.textSecondary,
                             ),
                           ),
                         ),
@@ -249,22 +244,21 @@ class _FunctionAssignmentOption extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 5, vertical: 2),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFE2E8F0),
-                              borderRadius: BorderRadius.circular(5),
+                              color: context.colors.border,
+                              borderRadius: DSRadius.all(5),
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(Icons.lock_outline_rounded,
-                                    size: 9, color: AppTheme.textSecondary),
-                                SizedBox(width: 3),
+                                    size: 9, color: context.colors.textSecondary),
+                                const SizedBox(width: 3),
                                 Text(
                                   'Não disponível',
-                                  style: TextStyle(
-                                    fontFamily: 'Inter',
+                                  style: context.textStyles.labelSmall?.copyWith(
                                     fontSize: 9,
                                     fontWeight: FontWeight.w600,
-                                    color: AppTheme.textSecondary,
+                                    color: context.colors.textSecondary,
                                   ),
                                 ),
                               ],
@@ -275,11 +269,10 @@ class _FunctionAssignmentOption extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       description,
-                      style: const TextStyle(
-                        fontFamily: 'Inter',
+                      style: context.textStyles.bodySmall?.copyWith(
                         fontSize: 10,
-                        color: AppTheme.textSecondary,
                         height: 1.4,
+                        color: context.colors.textSecondary,
                       ),
                     ),
                   ],
@@ -315,11 +308,10 @@ class _MinMaxControl extends StatelessWidget {
       children: [
         Text(
           label.toUpperCase(),
-          style: const TextStyle(
-            fontFamily: 'Inter',
+          style: context.textStyles.labelSmall?.copyWith(
             fontSize: 9,
             fontWeight: FontWeight.w700,
-            color: AppTheme.textSecondary,
+            color: context.colors.textSecondary,
             letterSpacing: 0.6,
           ),
         ),
@@ -327,9 +319,9 @@ class _MinMaxControl extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            color: context.colors.surfaceSubtle,
+            borderRadius: DSRadius.allMd,
+            border: Border.all(color: context.colors.border),
           ),
           child: Row(
             children: [
@@ -338,11 +330,9 @@ class _MinMaxControl extends StatelessWidget {
                 child: Text(
                   displayValue,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 15,
+                  style: context.textStyles.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
+                    color: context.colors.textPrimary,
                   ),
                 ),
               ),
@@ -369,18 +359,16 @@ class _CounterBtn extends StatelessWidget {
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: onTap != null ? Colors.white : const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(9),
-          boxShadow: onTap != null
-              ? const [BoxShadow(color: Color(0x0A000000), blurRadius: 4)]
-              : null,
+          color: onTap != null ? context.colors.surface : context.colors.surfaceSubtle,
+          borderRadius: DSRadius.all(9),
+          boxShadow: onTap != null ? DSElevation.sm : null,
         ),
         child: Icon(
           icon,
           size: 16,
           color: onTap != null
-              ? AppTheme.textSecondary
-              : const Color(0xFFCBD5E1),
+              ? context.colors.textSecondary
+              : context.colors.border,
         ),
       ),
     );

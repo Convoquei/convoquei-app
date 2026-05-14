@@ -2,13 +2,7 @@ import 'package:convoquei_app/app/router.dart';
 import 'package:convoquei_app/core/network/exceptions/api_exception.dart';
 import 'package:convoquei_app/core/services/toast_feedback_service.dart';
 import 'package:convoquei_app/core/services/user_feedback_service.dart';
-import 'package:convoquei_app/core/theme/app_theme.dart';
-import 'package:convoquei_app/core/widgets/action_button.dart';
-import 'package:convoquei_app/core/widgets/app_loading_info.dart';
-import 'package:convoquei_app/core/widgets/app_loading_screen.dart';
-import 'package:convoquei_app/core/widgets/base_modal_stateful_widget.dart';
-import 'package:convoquei_app/core/widgets/error_retry_state.dart';
-import 'package:convoquei_app/core/widgets/header_modal_title_subtitle.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/home/widgets/action_tile.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_status.dart';
 import 'package:convoquei_app/features/organizations/events/models/organization_event_details_model.dart';
@@ -61,15 +55,13 @@ class OrgEventDetailPage extends ConsumerWidget {
         ?.value;
 
     return detailsAsync.when(
-      loading: () => const AppLoadingScreen(
-        content: AppLoadingInfo(
-          label: 'Carregando evento...',
-          description: 'Buscando detalhes e participantes',
-        ),
-        skeleton: AppLoadingSkeleton.details,
+      loading: () => const DSLoadingScreen(
+        label: 'Carregando evento...',
+        description: 'Buscando detalhes e participantes',
+        skeleton: DSLoadingSkeleton.details,
       ),
       error: (_, _) => Center(
-        child: ErrorRetryState(
+        child: DSErrorRetryState(
           icon: Icons.event_busy_rounded,
           message: 'Não foi possível carregar o evento',
           description: 'Verifique sua conexão e tente novamente.',
@@ -261,7 +253,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                     ),
                     const SizedBox(height: 16),
                     AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
+                      duration: DSMotion.fast,
                       child: KeyedSubtree(
                         key: ValueKey(_tab),
                         child: _tab == _EventDetailTab.people
@@ -297,35 +289,37 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
             right: 0,
             child: SafeArea(
               top: false,
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  border: Border(
-                    top: BorderSide(color: Color(0xFFE2E8F0)),
+              child: Builder(
+                builder: (context) => Container(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                  decoration: BoxDecoration(
+                    color: context.colors.surface,
+                    border: Border(
+                      top: BorderSide(color: context.colors.border),
+                    ),
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ActionButton(
-                        label: 'Redefinir',
-                        icon: Icons.restart_alt_rounded,
-                        outlined: true,
-                        schema: ActionButtonSchema.ghost,
-                        onPressed: () => _rulesKey.currentState?.reset(),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: DSButton(
+                          label: 'Redefinir',
+                          icon: Icons.restart_alt_rounded,
+                          outlined: true,
+                          schema: DSButtonSchema.ghost,
+                          onPressed: () => _rulesKey.currentState?.reset(),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ActionButton(
-                        label: 'Salvar Regras',
-                        icon: Icons.save_rounded,
-                        isLoading: _rulesSaving,
-                        onPressed: () => _rulesKey.currentState?.save(),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: DSButton(
+                          label: 'Salvar Regras',
+                          icon: Icons.save_rounded,
+                          isLoading: _rulesSaving,
+                          onPressed: () => _rulesKey.currentState?.save(),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -337,7 +331,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
 
 // ─── Options Sheet ────────────────────────────────────────────────────────────
 
-class _EventOptionsModal extends BaseModalStatefulWidget {
+class _EventOptionsModal extends DSBaseModal {
   const _EventOptionsModal({
     required this.organizationId,
     required this.eventId,
@@ -375,7 +369,7 @@ class _EventOptionsModal extends BaseModalStatefulWidget {
     VoidCallback? onLockAssignments,
     VoidCallback? onReopenAssignments,
   }) =>
-      BaseModalStatefulWidget.show(
+      DSBaseModal.show(
         context,
         _EventOptionsModal(
           organizationId: organizationId,
@@ -395,9 +389,9 @@ class _EventOptionsModal extends BaseModalStatefulWidget {
   State<_EventOptionsModal> createState() => _EventOptionsModalState();
 }
 
-class _EventOptionsModalState extends BaseModalState<_EventOptionsModal> {
+class _EventOptionsModalState extends DSBaseModalState<_EventOptionsModal> {
   @override
-  Widget? get titleWidget => HeaderModalTitleSubtitle(
+  Widget? get titleWidget => DSModalHeader(
         title: 'Opções do evento',
         subtitle: widget.eventName,
       );
@@ -416,7 +410,7 @@ class _EventOptionsModalState extends BaseModalState<_EventOptionsModal> {
           title: 'Compartilhar Evento',
           description: 'Enviar informações e link do evento',
           onTap: () {
-            BaseModalStatefulWidget.hide(context);
+            DSBaseModal.hide(context);
             widget.onShareEvent?.call();
           },
         ),
@@ -429,7 +423,7 @@ class _EventOptionsModalState extends BaseModalState<_EventOptionsModal> {
             title: 'Editar Evento',
             description: 'Alterar data, local e configurações',
             onTap: () {
-              BaseModalStatefulWidget.hide(context);
+              DSBaseModal.hide(context);
               context.pushNamed(
                 AppRoutes.orgEditEvent,
                 pathParameters: {
@@ -447,10 +441,10 @@ class _EventOptionsModalState extends BaseModalState<_EventOptionsModal> {
             icon: Icons.lock_rounded,
             title: 'Fechar Escalação',
             description: 'Encerrar respostas de disponibilidade',
-            iconColor: const Color(0xFFD97706),
-            iconBgColor: const Color(0xFFFFF7ED),
+            iconColor: context.colors.warning,
+            iconBgColor: context.colors.warningTint,
             onTap: () {
-              BaseModalStatefulWidget.hide(context);
+              DSBaseModal.hide(context);
               widget.onLockAssignments?.call();
             },
           ),
@@ -462,10 +456,10 @@ class _EventOptionsModalState extends BaseModalState<_EventOptionsModal> {
             icon: Icons.lock_open_rounded,
             title: 'Reabrir Escalação',
             description: 'Permitir novas respostas de disponibilidade',
-            iconColor: AppTheme.successColor,
-            iconBgColor: const Color(0xFFECFDF5),
+            iconColor: context.colors.success,
+            iconBgColor: context.colors.successTint,
             onTap: () {
-              BaseModalStatefulWidget.hide(context);
+              DSBaseModal.hide(context);
               widget.onReopenAssignments?.call();
             },
           ),
@@ -480,7 +474,7 @@ class _EventOptionsModalState extends BaseModalState<_EventOptionsModal> {
             description: 'Encerrar e notificar todos os membros',
             destructive: true,
             onTap: () {
-              BaseModalStatefulWidget.hide(context);
+              DSBaseModal.hide(context);
               widget.onCancelEvent?.call();
             },
           ),

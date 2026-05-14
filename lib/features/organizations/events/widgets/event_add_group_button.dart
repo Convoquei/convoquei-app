@@ -1,4 +1,4 @@
-import 'package:convoquei_app/core/theme/app_theme.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:flutter/material.dart';
 
 class EventAddGroupButton extends StatelessWidget {
@@ -14,25 +14,22 @@ class EventAddGroupButton extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFFEFF6FF),
-          borderRadius: BorderRadius.circular(12),
+          color: context.colors.primaryTint,
+          borderRadius: DSRadius.allMd,
           border: Border.all(
-            color: AppTheme.primaryColor.withValues(alpha: 0.3),
-            style: BorderStyle.solid,
+            color: context.colors.primary.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.add_rounded, color: AppTheme.primaryColor, size: 18),
+            Icon(Icons.add_rounded, color: context.colors.primary, size: 18),
             const SizedBox(width: 6),
             Text(
               'Adicionar Grupo',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 13,
+              style: context.textStyles.labelMedium?.copyWith(
+                color: context.colors.primary,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.primaryColor,
               ),
             ),
           ],
