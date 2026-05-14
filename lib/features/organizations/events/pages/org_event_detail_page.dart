@@ -7,7 +7,10 @@ import 'package:convoquei_app/features/home/widgets/action_tile.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_status.dart';
 import 'package:convoquei_app/features/organizations/events/models/organization_event_details_model.dart';
 import 'package:convoquei_app/features/organizations/events/providers/cancel_event_provider.dart';
+import 'package:convoquei_app/features/organizations/events/providers/find_all_events_membership_provider.dart';
 import 'package:convoquei_app/features/organizations/events/providers/find_event_details_by_id_provider.dart';
+import 'package:convoquei_app/features/organizations/home/providers/next_assigned_event_provider.dart';
+import 'package:convoquei_app/features/organizations/home/providers/next_pending_availability_event_provider.dart';
 import 'package:convoquei_app/features/organizations/events/providers/manage_assignments_provider.dart';
 import 'package:convoquei_app/features/organizations/events/services/event_share_service.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/event_detail_hero_card.dart';
@@ -204,6 +207,11 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
         organizationId: widget.organizationId,
         eventId: widget.eventId,
       ));
+      ref.invalidate(eventMembershipProvider);
+      ref.invalidate(
+        nextPendingAvailabilityEventProvider(widget.organizationId),
+      );
+      ref.invalidate(nextAssignedEventProvider(widget.organizationId));
       ToastFeedbackService.showToast(
           context, 'Evento cancelado com sucesso.', ToastType.success);
     } on ApiException catch (e) {

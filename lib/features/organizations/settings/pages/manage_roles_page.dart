@@ -20,7 +20,7 @@ import 'package:convoquei_app/features/organizations/shared/models/organization_
 import 'package:convoquei_app/features/organizations/shared/models/organization_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_role_member_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_role_model.dart';
-import 'package:convoquei_app/features/organizations/shared/widgets/expanded_card.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -256,7 +256,7 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
   }
 
   Widget _buildRoleCard(OrganizationRoleModel role) {
-    return ExpandedCard(
+    return DSExpandableCard(
       key: ValueKey(role.id),
       initiallyExpanded: false,
       leading: _buildRoleAvatar(role.name),

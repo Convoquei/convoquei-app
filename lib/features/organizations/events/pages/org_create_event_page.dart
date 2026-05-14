@@ -5,6 +5,8 @@ import 'package:convoquei_app/features/organizations/events/models/requests/crea
 import 'package:convoquei_app/features/organizations/events/pages/org_event_form_page.dart';
 import 'package:convoquei_app/features/organizations/events/providers/create_event_provider.dart';
 import 'package:convoquei_app/features/organizations/events/providers/find_all_events_membership_provider.dart';
+import 'package:convoquei_app/features/organizations/home/providers/next_assigned_event_provider.dart';
+import 'package:convoquei_app/features/organizations/home/providers/next_pending_availability_event_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -40,6 +42,8 @@ class OrgCreateEventPage extends ConsumerWidget {
           ref
               .read(eventMembershipProvider.notifier)
               .reset(organizationId, const EventsFilter());
+          ref.invalidate(nextPendingAvailabilityEventProvider(organizationId));
+          ref.invalidate(nextAssignedEventProvider(organizationId));
 
           ToastFeedbackService.showToast(
             context,

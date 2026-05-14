@@ -4,6 +4,7 @@ import 'package:convoquei_app/features/organizations/events/models/orgnaization_
 import 'package:convoquei_app/features/organizations/events/providers/answer_availability_provider.dart';
 import 'package:convoquei_app/features/organizations/home/providers/next_assigned_event_provider.dart';
 import 'package:convoquei_app/features/organizations/home/providers/next_pending_availability_event_provider.dart';
+import 'package:convoquei_app/features/organizations/members/widgets/modals/invite_member_by_email_modal.dart';
 import 'package:convoquei_app/features/organizations/shared/models/enums/organization_permission.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/organization_providers.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/selected_organization_provider.dart';
@@ -524,16 +525,13 @@ class _QuickMenu extends ConsumerWidget {
         (
           icon: Icons.person_add_rounded,
           label: 'Convidar',
-          onTap: () => context.goNamed(
-            AppRoutes.orgTeam,
-            pathParameters: {'orgId': orgId},
-          ),
+          onTap: () => InviteMemberByEmailModal.show(context, orgId),
         ),
       (
         icon: Icons.list_alt_rounded,
         label: 'Escalas',
         onTap: () => context.goNamed(
-          AppRoutes.orgEvents,
+          AppRoutes.orgScales,
           pathParameters: {'orgId': orgId},
         ),
       ),
@@ -561,7 +559,6 @@ class _QuickMenu extends ConsumerWidget {
     );
   }
 }
-
 
 // ── Birthdays ────────────────────────────────────────────────────────────────
 
@@ -841,7 +838,10 @@ class _NextAssignedCard extends StatelessWidget {
             padding: const EdgeInsets.all(DSSpacing.lg),
             child: Row(
               children: [
-                DSDateBadge(date: event.startTime, color: context.colors.success),
+                DSDateBadge(
+                  date: event.startTime,
+                  color: context.colors.success,
+                ),
                 const SizedBox(width: DSSpacing.md),
                 Expanded(
                   child: Column(
@@ -884,4 +884,3 @@ class _NextAssignedCard extends StatelessWidget {
     );
   }
 }
-

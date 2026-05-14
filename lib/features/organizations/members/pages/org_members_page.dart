@@ -9,7 +9,6 @@ import 'package:convoquei_app/core/widgets/app_loading_info.dart';
 import 'package:convoquei_app/core/widgets/app_loading_screen.dart';
 import 'package:convoquei_app/core/widgets/error_retry_state.dart';
 import 'package:convoquei_app/features/organizations/members/models/enums/manage_member_action.dart';
-import 'package:convoquei_app/features/organizations/members/providers/invite_member_provider.dart';
 import 'package:convoquei_app/features/organizations/members/providers/kick_member_provider.dart';
 import 'package:convoquei_app/features/organizations/members/providers/list_all_members_query_provider.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/member_list_tile.dart';
@@ -161,29 +160,6 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
     }
   }
 
-  Future<bool> _handleInviteMember(String email) async {
-    try {
-      final orgId = ref.read(selectedOrganizationProvider)!.id;
-      await ref
-          .read(inviteOrganizationMemberProvider.notifier)
-          .invite(organizationId: orgId, email: email);
-
-      if (!mounted) return false;
-      ToastFeedbackService.showToast(
-        context,
-        'Convite enviado com sucesso!',
-        ToastType.success,
-      );
-      return true;
-    } catch (e) {
-      if (!mounted) return false;
-      if (e is ApiException) {
-        UserFeedbackService.error(context, message: e.message);
-      }
-      return false;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final orgId = ref.watch(selectedOrganizationProvider)?.id;
@@ -258,7 +234,7 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
                             child: InkWell(
                               onTap: () => InviteMemberByEmailModal.show(
                                 context,
-                                _handleInviteMember,
+                                orgId!,
                               ),
                               borderRadius: BorderRadius.circular(6),
                               child: const SizedBox(
@@ -299,7 +275,7 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
                     canInvite: canInvite,
                     onInvite: () => InviteMemberByEmailModal.show(
                       context,
-                      _handleInviteMember,
+                      orgId!,
                     ),
                   ),
                 ),

@@ -1,19 +1,24 @@
+import 'package:convoquei_app/core/network/exceptions/api_exception.dart';
+import 'package:convoquei_app/core/services/toast_feedback_service.dart';
+import 'package:convoquei_app/core/services/user_feedback_service.dart';
 import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/core/widgets/action_button.dart';
 import 'package:convoquei_app/core/widgets/base_modal_stateful_widget.dart';
+import 'package:convoquei_app/features/organizations/members/providers/invite_member_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class InviteMemberByEmailModal extends BaseModalStatefulWidget {
-  final Future<bool> Function(String email) onSubmit;
+  final String orgId;
 
-  const InviteMemberByEmailModal({super.key, required this.onSubmit});
+  const InviteMemberByEmailModal({super.key, required this.orgId});
 
   static Future<bool?> show(
     BuildContext context,
-    Future<bool> Function(String email) onSubmit,
+    String orgId,
   ) => BaseModalStatefulWidget.show<bool>(
     context,
-    InviteMemberByEmailModal(onSubmit: onSubmit),
+    InviteMemberByEmailModal(orgId: orgId),
   );
 
   @override
@@ -42,9 +47,22 @@ class _InviteMemberByEmailModalState
     setState(() => _isLoading = true);
 
     try {
-      if (await widget.onSubmit(_emailController.text.trim())) {
-        if (!mounted) return;
-        BaseModalStatefulWidget.hide(context, true);
+      final container = ProviderScope.containerOf(context);
+      await container
+          .read(inviteOrganizationMemberProvider.notifier)
+          .invite(organizationId: widget.orgId, email: _emailController.text.trim());
+
+      if (!mounted) return;
+      ToastFeedbackService.showToast(
+        context,
+        'Convite enviado com sucesso!',
+        ToastType.success,
+      );
+      BaseModalStatefulWidget.hide(context, true);
+    } catch (e) {
+      if (!mounted) return;
+      if (e is ApiException) {
+        UserFeedbackService.error(context, message: e.message);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

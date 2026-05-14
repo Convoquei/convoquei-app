@@ -1,11 +1,6 @@
-import 'package:convoquei_app/core/widgets/filter_button.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:flutter/material.dart';
 
-/// Seção de filtro de período para uso dentro de um [FilterButton].
-///
-/// Abre o [showDateRangePicker] nativo do Flutter ao ser tocado e
-/// exibe as datas selecionadas formatadas. Um botão de limpar aparece
-/// quando há um intervalo ativo.
 class DateRangeFilterSection extends StatefulWidget {
   final DateTime? startDate;
   final DateTime? endDate;
@@ -30,7 +25,7 @@ class _DateRangeFilterSectionState extends State<DateRangeFilterSection> {
   void initState() {
     super.initState();
     _start = widget.startDate;
-    _end   = widget.endDate;
+    _end = widget.endDate;
   }
 
   Future<void> _pickRange() async {
@@ -45,7 +40,7 @@ class _DateRangeFilterSectionState extends State<DateRangeFilterSection> {
     if (result == null) return;
     setState(() {
       _start = result.start;
-      _end   = result.end;
+      _end = result.end;
     });
     widget.onChanged(_start, _end);
   }
@@ -53,7 +48,7 @@ class _DateRangeFilterSectionState extends State<DateRangeFilterSection> {
   void _clear() {
     setState(() {
       _start = null;
-      _end   = null;
+      _end = null;
     });
     widget.onChanged(null, null);
   }
@@ -64,57 +59,56 @@ class _DateRangeFilterSectionState extends State<DateRangeFilterSection> {
   @override
   Widget build(BuildContext context) {
     final hasRange = _start != null && _end != null;
-    return FilterSection(
+    return DSFilterSection(
       title: 'Período',
       child: InkWell(
         onTap: _pickRange,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: DSRadius.allMd,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: const EdgeInsets.symmetric(
+            horizontal: DSSpacing.lg,
+            vertical: DSSpacing.md,
+          ),
           decoration: BoxDecoration(
             color: hasRange
-                ? const Color(0xFF1D4ED8).withValues(alpha: 0.06)
-                : Colors.white,
-            borderRadius: BorderRadius.circular(12),
+                ? context.colors.primary.withValues(alpha: 0.06)
+                : context.colors.surface,
+            borderRadius: DSRadius.allMd,
             border: Border.all(
-              color: hasRange
-                  ? const Color(0xFF1D4ED8)
-                  : const Color(0xFFE2E8F0),
+              color: hasRange ? context.colors.primary : context.colors.border,
             ),
           ),
           child: Row(
             children: [
-              Icon(
+              DSIcon(
                 Icons.date_range_rounded,
-                size: 18,
+                size: DSIconSize.sm,
                 color: hasRange
-                    ? const Color(0xFF1D4ED8)
-                    : const Color(0xFF64748B),
+                    ? context.colors.primary
+                    : context.colors.textSecondary,
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: DSSpacing.sm),
               Expanded(
                 child: Text(
                   hasRange
                       ? '${_fmt(_start!)}  →  ${_fmt(_end!)}'
                       : 'Selecionar período',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 13,
+                  style: context.textStyles.labelMedium.copyWith(
                     color: hasRange
-                        ? const Color(0xFF1D4ED8)
-                        : const Color(0xFF64748B),
+                        ? context.colors.primary
+                        : context.colors.textSecondary,
                     fontWeight:
-                        hasRange ? FontWeight.w600 : FontWeight.w400,
+                        hasRange ? FontWeight.w600 : FontWeight.w500,
                   ),
                 ),
               ),
               if (hasRange)
                 GestureDetector(
                   onTap: _clear,
-                  child: const Icon(
+                  child: DSIcon(
                     Icons.close_rounded,
-                    size: 16,
-                    color: Color(0xFF64748B),
+                    size: DSIconSize.sm,
+                    color: context.colors.textSecondary,
                   ),
                 ),
             ],

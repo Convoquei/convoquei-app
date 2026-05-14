@@ -1,7 +1,25 @@
+// Card expansível com header clicável (leading + title + description + chevron)
+// e body animado com children e actions.
+//
+// Exemplo:
+//   DSExpandableCard(
+//     leading: DSAvatar(name: 'João'),
+//     title: 'João Silva',
+//     description: '3 eventos',
+//     children: [MyContent()],
+//     actions: [DSButton(label: 'Editar', onPressed: _edit)],
+//   )
 import 'package:flutter/material.dart';
 
-class ExpandedCard extends StatefulWidget {
-  const ExpandedCard({
+import '../../foundations/ds_icon.dart';
+import '../../theme/ds_context_extensions.dart';
+import '../../tokens/ds_elevation.dart';
+import '../../tokens/ds_motion.dart';
+import '../../tokens/ds_radius.dart';
+import '../../tokens/ds_spacing.dart';
+
+class DSExpandableCard extends StatefulWidget {
+  const DSExpandableCard({
     super.key,
     required this.leading,
     required this.title,
@@ -32,11 +50,12 @@ class ExpandedCard extends StatefulWidget {
   final VoidCallback? onExpand;
 
   @override
-  State<ExpandedCard> createState() => _ExpandedCardState();
+  State<DSExpandableCard> createState() => _DSExpandableCardState();
 }
 
-class _ExpandedCardState extends State<ExpandedCard> {
+class _DSExpandableCardState extends State<DSExpandableCard> {
   late bool _expanded;
+
   @override
   void initState() {
     super.initState();
@@ -51,18 +70,14 @@ class _ExpandedCardState extends State<ExpandedCard> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: colors.surface,
+        borderRadius: DSRadius.allLg,
+        border: Border.all(color: colors.border),
+        boxShadow: DSElevation.sm,
       ),
       clipBehavior: Clip.hardEdge,
       child: Column(
@@ -77,8 +92,8 @@ class _ExpandedCardState extends State<ExpandedCard> {
             onTap: _toggle,
           ),
           AnimatedSize(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeInOut,
+            duration: DSMotion.normal,
+            curve: DSMotion.standard,
             child: _expanded
                 ? _Body(actions: widget.actions, children: widget.children)
                 : const SizedBox.shrink(),
@@ -110,37 +125,40 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final textStyles = context.textStyles;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: const EdgeInsets.symmetric(
+            horizontal: DSSpacing.lg,
+            vertical: 14,
+          ),
           child: Row(
             children: [
               leading,
-              const SizedBox(width: 12),
+              const SizedBox(width: DSSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1E293B),
+                      style: textStyles.titleSmall.copyWith(
+                        color: colors.textPrimary,
                         height: 1.2,
                       ),
                     ),
                     if (descriptionWidget != null || description != null) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: DSSpacing.xs),
                       descriptionWidget ??
                           Text(
                             description!,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: Color(0xFF94A3B8),
+                            style: textStyles.labelSmall.copyWith(
+                              color: colors.textSecondary,
                             ),
                           ),
                     ],
@@ -149,11 +167,8 @@ class _Header extends StatelessWidget {
               ),
               AnimatedRotation(
                 turns: expanded ? 0.5 : 0.0,
-                duration: const Duration(milliseconds: 250),
-                child: const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: Color(0xFF94A3B8),
-                ),
+                duration: DSMotion.normal,
+                child: DSIcon(Icons.keyboard_arrow_down_rounded),
               ),
             ],
           ),
@@ -173,20 +188,22 @@ class _Body extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        color: Color(0xFFF8FAFC),
-        border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
+      decoration: BoxDecoration(
+        color: colors.background,
+        border: Border(top: BorderSide(color: colors.divider)),
       ),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(DSSpacing.md),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ...children,
           if (actions.isNotEmpty) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: DSSpacing.sm),
             Row(children: actions),
           ],
         ],

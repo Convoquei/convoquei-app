@@ -12,7 +12,7 @@ import 'package:convoquei_app/features/organizations/members/providers/group_par
 import 'package:convoquei_app/features/organizations/members/providers/list_all_groups_query_provider.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/modals/create_group_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/no_groups_empty_state.dart';
-import 'package:convoquei_app/features/organizations/shared/widgets/expanded_card.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -139,7 +139,7 @@ class _GroupExpandedCard extends ConsumerWidget {
       groupParticipantsPagedProvider(group.id),
     );
 
-    return ExpandedCard(
+    return DSExpandableCard(
       leading: Container(
         width: 48,
         height: 48,

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:convoquei_app/core/utils/date_locale_pt.dart';
-import 'package:convoquei_app/core/widgets/date_range_filter_section.dart';
 import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/org_events_tab.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_status.dart';
@@ -15,6 +14,7 @@ import 'package:convoquei_app/features/organizations/events/widgets/event_status
 import 'package:convoquei_app/features/organizations/events/widgets/events_tabs.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_availability_status.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/availability_status_filter_section.dart';
+import 'package:convoquei_app/features/organizations/events/widgets/date_range_filter_section.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/membership_status_filter_section.dart';
 import 'package:convoquei_app/core/network/exceptions/api_exception.dart';
 import 'package:convoquei_app/core/services/toast_feedback_service.dart';
@@ -277,14 +277,6 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
 
     if (!eventsState.isInitialLoading) _hasLoadedOnce = true;
 
-    if (eventsState.isInitialLoading && !_hasLoadedOnce) {
-      return const DSLoadingScreen(
-        label: 'Carregando eventos...',
-        description: '',
-        skeleton: DSLoadingSkeleton.list,
-      );
-    }
-
     if (eventsState.error != null && eventsState.items.isEmpty && !eventsState.isInitialLoading) {
       return Scaffold(
         body: Center(
@@ -431,7 +423,7 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
               ),
             ),
 
-            if (eventsState.isInitialLoading && _hasLoadedOnce)
+            if (eventsState.isInitialLoading)
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                 sliver: SliverList(

@@ -10,7 +10,7 @@ import 'package:convoquei_app/features/organizations/members/providers/clear_gro
 import 'package:convoquei_app/features/organizations/members/providers/delete_group_participant_provider.dart';
 import 'package:convoquei_app/features/organizations/members/providers/delete_group_provider.dart';
 import 'package:convoquei_app/features/organizations/members/providers/group_participants_paged_provider.dart';
-import 'package:convoquei_app/features/organizations/shared/widgets/expanded_card.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -26,7 +26,7 @@ class GroupCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ExpandedCard(
+    return DSExpandableCard(
       leading: Container(
         width: 48,
         height: 48,

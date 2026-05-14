@@ -7,7 +7,6 @@ import 'package:convoquei_app/features/organizations/events/models/organization_
 import 'package:convoquei_app/features/organizations/events/providers/manage_participant_provider.dart';
 import 'package:convoquei_app/features/organizations/events/providers/find_event_details_by_id_provider.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/event_participant_tile.dart';
-import 'package:convoquei_app/features/organizations/shared/widgets/expanded_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -241,7 +240,7 @@ class EventParticipantsView extends ConsumerWidget {
     return Column(
       children: [
         // ── 1. Aguardando Escalação ────────────────────────────────────────────
-        ExpandedCard(
+        DSExpandableCard(
           leading: _SectionIcon(
             bgColor: context.colors.warningTint,
             iconColor: context.colors.warning,
@@ -269,7 +268,7 @@ class EventParticipantsView extends ConsumerWidget {
         const SizedBox(height: 12),
 
         // ── 2. Escalados ──────────────────────────────────────────────────────
-        ExpandedCard(
+        DSExpandableCard(
           leading: _SectionIcon(
             bgColor: context.colors.successTint,
             iconColor: context.colors.success,
@@ -295,7 +294,7 @@ class EventParticipantsView extends ConsumerWidget {
         const SizedBox(height: 12),
 
         // ── 3. Não Escalados ──────────────────────────────────────────────────
-        ExpandedCard(
+        DSExpandableCard(
           leading: _SectionIcon(
             bgColor: context.colors.surfaceSubtle,
             iconColor: context.colors.textSecondary,
@@ -320,7 +319,7 @@ class EventParticipantsView extends ConsumerWidget {
         const SizedBox(height: 12),
 
         // ── 4. Não Confirmados (não responderam + indisponíveis) ──────────────
-        ExpandedCard(
+        DSExpandableCard(
           leading: _SectionIcon(
             bgColor: context.colors.surfaceSubtle,
             iconColor: context.colors.textSecondary,

@@ -34,7 +34,8 @@
       "Skill(ds-component)",
       "Bash(Remove-Item \"C:\\\\repo\\\\convoquei\\\\convoquei-app\\\\lib\\\\features\\\\organizations\\\\events\\\\widgets\\\\participants_chip.dart\" -Force)",
       "Bash(Remove-Item \"C:\\\\repo\\\\convoquei\\\\convoquei-app\\\\lib\\\\features\\\\organizations\\\\events\\\\widgets\\\\empty_event_state.dart\" -Force)",
-      "Bash(Write-Host \"Deleted\")"
+      "Bash(Write-Host \"Deleted\")",
+      "Bash(Remove-Item *)"
     ]
   }
 }

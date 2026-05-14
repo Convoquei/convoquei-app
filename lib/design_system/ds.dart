@@ -45,6 +45,7 @@ export 'components/feedback/ds_empty_state.dart';
 // ── Components: cards ─────────────────────────────────────────────────────────
 export 'components/cards/ds_card.dart';
 export 'components/cards/ds_action_card.dart';
+export 'components/cards/ds_expandable_card.dart';
 
 // ── Components: lists ─────────────────────────────────────────────────────────
 export 'components/lists/ds_selectable_tile.dart';

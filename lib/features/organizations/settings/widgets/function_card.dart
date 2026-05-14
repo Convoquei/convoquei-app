@@ -11,7 +11,7 @@ import 'package:convoquei_app/features/organizations/members/providers/delete_fu
 import 'package:convoquei_app/features/organizations/members/providers/delete_function_provider.dart';
 import 'package:convoquei_app/features/organizations/members/providers/function_members_paged_provider.dart';
 import 'package:convoquei_app/features/organizations/settings/widgets/function_card_skeleton.dart';
-import 'package:convoquei_app/features/organizations/shared/widgets/expanded_card.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -27,7 +27,7 @@ class FunctionCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ExpandedCard(
+    return DSExpandableCard(
       leading: Container(
         width: 48,
         height: 48,
