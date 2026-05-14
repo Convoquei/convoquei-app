@@ -100,21 +100,24 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             ),
           ),
           const SizedBox(height: DSSpacing.xl),
-          DSButton(
-            label: 'Entrar',
-            isLoading: isLoading,
-            onPressed: _submit,
-          ),
+          DSButton(label: 'Entrar', isLoading: isLoading, onPressed: _submit),
           const SizedBox(height: DSSpacing.xxl),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const DSText('Não tem conta? ', variant: DSTextVariant.bodyMedium),
+              const DSText(
+                'Não tem conta? ',
+                variant: DSTextVariant.bodyMedium,
+              ),
               InkWell(
                 onTap: isLoading
                     ? null
                     : () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const RegisterPage()),
+                        PageRouteBuilder(
+                          pageBuilder: (_, __, ___) => const RegisterPage(),
+                          transitionDuration: Duration.zero,
+                          reverseTransitionDuration: Duration.zero,
+                        ),
                       ),
                 child: DSText(
                   'Registre-se',
