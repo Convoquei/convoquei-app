@@ -88,6 +88,7 @@ class DSExample extends StatelessWidget {
 - **Primitivos proibidos:** `DSColorsPrimitive` e `DSTypography` são internos do DS — não usar em novos componentes
 - **Enums top-level:** variantes como `DSExampleVariant` declaradas fora da classe
 - **Parâmetros opcionais com defaults sensatos:** o caso mais comum não deve exigir parâmetros
+- **Complexidade:** o componente deve ser o mai simples possível, não deve haver complexidade desnecessária
 
 ## Registrar no ds.dart
 

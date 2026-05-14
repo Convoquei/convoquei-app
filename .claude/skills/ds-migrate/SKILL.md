@@ -44,6 +44,11 @@ O argumento define o alvo:
 | `Duration(milliseconds: 250)` | `DSMotion.normal` |
 | `import 'package:convoquei_app/core/widgets/...'` | `import 'package:convoquei_app/design_system/ds.dart'` |
 
+### 2.1. Analisar se vale a pena criar um novo item no design system para a funcionalidade / componente que está sendo migrado
+
+- Um componente / foundation / equivalente do design system deve ser simples e direto, expressar apenas uma única funcionalidade, a fim de conseguir a reutilização genérica em diversas partes do sistema.
+- Caso o componente atenda esse critério, deve ser feito a criação desse novo componente no DS e utiliza-lo nas telas, deletando o componente de onde está sendo utilizado (verificando em todas as telas)
+
 ### 3. Não tocar
 
 - Lógica de negócio e providers Riverpod
@@ -67,3 +72,4 @@ Confirmar que não há erros de compilação antes de encerrar.
 - Não alterar comportamento da UI (layout, lógica de estado, navegação)
 - Se um widget legado não tiver equivalente DS direto, reportar ao utilizador antes de prosseguir
 - Se a migração exigir alteração de parâmetros públicos da página, confirmar com o utilizador
+- A tela deve ser o mais simples possível, complexidade desnecessária atrapalha a evolução da aplicação
