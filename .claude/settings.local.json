@@ -29,7 +29,8 @@
       "Bash(mkdir -p 'C:\\\\repo\\\\convoquei\\\\convoquei-app\\\\.claude\\\\skills\\\\ds-component')",
       "Bash(Get-ChildItem 'C:\\\\repo\\\\convoquei\\\\convoquei-app\\\\.claude\\\\rules')",
       "Bash(Get-ChildItem 'C:\\\\repo\\\\convoquei\\\\convoquei-app\\\\.claude\\\\skills' -Recurse -Filter SKILL.md)",
-      "Bash(xargs grep -l \"Scaffold.*appBar\")"
+      "Bash(xargs grep -l \"Scaffold.*appBar\")",
+      "Bash(xargs grep -l \"scale\\\\|escalado\\\\|assigned\" -i)"
     ]
   }
 }
