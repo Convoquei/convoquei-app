@@ -551,7 +551,7 @@ class _QuickMenu extends ConsumerWidget {
       children: [
         for (final item in items)
           Expanded(
-            child: _QuickMenuItem(
+            child: DSQuickMenuItem(
               icon: item.icon,
               label: item.label,
               onTap: item.onTap,
@@ -562,46 +562,6 @@ class _QuickMenu extends ConsumerWidget {
   }
 }
 
-class _QuickMenuItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _QuickMenuItem({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: colors.surface,
-              borderRadius: DSRadius.allLg,
-              border: Border.all(color: colors.border),
-            ),
-            child: Icon(icon, color: colors.primary, size: 24),
-          ),
-          const SizedBox(height: DSSpacing.xs),
-          DSText(
-            label,
-            variant: DSTextVariant.labelSmall,
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 // ── Birthdays ────────────────────────────────────────────────────────────────
 
@@ -881,7 +841,7 @@ class _NextAssignedCard extends StatelessWidget {
             padding: const EdgeInsets.all(DSSpacing.lg),
             child: Row(
               children: [
-                _DateBadge(date: event.startTime),
+                DSDateBadge(date: event.startTime, color: context.colors.success),
                 const SizedBox(width: DSSpacing.md),
                 Expanded(
                   child: Column(
@@ -925,48 +885,3 @@ class _NextAssignedCard extends StatelessWidget {
   }
 }
 
-class _DateBadge extends StatelessWidget {
-  final DateTime date;
-  const _DateBadge({required this.date});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    String dayName;
-    try {
-      dayName = DateFormat('EEE', 'pt_BR').format(date).toUpperCase();
-    } catch (_) {
-      dayName = DateFormat('EEE').format(date).toUpperCase();
-    }
-
-    return Container(
-      width: 48,
-      height: 56,
-      decoration: BoxDecoration(
-        color: colors.successTint,
-        borderRadius: DSRadius.allMd,
-        border: Border.all(color: colors.success.withValues(alpha: 0.15)),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            dayName,
-            style: context.textStyles.labelSmall.copyWith(
-              color: colors.success,
-              fontSize: 9,
-              letterSpacing: 0.8,
-            ),
-          ),
-          Text(
-            date.day.toString(),
-            style: context.textStyles.displayMedium.copyWith(
-              color: colors.success,
-              height: 1.1,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

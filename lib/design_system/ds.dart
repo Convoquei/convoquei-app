@@ -25,6 +25,7 @@ export 'foundations/ds_badge.dart';
 export 'foundations/ds_divider.dart';
 export 'foundations/ds_icon.dart';
 export 'foundations/ds_text.dart';
+export 'foundations/ds_date_badge.dart';
 
 // ── Components: buttons ───────────────────────────────────────────────────────
 export 'components/buttons/ds_button.dart';
@@ -46,6 +47,7 @@ export 'components/cards/ds_action_card.dart';
 // ── Components: lists ─────────────────────────────────────────────────────────
 export 'components/lists/ds_selectable_tile.dart';
 export 'components/lists/ds_timeline_group.dart';
+export 'components/lists/ds_quick_menu_item.dart';
 
 // ── Components: overlays ──────────────────────────────────────────────────────
 export 'components/overlays/ds_modal.dart';
