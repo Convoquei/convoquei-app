@@ -70,7 +70,10 @@ class OrganizationShell extends ConsumerWidget {
 
     return ProviderScope(
       overrides: [currentOrgProvider.overrideWithValue(org)],
-      child: content,
+      child: KeyedSubtree(
+        key: ValueKey(org.id),
+        child: content,
+      ),
     );
   }
 

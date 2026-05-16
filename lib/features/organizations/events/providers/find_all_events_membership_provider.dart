@@ -13,7 +13,7 @@ class EventMembershipNotifier extends _$EventMembershipNotifier {
   int _generation = 0;
 
   @override
-  StateListPaged<OrganizationEventMembershipModel> build() {
+  StateListPaged<OrganizationEventMembershipModel> build(String organizationId) {
     return const StateListPaged();
   }
 

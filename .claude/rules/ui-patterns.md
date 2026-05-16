@@ -167,6 +167,16 @@ Não usar `BaseScrollablePage` (legado — usa `SingleChildScrollView`, incompat
 
 ---
 
+## Reatividade a troca de organização
+
+Telas dentro do `OrganizationShell` são automaticamente **remontadas** quando a organização logada muda — o shell usa `KeyedSubtree(key: ValueKey(org.id), ...)`, o que descarta todo o estado local (controllers, filtros, flags, scroll) e recria a árvore com a nova org.
+
+**Não declare** `ref.listen(currentOrgProvider, ...)` para resetar estado local — isso é boilerplate desnecessário e proibido.
+
+Para que os **dados** também sejam buscados da nova org: use providers `Family` por `orgId` e leia o id via `ref.watch(currentOrgProvider).id` no `build`.
+
+---
+
 ## Responsividade
 
 | Contexto | Layout |

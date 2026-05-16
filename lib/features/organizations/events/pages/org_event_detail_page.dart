@@ -210,7 +210,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
         organizationId: widget.organizationId,
         eventId: widget.eventId,
       ));
-      ref.invalidate(eventMembershipProvider);
+      ref.invalidate(eventMembershipProvider(widget.organizationId));
       ref.invalidate(
         nextPendingAvailabilityEventProvider(widget.organizationId),
       );

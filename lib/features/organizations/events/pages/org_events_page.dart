@@ -137,7 +137,7 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
   void _applyFilter(EventsFilter newFilter) {
     setState(() => _filter = newFilter);
     ref
-        .read(eventMembershipProvider.notifier)
+        .read(eventMembershipProvider(_orgId).notifier)
         .reset(_orgId, newFilter);
   }
 
@@ -162,11 +162,11 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
     final pos = _scrollController.position;
     if (pos.pixels < pos.maxScrollExtent - 200) return;
 
-    final s = ref.read(eventMembershipProvider);
+    final s = ref.read(eventMembershipProvider(_orgId));
     if (s.isLoadingMore || s.isInitialLoading || !s.hasNextPage) return;
 
     ref
-        .read(eventMembershipProvider.notifier)
+        .read(eventMembershipProvider(_orgId).notifier)
         .loadNextPage(_orgId, _filter);
   }
 
@@ -206,7 +206,7 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
 
   void _handleRetry() {
     ref
-        .read(eventMembershipProvider.notifier)
+        .read(eventMembershipProvider(_orgId).notifier)
         .reset(_orgId, _filter);
   }
 
@@ -239,7 +239,7 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
           );
 
       if (!mounted) return;
-      ref.read(eventMembershipProvider.notifier).updateItem(updated);
+      ref.read(eventMembershipProvider(_orgId).notifier).updateItem(updated);
     } on ApiException catch (e) {
       if (!mounted) return;
       ToastFeedbackService.showToast(
@@ -265,30 +265,13 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
   Widget build(BuildContext context) {
     final orgId = ref.watch(currentOrgProvider).id;
 
-    ref.listen(currentOrgProvider, (prev, next) {
-      if (prev?.id != next.id) {
-        setState(() {
-          _selectedTab = OrgEventsTab.all;
-          _customStatus = null;
-          _customAvailabilityStatus = null;
-          _customEventStatus = null;
-          _customStartDate = null;
-          _customEndDate = null;
-          _searchQuery = '';
-          _hasLoadedOnce = false;
-        });
-        _searchController.clear();
-        _debounce?.cancel();
-        _applyFilter(_buildFilter());
-      }
-    });
-
-    final eventsState = ref.watch(eventMembershipProvider);
+    final eventsState = ref.watch(eventMembershipProvider(orgId));
     final currentUser = ref
         .watch(currentUserMembershipOrganizationProvider(orgId))
-        .asData!
-        .value;
-    final canManageEvents = currentUser.hasPermission(OrganizationPermissionEnum.manageEvents);
+        .asData
+        ?.value;
+    final canManageEvents =
+        currentUser?.hasPermission(OrganizationPermissionEnum.manageEvents) ?? false;
 
     if (!eventsState.isInitialLoading) _hasLoadedOnce = true;
 
@@ -309,7 +292,7 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () => ref
-            .read(eventMembershipProvider.notifier)
+            .read(eventMembershipProvider(_orgId).notifier)
             .resetAsync(_orgId, _filter),
         child: CustomScrollView(
           controller: _scrollController,
@@ -522,7 +505,7 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
                     child: Center(
                       child: TextButton.icon(
                         onPressed: () => ref
-                            .read(eventMembershipProvider.notifier)
+                            .read(eventMembershipProvider(_orgId).notifier)
                             .loadNextPage(_orgId, _filter),
                         icon: const Icon(Icons.refresh_rounded, size: 16),
                         label: const Text('Tentar novamente'),

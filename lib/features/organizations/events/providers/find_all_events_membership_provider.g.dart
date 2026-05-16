@@ -10,7 +10,7 @@ part of 'find_all_events_membership_provider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(EventMembershipNotifier)
-final eventMembershipProvider = EventMembershipNotifierProvider._();
+final eventMembershipProvider = EventMembershipNotifierFamily._();
 
 final class EventMembershipNotifierProvider
     extends
@@ -18,19 +18,26 @@ final class EventMembershipNotifierProvider
           EventMembershipNotifier,
           StateListPaged<OrganizationEventMembershipModel>
         > {
-  EventMembershipNotifierProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'eventMembershipProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  EventMembershipNotifierProvider._({
+    required EventMembershipNotifierFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'eventMembershipProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$eventMembershipNotifierHash();
+
+  @override
+  String toString() {
+    return r'eventMembershipProvider'
+        ''
+        '($argument)';
+  }
 
   @$internal
   @override
@@ -48,14 +55,53 @@ final class EventMembershipNotifierProvider
           ),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    return other is EventMembershipNotifierProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
 }
 
 String _$eventMembershipNotifierHash() =>
-    r'd49aa72ed698f98e357285e28dc15bc0d626beca';
+    r'9428fcd9676c0cc694cbc49673647bc3488f485d';
+
+final class EventMembershipNotifierFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          EventMembershipNotifier,
+          StateListPaged<OrganizationEventMembershipModel>,
+          StateListPaged<OrganizationEventMembershipModel>,
+          StateListPaged<OrganizationEventMembershipModel>,
+          String
+        > {
+  EventMembershipNotifierFamily._()
+    : super(
+        retry: null,
+        name: r'eventMembershipProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  EventMembershipNotifierProvider call(String organizationId) =>
+      EventMembershipNotifierProvider._(argument: organizationId, from: this);
+
+  @override
+  String toString() => r'eventMembershipProvider';
+}
 
 abstract class _$EventMembershipNotifier
     extends $Notifier<StateListPaged<OrganizationEventMembershipModel>> {
-  StateListPaged<OrganizationEventMembershipModel> build();
+  late final _$args = ref.$arg as String;
+  String get organizationId => _$args;
+
+  StateListPaged<OrganizationEventMembershipModel> build(String organizationId);
   @$mustCallSuper
   @override
   void runBuild() {
@@ -76,6 +122,6 @@ abstract class _$EventMembershipNotifier
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    element.handleCreate(ref, () => build(_$args));
   }
 }
