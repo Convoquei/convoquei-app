@@ -30,6 +30,7 @@ export 'foundations/ds_date_badge.dart';
 // ── Components: buttons ───────────────────────────────────────────────────────
 export 'components/buttons/ds_button.dart';
 export 'components/buttons/ds_icon_button.dart';
+export 'components/buttons/ds_square_icon_button.dart';
 
 // ── Components: inputs ────────────────────────────────────────────────────────
 export 'components/inputs/ds_search_input.dart';

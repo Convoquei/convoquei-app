@@ -381,23 +381,9 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
                             opacity: isPartialLoading ? 0.4 : 1.0,
                             child: AbsorbPointer(
                               absorbing: isPartialLoading,
-                              child: GestureDetector(
-                                onTap: _handleCreateEvent,
-                                child: Container(
-                                  width: 48,
-                                  height: 48,
-                                  decoration: BoxDecoration(
-                                    color: context.colors.primary,
-                                    borderRadius: DSRadius.allMd,
-                                    border: Border.all(color: context.colors.border),
-                                    boxShadow: DSElevation.md,
-                                  ),
-                                  child: Icon(
-                                    Icons.add_rounded,
-                                    size: 22,
-                                    color: context.colors.onPrimary,
-                                  ),
-                                ),
+                              child: DSSquareIconButton(
+                                icon: Icons.add_rounded,
+                                onPressed: _handleCreateEvent,
                               ),
                             ),
                           ),

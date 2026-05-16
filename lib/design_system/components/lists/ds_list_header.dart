@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../../foundations/ds_text.dart';
 import '../../theme/ds_context_extensions.dart';
 import '../../tokens/ds_spacing.dart';
-import '../buttons/ds_icon_button.dart';
+import '../buttons/ds_square_icon_button.dart';
+import '../buttons/ds_button.dart';
 import '../inputs/ds_search_input.dart';
 
 class DSListHeader extends StatelessWidget {
@@ -14,8 +15,10 @@ class DSListHeader extends StatelessWidget {
     this.onSearchChanged,
     this.onClear,
     this.counterLabel,
+    this.filterButton,
     this.onActionTap,
     this.actionIcon = Icons.add_rounded,
+    this.actionSchema = DSButtonSchema.primary,
     this.actionTooltip,
     this.enabled = true,
   });
@@ -25,8 +28,12 @@ class DSListHeader extends StatelessWidget {
   final ValueChanged<String>? onSearchChanged;
   final VoidCallback? onClear;
   final String? counterLabel;
+  /// Widget opcional renderizado entre o campo de busca e o botão de ação.
+  /// Tipicamente um [DSFilterButton].
+  final Widget? filterButton;
   final VoidCallback? onActionTap;
   final IconData actionIcon;
+  final DSButtonSchema actionSchema;
   final String? actionTooltip;
   final bool enabled;
 
@@ -42,6 +49,13 @@ class DSListHeader extends StatelessWidget {
       child: Row(
         children: [
           Expanded(child: _leading(context)),
+          if (filterButton != null) ...[
+            const SizedBox(width: DSSpacing.md),
+            Opacity(
+              opacity: enabled ? 1.0 : 0.4,
+              child: AbsorbPointer(absorbing: !enabled, child: filterButton!),
+            ),
+          ],
           if (onActionTap != null) ...[
             const SizedBox(width: DSSpacing.md),
             _actionButton(context),
@@ -80,10 +94,9 @@ class DSListHeader extends StatelessWidget {
         absorbing: !enabled,
         child: Tooltip(
           message: actionTooltip ?? '',
-          child: DSIconButton(
+          child: DSSquareIconButton(
             icon: actionIcon,
-            backgroundColor: context.colors.primary,
-            iconColor: context.colors.onPrimary,
+            schema: actionSchema,
             onPressed: onActionTap,
           ),
         ),

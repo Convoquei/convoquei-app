@@ -13,6 +13,7 @@ final groupsPagedProvider =
 
 class GroupsNotifier extends Notifier<StateListPaged<OrganizationGroupModel>> {
   int _generation = 0;
+  String? _currentName;
 
   @override
   StateListPaged<OrganizationGroupModel> build() {
@@ -37,7 +38,11 @@ class GroupsNotifier extends Notifier<StateListPaged<OrganizationGroupModel>> {
 
       final result = await repo.findAllGroups(
         organizationId,
-        FindAllOrganizationGroupsRequest(page: state.page, size: size),
+        FindAllOrganizationGroupsRequest(
+          page: state.page,
+          size: size,
+          name: _currentName,
+        ),
       );
 
       if (!ref.mounted) return;
@@ -62,14 +67,16 @@ class GroupsNotifier extends Notifier<StateListPaged<OrganizationGroupModel>> {
     }
   }
 
-  void reset() {
+  void reset({String? name}) {
     _generation++;
+    _currentName = name;
     state = const StateListPaged();
     loadNextPage();
   }
 
-  Future<void> resetAsync() {
+  Future<void> resetAsync({String? name}) {
     _generation++;
+    _currentName = name;
     state = const StateListPaged();
     return loadNextPage();
   }

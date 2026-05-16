@@ -36,9 +36,6 @@ class AppHeader extends ConsumerWidget implements PreferredSizeWidget {
         final location = GoRouterState.of(context).uri.toString();
         DSBaseModal.show(context, OrgSwitcherSheet(currentLocation: location));
       },
-      onSettingsTap: currentOrg != null
-          ? () => context.go(AppPaths.orgMinistry)
-          : null,
       onNotificationsTap: () {
         // TODO: navegar para /notifications quando a tela existir.
       },

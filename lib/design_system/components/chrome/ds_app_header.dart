@@ -12,7 +12,6 @@
 //     currentContextLabel: 'ICM Colina de Laranjeiras 1',
 //     onProfileTap: _openProfile,
 //     onContextTap: _openSwitcher,
-//     onSettingsTap: _openSettings, // null esconde o botão
 //     onNotificationsTap: _openNotifications,
 //     hasNotifications: true,
 //   )
@@ -31,7 +30,6 @@ class DSAppHeader extends StatelessWidget implements PreferredSizeWidget {
   final String currentContextLabel;
   final VoidCallback? onProfileTap;
   final VoidCallback? onContextTap;
-  final VoidCallback? onSettingsTap;
   final VoidCallback? onNotificationsTap;
   final bool hasNotifications;
 
@@ -42,7 +40,6 @@ class DSAppHeader extends StatelessWidget implements PreferredSizeWidget {
     this.userAvatarUrl,
     this.onProfileTap,
     this.onContextTap,
-    this.onSettingsTap,
     this.onNotificationsTap,
     this.hasNotifications = false,
   });
@@ -91,12 +88,7 @@ class DSAppHeader extends StatelessWidget implements PreferredSizeWidget {
                         onContextTap: onContextTap,
                       ),
                     ),
-                    if (onSettingsTap != null)
-                      _HeaderAction(
-                        icon: Icons.settings_rounded,
-                        onPressed: onSettingsTap,
-                        tooltip: 'Configurações',
-                      ),
+
                     _HeaderAction(
                       icon: Icons.notifications_rounded,
                       onPressed: onNotificationsTap,
@@ -140,11 +132,7 @@ class _Identity extends StatelessWidget {
         GestureDetector(
           onTap: onProfileTap,
           behavior: HitTestBehavior.opaque,
-          child: DSAvatar(
-            name: userName,
-            avatarUrl: userAvatarUrl,
-            radius: 20,
-          ),
+          child: DSAvatar(name: userName, avatarUrl: userAvatarUrl, radius: 20),
         ),
         const SizedBox(width: DSSpacing.md),
         Expanded(

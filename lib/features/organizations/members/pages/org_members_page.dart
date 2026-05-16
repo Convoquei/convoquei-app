@@ -4,7 +4,6 @@ import 'package:convoquei_app/app/router.dart';
 import 'package:convoquei_app/core/network/exceptions/api_exception.dart';
 import 'package:convoquei_app/core/services/toast_feedback_service.dart';
 import 'package:convoquei_app/core/services/user_feedback_service.dart';
-import 'package:convoquei_app/core/theme/app_theme.dart';
 import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/members/models/enums/manage_member_action.dart';
 import 'package:convoquei_app/features/organizations/members/providers/kick_member_provider.dart';
@@ -188,228 +187,129 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
           }
 
           return RefreshIndicator(
-        onRefresh: () =>
-            ref.read(membersPagedProvider.notifier).resetAsync(name: _currentName),
-        child: CustomScrollView(
-          controller: _scrollController,
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        onChanged: _handleSearchChanged,
-                        enabled: !isPartialLoading,
-                        decoration: const InputDecoration(
-                          hintText: 'Buscar membro...',
-                          prefixIcon: Icon(Icons.search_rounded, size: 20),
+            onRefresh: () =>
+                ref.read(membersPagedProvider.notifier).resetAsync(name: _currentName),
+            child: CustomScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: DSListHeader(
+                    searchController: _searchController,
+                    searchHint: 'Buscar membro...',
+                    onSearchChanged: _handleSearchChanged,
+                    onClear: () {
+                      _searchController.clear();
+                      ref.read(membersPagedProvider.notifier).reset();
+                    },
+                    onActionTap: canInvite
+                        ? () => InviteMemberByEmailModal.show(context, orgId!)
+                        : null,
+                    actionIcon: Icons.person_add_rounded,
+                    actionTooltip: 'Convidar membro',
+                    enabled: !isPartialLoading,
+                  ),
+                ),
+
+                if (isPartialLoading)
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, _) => const Padding(
+                          padding: EdgeInsets.only(bottom: 4),
+                          child: MemberListTileSkeleton(),
                         ),
+                        childCount: 5,
                       ),
                     ),
-                    if (canInvite) ...[
-                      const SizedBox(width: 12),
-                      Opacity(
-                        opacity: isPartialLoading ? 0.4 : 1.0,
-                        child: AbsorbPointer(
-                          absorbing: isPartialLoading,
-                          child: Material(
-                            color: AppTheme.primaryColor,
-                            borderRadius: BorderRadius.circular(6),
-                            child: InkWell(
-                              onTap: () => InviteMemberByEmailModal.show(
-                                context,
-                                orgId!,
-                              ),
-                              borderRadius: BorderRadius.circular(6),
-                              child: const SizedBox(
-                                height: 40,
-                                width: 40,
-                                child: Icon(Icons.person_add, color: Colors.white),
-                              ),
+                  )
+                else if (state.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: _searchController.text.isNotEmpty
+                        ? const DSEmptyState(
+                            icon: Icons.search_off_rounded,
+                            title: 'Nenhum resultado encontrado',
+                            description: 'Tente buscar por outro nome.',
+                          )
+                        : DSEmptyState(
+                            icon: Icons.group_rounded,
+                            title: 'Nenhum membro ainda',
+                            description: 'Convide membros para começar a organizar sua equipe.',
+                            actionLabel: canInvite ? 'Convidar membro' : null,
+                            onAction: canInvite
+                                ? () => InviteMemberByEmailModal.show(context, orgId!)
+                                : null,
+                          ),
+                  )
+                else ...[
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final m = state.items[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: MemberListTile(
+                              key: ValueKey(m.id),
+                              member: m,
+                              isCurrentUser: m.id == currentUser?.id,
+                              onOptionsPressed: currentUser != null
+                                  ? () => ManageMemberModal.show(
+                                        context,
+                                        m,
+                                        currentUser,
+                                        (action) {
+                                          _handleActionManageMember(action, m);
+                                          return true;
+                                        },
+                                      )
+                                  : null,
                             ),
+                          );
+                        },
+                        childCount: state.items.length,
+                      ),
+                    ),
+                  ),
+
+                  if (state.isLoadingMore)
+                    const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 24),
+                        child: Center(child: DSSpinner(size: 32)),
+                      ),
+                    ),
+
+                  if (state.error != null && state.items.isNotEmpty)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                          horizontal: 20,
+                        ),
+                        child: Center(
+                          child: DSButton(
+                            label: 'Tentar novamente',
+                            schema: DSButtonSchema.ghost,
+                            size: DSButtonSize.sm,
+                            fullWidth: false,
+                            onPressed: () =>
+                                ref.read(membersPagedProvider.notifier).loadNextPage(),
                           ),
                         ),
                       ),
-                    ],
-                  ],
-                ),
-              ),
+                    ),
+
+                  if (!state.hasNextPage && !state.isLoadingMore)
+                    const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                ],
+              ],
             ),
-
-            if (isPartialLoading)
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, _) => const Padding(
-                      padding: EdgeInsets.only(bottom: 4),
-                      child: MemberListTileSkeleton(),
-                    ),
-                    childCount: 5,
-                  ),
-                ),
-              )
-            else if (state.isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Align(
-                  alignment: const Alignment(0, -0.2),
-                  child: _EmptyState(
-                    hasSearch: _searchController.text.isNotEmpty,
-                    canInvite: canInvite,
-                    onInvite: () => InviteMemberByEmailModal.show(
-                      context,
-                      orgId!,
-                    ),
-                  ),
-                ),
-              )
-            else ...[
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final m = state.items[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
-                        child: MemberListTile(
-                          key: ValueKey(m.id),
-                          member: m,
-                          isCurrentUser: m.id == currentUser?.id,
-                          onOptionsPressed: currentUser != null
-                              ? () => ManageMemberModal.show(
-                                    context,
-                                    m,
-                                    currentUser,
-                                    (action) {
-                                      _handleActionManageMember(action, m);
-                                      return true;
-                                    },
-                                  )
-                              : null,
-                        ),
-                      );
-                    },
-                    childCount: state.items.length,
-                  ),
-                ),
-              ),
-
-              if (state.isLoadingMore)
-                const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                ),
-
-              if (state.error != null && state.items.isNotEmpty)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 20,
-                    ),
-                    child: Center(
-                      child: TextButton.icon(
-                        onPressed: () =>
-                            ref.read(membersPagedProvider.notifier).loadNextPage(),
-                        icon: const Icon(Icons.refresh_rounded, size: 16),
-                        label: const Text('Tentar novamente'),
-                      ),
-                    ),
-                  ),
-                ),
-
-              if (!state.hasNextPage && !state.isLoadingMore)
-                const SliverToBoxAdapter(child: SizedBox(height: 32)),
-            ],
-          ],
-        ),
-      );
+          );
         },
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({
-    required this.hasSearch,
-    required this.canInvite,
-    required this.onInvite,
-  });
-
-  final bool hasSearch;
-  final bool canInvite;
-  final VoidCallback onInvite;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: AppTheme.surfaceSubtle,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              hasSearch ? '🔍' : '👥',
-              style: const TextStyle(fontSize: 36),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            hasSearch ? 'Nenhum resultado encontrado' : 'Nenhum membro ainda',
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: AppTheme.textPrimary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            hasSearch
-                ? 'Tente buscar por outro nome.'
-                : 'Convide membros para começar a organizar sua equipe.',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: AppTheme.textSecondary,
-              height: 1.5,
-            ),
-          ),
-          if (!hasSearch && canInvite) ...[
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: onInvite,
-                icon: const Icon(Icons.person_add_rounded, size: 18),
-                label: const Text('Convidar membro'),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ],
       ),
     );
   }
