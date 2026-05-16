@@ -185,10 +185,7 @@ class HomePage extends ConsumerWidget {
                             ref
                                 .read(selectedOrganizationProvider.notifier)
                                 .select(org);
-                            context.goNamed(
-                              AppRoutes.orgHome,
-                              pathParameters: {'orgId': org.id},
-                            );
+                            context.go(AppPaths.orgHome);
                           },
                         ),
                       ),

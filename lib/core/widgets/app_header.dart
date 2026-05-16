@@ -2,18 +2,14 @@ import 'package:convoquei_app/app/router.dart';
 import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/auth/providers/auth_providers.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_model.dart';
-import 'package:convoquei_app/features/organizations/shared/providers/organization_providers.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/selected_organization_provider.dart';
 import 'package:convoquei_app/features/organizations/shared/widgets/org_switcher_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Header padrão usado em telas raiz do app (Home, OrgHome, Eventos, etc.).
-///
-/// Deriva o contexto atual (organização) da rota — `:orgId` no path — com
-/// fallback para [selectedOrganizationProvider]. Telas internas que "fogem da
-/// pilha" (ex.: Configurações da organização) não devem usar este header.
+/// Header padrão das telas raiz (Home, abas da org). Mostra a org atual
+/// via [selectedOrganizationProvider] e permite trocar de contexto.
 class AppHeader extends ConsumerWidget implements PreferredSizeWidget {
   const AppHeader({super.key});
 
@@ -41,10 +37,7 @@ class AppHeader extends ConsumerWidget implements PreferredSizeWidget {
         DSBaseModal.show(context, OrgSwitcherSheet(currentLocation: location));
       },
       onSettingsTap: currentOrg != null
-          ? () => context.goNamed(
-                AppRoutes.orgSettings,
-                pathParameters: {'orgId': currentOrg.id},
-              )
+          ? () => context.go(AppPaths.orgMinistry)
           : null,
       onNotificationsTap: () {
         // TODO: navegar para /notifications quando a tela existir.
@@ -52,22 +45,9 @@ class AppHeader extends ConsumerWidget implements PreferredSizeWidget {
     );
   }
 
-  /// Determines the current organization from the route (`:orgId`), falling
-  /// back to [selectedOrganizationProvider] when the route param is absent
-  /// (or to enrich it with a freshly fetched model). Returns null on /home or
-  /// any route outside the org shell.
   OrganizationModel? _resolveCurrentOrg(BuildContext context, WidgetRef ref) {
-    final routeOrgId =
-        GoRouterState.of(context).pathParameters['orgId'];
-    final selected = ref.watch(selectedOrganizationProvider);
-
-    if (routeOrgId == null) return null;
-
-    if (selected != null && selected.id == routeOrgId) return selected;
-
-    final orgs = ref.watch(userOrganizationsProvider).asData?.value;
-    final found =
-        orgs?.where((o) => o.id == routeOrgId).cast<OrganizationModel?>().firstOrNull;
-    return found ?? selected;
+    final loc = GoRouterState.of(context).matchedLocation;
+    if (!loc.startsWith('/org')) return null;
+    return ref.watch(selectedOrganizationProvider);
   }
 }

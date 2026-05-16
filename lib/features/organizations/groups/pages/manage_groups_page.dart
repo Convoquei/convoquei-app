@@ -54,30 +54,31 @@ class _ManageGroupsPageState extends ConsumerState<ManageGroupsPage> {
     final state = ref.watch(groupsPagedProvider);
     if (!state.isInitialLoading) _hasLoadedOnce = true;
 
-    if (state.isInitialLoading && !_hasLoadedOnce) {
-      return const DSLoadingScreen(
-        label: 'Carregando grupos...',
-        description: 'Buscando grupos da organização',
-        skeleton: DSLoadingSkeleton.list,
-      );
-    }
-
-    if (state.hasError && state.items.isEmpty && !state.isInitialLoading) {
-      return Scaffold(
-        body: DSErrorRetryState(
-          message: 'Não foi possível carregar os grupos.',
-          description: 'Verifique sua conexão e tente novamente.',
-          onRetry: () => ref.read(groupsPagedProvider.notifier).reset(),
-        ),
-      );
-    }
-
     final isPartialLoading = state.isInitialLoading && _hasLoadedOnce;
     final count = state.items.length;
     final counterLabel = '$count ${count == 1 ? 'grupo' : 'grupos'}';
 
     return Scaffold(
-      body: RefreshIndicator(
+      appBar: AppBar(title: const Text('Gerenciar Grupos')),
+      body: Builder(
+        builder: (context) {
+          if (state.isInitialLoading && !_hasLoadedOnce) {
+            return const DSLoadingScreen(
+              label: 'Carregando grupos...',
+              description: 'Buscando grupos da organização',
+              skeleton: DSLoadingSkeleton.list,
+            );
+          }
+
+          if (state.hasError && state.items.isEmpty && !state.isInitialLoading) {
+            return DSErrorRetryState(
+              message: 'Não foi possível carregar os grupos.',
+              description: 'Verifique sua conexão e tente novamente.',
+              onRetry: () => ref.read(groupsPagedProvider.notifier).reset(),
+            );
+          }
+
+          return RefreshIndicator(
         onRefresh: () => ref.read(groupsPagedProvider.notifier).resetAsync(),
         child: CustomScrollView(
           controller: _scrollController,
@@ -154,6 +155,8 @@ class _ManageGroupsPageState extends ConsumerState<ManageGroupsPage> {
             ],
           ],
         ),
+      );
+        },
       ),
     );
   }

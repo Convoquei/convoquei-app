@@ -73,28 +73,29 @@ class _ManageFunctionsPageState extends ConsumerState<ManageFunctionsPage> {
     final state = ref.watch(functionsProvider);
     if (!state.isInitialLoading) _hasLoadedOnce = true;
 
-    if (state.isInitialLoading && !_hasLoadedOnce) {
-      return const DSLoadingScreen(
-        label: 'Carregando funções...',
-        description: 'Buscando funções da organização',
-        skeleton: DSLoadingSkeleton.list,
-      );
-    }
-
-    if (state.hasError && state.items.isEmpty && !state.isInitialLoading) {
-      return Scaffold(
-        body: DSErrorRetryState(
-          message: 'Não foi possível carregar as funções.',
-          description: 'Verifique sua conexão e tente novamente.',
-          onRetry: () => ref.read(functionsProvider.notifier).reset(name: _currentName),
-        ),
-      );
-    }
-
     final isPartialLoading = state.isInitialLoading && _hasLoadedOnce;
 
     return Scaffold(
-      body: RefreshIndicator(
+      appBar: AppBar(title: const Text('Gerenciar Funções')),
+      body: Builder(
+        builder: (context) {
+          if (state.isInitialLoading && !_hasLoadedOnce) {
+            return const DSLoadingScreen(
+              label: 'Carregando funções...',
+              description: 'Buscando funções da organização',
+              skeleton: DSLoadingSkeleton.list,
+            );
+          }
+
+          if (state.hasError && state.items.isEmpty && !state.isInitialLoading) {
+            return DSErrorRetryState(
+              message: 'Não foi possível carregar as funções.',
+              description: 'Verifique sua conexão e tente novamente.',
+              onRetry: () => ref.read(functionsProvider.notifier).reset(name: _currentName),
+            );
+          }
+
+          return RefreshIndicator(
         onRefresh: () => ref.read(functionsProvider.notifier).resetAsync(name: _currentName),
         child: CustomScrollView(
           controller: _scrollController,
@@ -177,6 +178,8 @@ class _ManageFunctionsPageState extends ConsumerState<ManageFunctionsPage> {
             ],
           ],
         ),
+      );
+        },
       ),
     );
   }

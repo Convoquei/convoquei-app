@@ -100,16 +100,14 @@ class _OrgSwitcherSheetState extends DSBaseModalState<OrgSwitcherSheet> {
   }
 }
 
-/// Mapeia a localização atual para o caminho-base da mesma seção na nova org.
-/// Garante que trocar de org mantém o contexto (eventos → eventos, etc.).
-String _resolveTargetPath(String currentLocation, String newOrgId) {
-  final match = RegExp(r'^/orgs/[^/]+/([^/]+)').firstMatch(currentLocation);
-  return switch (match?.group(1)) {
-    'events' => AppPaths.orgEvents(newOrgId),
-    'scales' => AppPaths.orgScales(newOrgId),
-    'team' => AppPaths.orgTeam(newOrgId),
-    _ => AppPaths.orgHome(newOrgId),
-  };
+/// Mantém o contexto de seção ao trocar de org (eventos → eventos, etc.).
+String _resolveTargetPath(String currentLocation) {
+  if (currentLocation.startsWith('/org/event')) return AppPaths.orgEvents;
+  if (currentLocation.startsWith(AppPaths.orgEvents)) return AppPaths.orgEvents;
+  if (currentLocation.startsWith(AppPaths.orgScales)) return AppPaths.orgScales;
+  if (currentLocation.startsWith(AppPaths.orgTeam)) return AppPaths.orgTeam;
+  if (currentLocation.startsWith(AppPaths.orgMinistry)) return AppPaths.orgMinistry;
+  return AppPaths.orgHome;
 }
 
 class _SectionLabel extends StatelessWidget {
@@ -179,7 +177,7 @@ class _OrgOption extends ConsumerWidget {
       onTap: () {
         DSBaseModal.hide(context);
         ref.read(selectedOrganizationProvider.notifier).select(organization);
-        context.go(_resolveTargetPath(currentLocation, organization.id));
+        context.go(_resolveTargetPath(currentLocation));
       },
     );
   }

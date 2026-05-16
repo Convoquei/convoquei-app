@@ -6,8 +6,8 @@ import 'package:convoquei_app/features/organizations/home/providers/next_assigne
 import 'package:convoquei_app/features/organizations/home/providers/next_pending_availability_event_provider.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/modals/invite_member_by_email_modal.dart';
 import 'package:convoquei_app/features/organizations/shared/models/enums/organization_permission.dart';
+import 'package:convoquei_app/features/organizations/shared/providers/current_org_provider.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/organization_providers.dart';
-import 'package:convoquei_app/features/organizations/shared/providers/selected_organization_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -33,7 +33,7 @@ class _OrgHomePageState extends ConsumerState<OrgHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final orgId = ref.watch(selectedOrganizationProvider)!.id;
+    final orgId = ref.watch(currentOrgProvider).id;
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -517,10 +517,7 @@ class _QuickMenu extends ConsumerWidget {
         (
           icon: Icons.calendar_today_rounded,
           label: 'Novo Evento',
-          onTap: () => context.pushNamed(
-            AppRoutes.orgCreateEvent,
-            pathParameters: {'orgId': orgId},
-          ),
+          onTap: () => context.push(AppPaths.orgEventNew),
         ),
       if (canInvite)
         (
@@ -531,18 +528,12 @@ class _QuickMenu extends ConsumerWidget {
       (
         icon: Icons.list_alt_rounded,
         label: 'Escalas',
-        onTap: () => context.goNamed(
-          AppRoutes.orgScales,
-          pathParameters: {'orgId': orgId},
-        ),
+        onTap: () => context.go(AppPaths.orgScales),
       ),
       (
         icon: Icons.people_rounded,
         label: 'Equipe',
-        onTap: () => context.pushNamed(
-          AppRoutes.orgTeam,
-          pathParameters: {'orgId': orgId},
-        ),
+        onTap: () => context.push(AppPaths.orgTeam),
       ),
     ];
 
@@ -816,10 +807,7 @@ class _NextAssignedCard extends StatelessWidget {
               variant: DSTextVariant.titleMedium,
             ),
             GestureDetector(
-              onTap: () => context.goNamed(
-                AppRoutes.orgScales,
-                pathParameters: {'orgId': orgId},
-              ),
+              onTap: () => context.go(AppPaths.orgScales),
               child: DSText(
                 'Ver todas',
                 variant: DSTextVariant.labelSmall,
@@ -831,10 +819,7 @@ class _NextAssignedCard extends StatelessWidget {
         const SizedBox(height: DSSpacing.md),
         DSCard(
           padding: EdgeInsets.zero,
-          onTap: () => context.pushNamed(
-            AppRoutes.orgEventDetail,
-            pathParameters: {'orgId': orgId, 'eventId': event.id},
-          ),
+          onTap: () => context.push(AppPaths.orgEventDetail(event.id)),
           child: Padding(
             padding: const EdgeInsets.all(DSSpacing.lg),
             child: Row(

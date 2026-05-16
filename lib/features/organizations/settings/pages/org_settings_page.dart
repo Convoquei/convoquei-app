@@ -4,20 +4,20 @@ import 'package:convoquei_app/features/organizations/settings/widgets/organizati
 import 'package:convoquei_app/features/organizations/settings/widgets/section_buttons_organization_settings.dart';
 import 'package:convoquei_app/features/organizations/settings/widgets/subscription_plan_card.dart';
 import 'package:convoquei_app/features/organizations/shared/models/enums/organization_permission.dart';
-import 'package:convoquei_app/features/organizations/shared/models/organization_model.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_my_member_profile_model.dart';
+import 'package:convoquei_app/features/organizations/shared/providers/current_org_provider.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/organization_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class OrgSettingsPage extends ConsumerWidget {
-  final OrganizationModel organization;
-
-  const OrgSettingsPage({super.key, required this.organization});
+  const OrgSettingsPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final organization = ref.watch(currentOrgProvider);
+
     final OrganizationMyMemberProfile currentUser = ref
         .watch(currentUserMembershipOrganizationProvider(organization.id))
         .asData!
@@ -38,8 +38,6 @@ class OrgSettingsPage extends ConsumerWidget {
     final canManageFunctions = currentUser.hasPermission(
       OrganizationPermissionEnum.manageFunctions,
     );
-
-    final orgId = organization.id;
 
     return SingleChildScrollView(
       child: Padding(
@@ -62,10 +60,7 @@ class OrgSettingsPage extends ConsumerWidget {
                       ? 'Adicione ou remova membros da organização'
                       : 'Veja a lista de membros da organização',
                   outlined: true,
-                  onTap: () => context.pushNamed(
-                    AppRoutes.orgTeam,
-                    pathParameters: {'orgId': orgId},
-                  ),
+                  onTap: () => context.push(AppPaths.orgTeam),
                 ),
                 if (canManageFunctions)
                   DSActionCard(
@@ -74,10 +69,7 @@ class OrgSettingsPage extends ConsumerWidget {
                     subtitle:
                         'Crie e gerencie as funções dos membros da organização',
                     outlined: true,
-                    onTap: () => context.pushNamed(
-                      AppRoutes.orgSettingsFunctions,
-                      pathParameters: {'orgId': orgId},
-                    ),
+                    onTap: () => context.push(AppPaths.orgMinistryFunctions),
                   ),
                 DSActionCard(
                   icon: Icons.groups_outlined,
@@ -86,10 +78,7 @@ class OrgSettingsPage extends ConsumerWidget {
                       ? 'Crie e organize grupos para facilitar a gestão'
                       : 'Veja os grupos da organização',
                   outlined: true,
-                  onTap: () => context.pushNamed(
-                    AppRoutes.orgSettingsGroups,
-                    pathParameters: {'orgId': orgId},
-                  ),
+                  onTap: () => context.push(AppPaths.orgMinistryGroups),
                 ),
                 DSActionCard(
                   icon: Icons.shield_outlined,
@@ -97,10 +86,7 @@ class OrgSettingsPage extends ConsumerWidget {
                   subtitle: 'Gerencie os papéis da organização (Admin, Líder)',
                   outlined: true,
                   onTap: canManageRoles
-                      ? () => context.pushNamed(
-                          AppRoutes.orgSettingsRoles,
-                          pathParameters: {'orgId': orgId},
-                        )
+                      ? () => context.push(AppPaths.orgMinistryRoles)
                       : null,
                 ),
                 DSActionCard(

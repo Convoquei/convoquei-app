@@ -57,31 +57,34 @@ class OrgEventDetailPage extends ConsumerWidget {
         .asData
         ?.value;
 
-    return detailsAsync.when(
-      loading: () => const DSLoadingScreen(
-        label: 'Carregando evento...',
-        description: 'Buscando detalhes e participantes',
-        skeleton: DSLoadingSkeleton.details,
-      ),
-      error: (_, _) => Center(
-        child: DSErrorRetryState(
-          icon: Icons.event_busy_rounded,
-          message: 'Não foi possível carregar o evento',
-          description: 'Verifique sua conexão e tente novamente.',
-          onRetry: () => ref.invalidate(
-            findEventDetailsByIdProvider(
-              organizationId: organizationId,
-              eventId: eventId,
+    return Scaffold(
+      appBar: AppBar(title: const Text('Detalhes do Evento')),
+      body: detailsAsync.when(
+        loading: () => const DSLoadingScreen(
+          label: 'Carregando evento...',
+          description: 'Buscando detalhes e participantes',
+          skeleton: DSLoadingSkeleton.details,
+        ),
+        error: (_, _) => Center(
+          child: DSErrorRetryState(
+            icon: Icons.event_busy_rounded,
+            message: 'Não foi possível carregar o evento',
+            description: 'Verifique sua conexão e tente novamente.',
+            onRetry: () => ref.invalidate(
+              findEventDetailsByIdProvider(
+                organizationId: organizationId,
+                eventId: eventId,
+              ),
             ),
           ),
         ),
-      ),
-      data: (details) => _EventDetailContent(
-        organizationId: organizationId,
-        eventId: eventId,
-        details: details,
-        canManageEvents: canManageEvents,
-        currentMember: currentMember,
+        data: (details) => _EventDetailContent(
+          organizationId: organizationId,
+          eventId: eventId,
+          details: details,
+          canManageEvents: canManageEvents,
+          currentMember: currentMember,
+        ),
       ),
     );
   }
@@ -432,13 +435,7 @@ class _EventOptionsModalState extends DSBaseModalState<_EventOptionsModal> {
             description: 'Alterar data, local e configurações',
             onTap: () {
               DSBaseModal.hide(context);
-              context.pushNamed(
-                AppRoutes.orgEditEvent,
-                pathParameters: {
-                  'orgId': widget.organizationId,
-                  'eventId': widget.eventId,
-                },
-              );
+              context.push(AppPaths.orgEventEdit(widget.eventId));
             },
           ),
         ),

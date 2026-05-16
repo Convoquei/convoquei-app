@@ -273,28 +273,29 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
     final state = ref.watch(rolesProvider);
     if (!state.isInitialLoading) _hasLoadedOnce = true;
 
-    if (state.isInitialLoading && !_hasLoadedOnce) {
-      return const DSLoadingScreen(
-        label: 'Carregando papéis...',
-        description: 'Buscando papéis da organização',
-        skeleton: DSLoadingSkeleton.list,
-      );
-    }
-
-    if (state.hasError && state.items.isEmpty && !state.isInitialLoading) {
-      return Scaffold(
-        body: DSErrorRetryState(
-          message: 'Não foi possível carregar os papéis.',
-          description: 'Verifique sua conexão e tente novamente.',
-          onRetry: () => ref.read(rolesProvider.notifier).reset(),
-        ),
-      );
-    }
-
     final isPartialLoading = state.isInitialLoading && _hasLoadedOnce;
 
     return Scaffold(
-      body: RefreshIndicator(
+      appBar: AppBar(title: const Text('Gerenciar Papéis')),
+      body: Builder(
+        builder: (context) {
+          if (state.isInitialLoading && !_hasLoadedOnce) {
+            return const DSLoadingScreen(
+              label: 'Carregando papéis...',
+              description: 'Buscando papéis da organização',
+              skeleton: DSLoadingSkeleton.list,
+            );
+          }
+
+          if (state.hasError && state.items.isEmpty && !state.isInitialLoading) {
+            return DSErrorRetryState(
+              message: 'Não foi possível carregar os papéis.',
+              description: 'Verifique sua conexão e tente novamente.',
+              onRetry: () => ref.read(rolesProvider.notifier).reset(),
+            );
+          }
+
+          return RefreshIndicator(
         onRefresh: () => ref.read(rolesProvider.notifier).resetAsync(),
         child: CustomScrollView(
           controller: _scrollController,
@@ -366,6 +367,8 @@ class _ManageRolesPageState extends ConsumerState<ManageRolesPage> {
             ],
           ],
         ),
+      );
+        },
       ),
     );
   }

@@ -5,9 +5,7 @@ import 'package:convoquei_app/core/network/exceptions/api_exception.dart';
 import 'package:convoquei_app/core/services/toast_feedback_service.dart';
 import 'package:convoquei_app/core/services/user_feedback_service.dart';
 import 'package:convoquei_app/core/theme/app_theme.dart';
-import 'package:convoquei_app/core/widgets/app_loading_info.dart';
-import 'package:convoquei_app/core/widgets/app_loading_screen.dart';
-import 'package:convoquei_app/core/widgets/error_retry_state.dart';
+import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/members/models/enums/manage_member_action.dart';
 import 'package:convoquei_app/features/organizations/members/providers/kick_member_provider.dart';
 import 'package:convoquei_app/features/organizations/members/providers/list_all_members_query_provider.dart';
@@ -98,10 +96,7 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
             orgId,
             onNavigateToSettings: () {
               if (!mounted) return;
-              context.pushNamed(
-                AppRoutes.orgSettings,
-                pathParameters: {'orgId': orgId},
-              );
+              context.push(AppPaths.orgMinistry);
             },
           );
         });
@@ -114,10 +109,7 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
             orgId,
             onNavigateToSettings: () {
               if (!mounted) return;
-              context.goNamed(
-                AppRoutes.orgSettingsFunctions,
-                pathParameters: {'orgId': orgId},
-              );
+              context.push(AppPaths.orgMinistryFunctions);
             },
           );
         });
@@ -130,10 +122,7 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
             orgId,
             onNavigateToSettings: () {
               if (!mounted) return;
-              context.goNamed(
-                AppRoutes.orgSettingsRoles,
-                pathParameters: {'orgId': orgId},
-              );
+              context.push(AppPaths.orgMinistryRoles);
             },
           );
         });
@@ -174,32 +163,31 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
 
     if (!state.isInitialLoading) _hasLoadedOnce = true;
 
-    if (state.isInitialLoading && !_hasLoadedOnce) {
-      return const AppLoadingScreen(
-        skeleton: AppLoadingSkeleton.list,
-        content: AppLoadingInfo(
-          label: 'Carregando membros...',
-          description: 'Buscando membros da organização',
-        ),
-      );
-    }
-
-    if (state.error != null && state.items.isEmpty && !state.isInitialLoading) {
-      return Scaffold(
-        body: Center(
-          child: ErrorRetryState(
-            onRetry: () =>
-                ref.read(membersPagedProvider.notifier).reset(name: _currentName),
-            message: state.error.toString(),
-          ),
-        ),
-      );
-    }
-
     final isPartialLoading = state.isInitialLoading && _hasLoadedOnce;
 
     return Scaffold(
-      body: RefreshIndicator(
+      appBar: AppBar(title: const Text('Membros')),
+      body: Builder(
+        builder: (context) {
+          if (state.isInitialLoading && !_hasLoadedOnce) {
+            return const DSLoadingScreen(
+              label: 'Carregando membros...',
+              description: 'Buscando membros da organização',
+              skeleton: DSLoadingSkeleton.list,
+            );
+          }
+
+          if (state.error != null && state.items.isEmpty && !state.isInitialLoading) {
+            return Center(
+              child: DSErrorRetryState(
+                onRetry: () =>
+                    ref.read(membersPagedProvider.notifier).reset(name: _currentName),
+                message: state.error.toString(),
+              ),
+            );
+          }
+
+          return RefreshIndicator(
         onRefresh: () =>
             ref.read(membersPagedProvider.notifier).resetAsync(name: _currentName),
         child: CustomScrollView(
@@ -343,6 +331,8 @@ class _OrgMembersPageState extends ConsumerState<OrgMembersPage> {
             ],
           ],
         ),
+      );
+        },
       ),
     );
   }

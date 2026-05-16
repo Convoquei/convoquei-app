@@ -22,6 +22,7 @@ import 'package:convoquei_app/features/organizations/events/models/enums/organiz
 import 'package:convoquei_app/features/organizations/events/widgets/function_selection_modal.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/month_divider.dart';
 import 'package:convoquei_app/features/organizations/shared/models/enums/organization_permission.dart';
+import 'package:convoquei_app/features/organizations/shared/providers/current_org_provider.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/organization_providers.dart';
 import 'package:convoquei_app/app/router.dart';
 import 'package:flutter/material.dart';
@@ -29,12 +30,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class OrgEventsPage extends ConsumerStatefulWidget {
-  const OrgEventsPage({
-    super.key,
-    required this.organizationId,
-  });
-
-  final String organizationId;
+  const OrgEventsPage({super.key});
 
   @override
   ConsumerState<OrgEventsPage> createState() => _OrgEventsPageState();
@@ -136,11 +132,13 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
     );
   }
 
+  String get _orgId => ref.read(currentOrgProvider).id;
+
   void _applyFilter(EventsFilter newFilter) {
     setState(() => _filter = newFilter);
     ref
         .read(eventMembershipProvider.notifier)
-        .reset(widget.organizationId, newFilter);
+        .reset(_orgId, newFilter);
   }
 
   @override
@@ -169,7 +167,7 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
 
     ref
         .read(eventMembershipProvider.notifier)
-        .loadNextPage(widget.organizationId, _filter);
+        .loadNextPage(_orgId, _filter);
   }
 
   void _handleTabChange(OrgEventsTab newTab) {
@@ -203,16 +201,13 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
   }
 
   void _handleCreateEvent() {
-    context.pushNamed(
-      AppRoutes.orgCreateEvent,
-      pathParameters: {'orgId': widget.organizationId},
-    );
+    context.push(AppPaths.orgEventNew);
   }
 
   void _handleRetry() {
     ref
         .read(eventMembershipProvider.notifier)
-        .reset(widget.organizationId, _filter);
+        .reset(_orgId, _filter);
   }
 
   Future<void> _handleAvailability(
@@ -237,7 +232,7 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
       final updated = await ref
           .read(answerAvailabilityProvider.notifier)
           .answer(
-            organizationId: widget.organizationId,
+            organizationId: _orgId,
             eventId:        event.id,
             available:      available,
             functionId:     functionId,
@@ -268,9 +263,29 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final orgId = ref.watch(currentOrgProvider).id;
+
+    ref.listen(currentOrgProvider, (prev, next) {
+      if (prev?.id != next.id) {
+        setState(() {
+          _selectedTab = OrgEventsTab.all;
+          _customStatus = null;
+          _customAvailabilityStatus = null;
+          _customEventStatus = null;
+          _customStartDate = null;
+          _customEndDate = null;
+          _searchQuery = '';
+          _hasLoadedOnce = false;
+        });
+        _searchController.clear();
+        _debounce?.cancel();
+        _applyFilter(_buildFilter());
+      }
+    });
+
     final eventsState = ref.watch(eventMembershipProvider);
     final currentUser = ref
-        .watch(currentUserMembershipOrganizationProvider(widget.organizationId))
+        .watch(currentUserMembershipOrganizationProvider(orgId))
         .asData!
         .value;
     final canManageEvents = currentUser.hasPermission(OrganizationPermissionEnum.manageEvents);
@@ -295,7 +310,7 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
       body: RefreshIndicator(
         onRefresh: () => ref
             .read(eventMembershipProvider.notifier)
-            .resetAsync(widget.organizationId, _filter),
+            .resetAsync(_orgId, _filter),
         child: CustomScrollView(
           controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
@@ -474,12 +489,8 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
                               child: EventCard(
                                 key: ValueKey(membership.id),
                                 event: membership,
-                                onTap: () => context.pushNamed(
-                                  AppRoutes.orgEventDetail,
-                                  pathParameters: {
-                                    'orgId':   widget.organizationId,
-                                    'eventId': membership.id,
-                                  },
+                                onTap: () => context.push(
+                                  AppPaths.orgEventDetail(membership.id),
                                 ),
                                 onAvailable:     () => _handleAvailability(membership, true),
                                 onUnavailable:   () => _handleAvailability(membership, false),
@@ -512,7 +523,7 @@ class _OrgEventsPageState extends ConsumerState<OrgEventsPage> {
                       child: TextButton.icon(
                         onPressed: () => ref
                             .read(eventMembershipProvider.notifier)
-                            .loadNextPage(widget.organizationId, _filter),
+                            .loadNextPage(_orgId, _filter),
                         icon: const Icon(Icons.refresh_rounded, size: 16),
                         label: const Text('Tentar novamente'),
                       ),
