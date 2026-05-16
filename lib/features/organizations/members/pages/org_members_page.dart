@@ -14,8 +14,8 @@ import 'package:convoquei_app/features/organizations/members/providers/list_all_
 import 'package:convoquei_app/features/organizations/members/widgets/member_list_tile.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/member_list_tile_skeleton.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/modals/invite_member_by_email_modal.dart';
-import 'package:convoquei_app/features/organizations/members/widgets/modals/manage_functions_member_modal.dart';
-import 'package:convoquei_app/features/organizations/members/widgets/modals/manage_groups_member_modal.dart';
+import 'package:convoquei_app/features/organizations/functions/widgets/modals/manage_functions_member_modal.dart';
+import 'package:convoquei_app/features/organizations/groups/widgets/modals/manage_groups_member_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/modals/manage_member_modal.dart';
 import 'package:convoquei_app/features/organizations/members/widgets/modals/manage_roles_member_modal.dart';
 import 'package:convoquei_app/features/organizations/shared/models/enums/organization_permission.dart';

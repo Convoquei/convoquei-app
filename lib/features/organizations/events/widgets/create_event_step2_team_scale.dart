@@ -9,9 +9,9 @@ import 'package:convoquei_app/features/organizations/events/widgets/event_auto_s
 import 'package:convoquei_app/features/organizations/events/widgets/event_scope_toggle.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/event_selected_groups_grid.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/group_item_tile.dart';
-import 'package:convoquei_app/features/organizations/members/models/organization_group_model.dart';
-import 'package:convoquei_app/features/organizations/members/models/requests/find_all_organization_groups_request.dart';
-import 'package:convoquei_app/features/organizations/members/repositories/organization_groups_repository.dart';
+import 'package:convoquei_app/features/organizations/groups/models/organization_group_model.dart';
+import 'package:convoquei_app/features/organizations/groups/models/requests/find_all_organization_groups_request.dart';
+import 'package:convoquei_app/features/organizations/groups/repositories/organization_groups_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

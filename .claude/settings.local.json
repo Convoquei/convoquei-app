@@ -36,7 +36,17 @@
       "Bash(Remove-Item \"C:\\\\repo\\\\convoquei\\\\convoquei-app\\\\lib\\\\features\\\\organizations\\\\events\\\\widgets\\\\empty_event_state.dart\" -Force)",
       "Bash(Write-Host \"Deleted\")",
       "Bash(Remove-Item *)",
-      "Bash(Write-Host \"Deleted 4 obsolete files\")"
+      "Bash(Write-Host \"Deleted 4 obsolete files\")",
+      "Bash(Get-ChildItem *)",
+      "Bash(mkdir -p \"lib/features/organizations/functions/models/requests\" \"lib/features/organizations/functions/repositories\" \"lib/features/organizations/functions/providers\" \"lib/features/organizations/functions/pages\" \"lib/features/organizations/functions/widgets/modals\")",
+      "Bash(mkdir -p \"lib/features/organizations/groups/models/requests\" \"lib/features/organizations/groups/repositories\" \"lib/features/organizations/groups/providers\" \"lib/features/organizations/groups/pages\" \"lib/features/organizations/groups/widgets/modals\")",
+      "Bash(mkdir -p \"lib/features/organizations/roles/providers\" \"lib/features/organizations/roles/pages\" \"lib/features/organizations/roles/widgets\")",
+      "Bash(git mv *)",
+      "Bash(git rm *)",
+      "Bash(xargs grep -l \"StateListPaged\\\\|state_list\")",
+      "Bash(python3 -c ' *)",
+      "Bash(python3)",
+      "Bash(node -e ' *)"
     ]
   }
 }

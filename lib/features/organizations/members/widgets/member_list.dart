@@ -30,7 +30,7 @@ class _MembersListState extends ConsumerState<MembersList> {
     Future.microtask(
       () => ref
           .read(membersPagedProvider.notifier)
-          .loadNextPage(name: widget.searchQuery),
+          .loadNextPage(),
     );
   }
 
@@ -64,7 +64,7 @@ class _MembersListState extends ConsumerState<MembersList> {
 
     ref
         .read(membersPagedProvider.notifier)
-        .loadNextPage(name: widget.searchQuery);
+        .loadNextPage();
   }
 
   @override
@@ -84,7 +84,7 @@ class _MembersListState extends ConsumerState<MembersList> {
             TextButton(
               onPressed: () => ref
                   .read(membersPagedProvider.notifier)
-                  .loadNextPage(name: widget.searchQuery),
+                  .loadNextPage(),
               child: const Text('Tentar novamente'),
             ),
           ],

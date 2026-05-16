@@ -1,5 +1,5 @@
 import 'package:convoquei_app/design_system/ds.dart';
-import 'package:convoquei_app/features/organizations/members/models/organization_function_model.dart';
+import 'package:convoquei_app/features/organizations/functions/models/organization_function_model.dart';
 import 'package:flutter/material.dart';
 
 /// Tile de seleção de função para uso em modais (MultiSelectModal).

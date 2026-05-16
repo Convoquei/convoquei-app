@@ -9,8 +9,9 @@ import 'package:convoquei_app/features/organizations/home/pages/org_home_page.da
 import 'package:convoquei_app/features/organizations/members/pages/org_members_page.dart';
 import 'package:convoquei_app/features/organizations/organization_shell.dart';
 import 'package:convoquei_app/features/organizations/scales/pages/org_scales_page.dart';
-import 'package:convoquei_app/features/organizations/settings/pages/manage_functions_page.dart';
-import 'package:convoquei_app/features/organizations/settings/pages/manage_roles_page.dart';
+import 'package:convoquei_app/features/organizations/functions/pages/manage_functions_page.dart';
+import 'package:convoquei_app/features/organizations/groups/pages/manage_groups_page.dart';
+import 'package:convoquei_app/features/organizations/roles/pages/manage_roles_page.dart';
 import 'package:convoquei_app/features/organizations/settings/pages/org_settings_page.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_model.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/organization_providers.dart';
@@ -33,6 +34,7 @@ abstract final class AppRoutes {
   static const orgSettings = 'org-settings';
   static const orgSettingsRoles = 'org-settings-roles';
   static const orgSettingsFunctions = 'org-settings-functions';
+  static const orgSettingsGroups = 'org-settings-groups';
   static const orgEventDetail = 'org-event-detail';
   static const orgEditEvent = 'org-edit-event';
 }
@@ -53,6 +55,8 @@ abstract final class AppPaths {
       '/orgs/$orgId/settings/roles';
   static String orgSettingsFunctions(String orgId) =>
       '/orgs/$orgId/settings/functions';
+  static String orgSettingsGroups(String orgId) =>
+      '/orgs/$orgId/settings/groups';
   static String orgEventDetail(String orgId, String eventId) =>
       '/orgs/$orgId/events/$eventId';
   static String orgEditEvent(String orgId, String eventId) =>
@@ -204,6 +208,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) => _noTransitionPage(
               state.pageKey,
               ManageFunctionsPage(organization: _orgFromState(ref, state)!),
+            ),
+          ),
+          GoRoute(
+            path: '/orgs/:orgId/settings/groups',
+            name: AppRoutes.orgSettingsGroups,
+            pageBuilder: (context, state) => _noTransitionPage(
+              state.pageKey,
+              ManageGroupsPage(organization: _orgFromState(ref, state)!),
             ),
           ),
         ],

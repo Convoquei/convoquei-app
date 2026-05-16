@@ -6,9 +6,9 @@ import 'package:convoquei_app/features/organizations/events/widgets/create_event
 import 'package:convoquei_app/features/organizations/events/widgets/function_item_tile.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/function_restriction_mode_option.dart';
 import 'package:convoquei_app/features/organizations/events/widgets/function_rule_card.dart';
-import 'package:convoquei_app/features/organizations/members/models/organization_function_model.dart';
-import 'package:convoquei_app/features/organizations/members/models/requests/find_all_organization_functions_request.dart';
-import 'package:convoquei_app/features/organizations/members/repositories/organization_functions_repository.dart';
+import 'package:convoquei_app/features/organizations/functions/models/organization_function_model.dart';
+import 'package:convoquei_app/features/organizations/functions/models/requests/find_all_organization_functions_request.dart';
+import 'package:convoquei_app/features/organizations/functions/repositories/organization_functions_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
