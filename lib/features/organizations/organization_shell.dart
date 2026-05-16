@@ -15,19 +15,19 @@ import 'package:go_router/go_router.dart';
 class OrganizationShell extends ConsumerStatefulWidget {
   final OrganizationModel organization;
 
-  /// The active tab page provided by GoRouter's [ShellRoute].
-  final Widget child;
+  /// The stateful navigation shell provided by GoRouter's [StatefulShellRoute].
+  /// Acts as the body widget and exposes [goBranch] for tab switching.
+  final StatefulNavigationShell navigationShell;
 
-  /// Key of the nested [Navigator] created by GoRouter's [ShellRoute].
-  /// Used to call [NavigatorState.maybePop] so that [PopScope] widgets
-  /// inside child pages (e.g. [WizardPage]) are properly respected.
-  final GlobalKey<NavigatorState> shellNavigatorKey;
+  /// Per-branch navigator keys — used to delegate back presses to the
+  /// active branch's navigator (respects [PopScope] within each branch).
+  final List<GlobalKey<NavigatorState>> branchNavigatorKeys;
 
   const OrganizationShell({
     super.key,
-    required this.shellNavigatorKey,
+    required this.navigationShell,
     required this.organization,
-    required this.child,
+    required this.branchNavigatorKeys,
   });
 
   @override
@@ -35,28 +35,21 @@ class OrganizationShell extends ConsumerStatefulWidget {
 }
 
 class _OrganizationShellState extends ConsumerState<OrganizationShell> {
-  static const _tabRouteNames = [
-    AppRoutes.orgHome,
-    AppRoutes.orgEvents,
-    AppRoutes.orgScales,
-    AppRoutes.orgTeam,
-  ];
-
   String _orgId() => widget.organization.id;
 
   // ── Location helpers ────────────────────────────────────────────────────
-
-  bool _isSettingsLocation(String path) =>
-      path.startsWith(AppPaths.orgSettings(_orgId()));
 
   bool _isDetailsEventLocation(String path) =>
       path.startsWith('${AppPaths.orgEvents(_orgId())}/');
 
   bool _showTabBar(String path) {
-    if (_isSettingsLocation(path) || _isDetailsEventLocation(path)) {
-      return false;
-    }
-
+    final id = _orgId();
+    // Settings sub-pages (roles, functions, groups) hide the tab bar
+    if (path.startsWith('${AppPaths.orgSettings(id)}/')) return false;
+    // Members page accessed from within the Ministério branch
+    if (path.startsWith(AppPaths.orgTeam(id))) return false;
+    // Event sub-pages (detail, create, edit)
+    if (_isDetailsEventLocation(path)) return false;
     return true;
   }
 
@@ -64,51 +57,32 @@ class _OrganizationShellState extends ConsumerState<OrganizationShell> {
     final id = _orgId();
     if (path.startsWith(AppPaths.orgEvents(id))) return 1;
     if (path.startsWith(AppPaths.orgScales(id))) return 2;
+    if (path.startsWith(AppPaths.orgSettings(id))) return 3;
     if (path.startsWith(AppPaths.orgTeam(id))) return 3;
     return 0;
   }
 
   String _titleForPath(String path) {
     final id = _orgId();
-    if (path.startsWith(AppPaths.orgSettingsRoles(id)))
-      return 'Gerenciar Papéis';
-    if (path.startsWith(AppPaths.orgSettingsFunctions(id)))
-      return 'Gerenciar Funções';
-    if (path.startsWith(AppPaths.orgSettings(id))) return 'Configurações';
+    if (path.startsWith(AppPaths.orgSettingsRoles(id))) return 'Gerenciar Papéis';
+    if (path.startsWith(AppPaths.orgSettingsFunctions(id))) return 'Gerenciar Funções';
+    if (path.startsWith(AppPaths.orgSettingsGroups(id))) return 'Gerenciar Grupos';
+    if (path.startsWith(AppPaths.orgTeam(id))) return 'Membros';
     if (path.startsWith(AppPaths.orgCreateEvent(id))) return '';
     if (path.endsWith('/edit')) return '';
     if (_isDetailsEventLocation(path)) return 'Detalhes do Evento';
     if (path.startsWith(AppPaths.orgEvents(id))) return kOrgTabs[1].label;
     if (path.startsWith(AppPaths.orgScales(id))) return kOrgTabs[2].label;
-    if (path.startsWith(AppPaths.orgTeam(id))) return kOrgTabs[3].label;
     return kOrgTabs[0].label;
   }
 
   // ── Navigation actions ──────────────────────────────────────────────────
 
   void _onTabChanged(int index) {
-    final path = GoRouterState.of(context).uri.path;
-    // When on a sub-page (tab bar hidden, e.g. Create Event), push the tab so
-    // that pressing back returns to the sub-page instead of exiting the org.
-    if (!_showTabBar(path)) {
-      context.pushNamed(
-        _tabRouteNames[index],
-        pathParameters: {'orgId': _orgId()},
-      );
-    } else {
-      context.goNamed(
-        _tabRouteNames[index],
-        pathParameters: {'orgId': _orgId()},
-      );
-    }
-  }
-
-  void _openSettings() {
-    // Push so the current page (any tab or sub-page) stays in the stack and
-    // the user returns to it when pressing back from Settings.
-    context.pushNamed(
-      AppRoutes.orgSettings,
-      pathParameters: {'orgId': _orgId()},
+    widget.navigationShell.goBranch(
+      index,
+      // Tapping the current tab again resets it to its root page
+      initialLocation: index == widget.navigationShell.currentIndex,
     );
   }
 
@@ -119,22 +93,17 @@ class _OrganizationShellState extends ConsumerState<OrganizationShell> {
   }
 
   void _handleBack(String path) {
-    // Delegate to the shell navigator first so that PopScope widgets inside
-    // child pages (e.g. WizardPage) can intercept and handle the back action
-    // (stepping through wizard steps) before we do any shell-level navigation.
-    final shellNav = widget.shellNavigatorKey.currentState;
-    if (shellNav != null && shellNav.canPop()) {
-      shellNav.maybePop();
+    // Delegate to the active branch's navigator so that PopScope widgets
+    // inside child pages (e.g. WizardPage) can intercept the back action.
+    final branchIndex = _tabIndexForPath(path);
+    final branchNav = widget.branchNavigatorKeys[branchIndex].currentState;
+    if (branchNav != null && branchNav.canPop()) {
+      branchNav.maybePop();
       return;
     }
 
-    // Shell navigator has nothing to pop — handle at the shell level.
-    if (_isSettingsLocation(path)) {
-      // Settings root – go back to the home tab
-      context.goNamed(AppRoutes.orgHome, pathParameters: {'orgId': _orgId()});
-    } else {
-      _exitOrganization();
-    }
+    // Branch has nothing to pop — exit the organization.
+    _exitOrganization();
   }
 
   // ── Layouts ─────────────────────────────────────────────────────────────
@@ -147,10 +116,10 @@ class _OrganizationShellState extends ConsumerState<OrganizationShell> {
             organization: widget.organization,
             currentIndex: _tabIndexForPath(GoRouterState.of(context).uri.path),
             onTabChanged: _onTabChanged,
-            onSettingsTap: _openSettings,
+            onSettingsTap: () => _onTabChanged(3),
             onExitTap: _exitOrganization,
           ),
-          Expanded(child: widget.child),
+          Expanded(child: widget.navigationShell),
         ],
       ),
     );
@@ -171,7 +140,7 @@ class _OrganizationShellState extends ConsumerState<OrganizationShell> {
                 icon: const Icon(Icons.arrow_back_rounded),
                 onPressed: () => _handleBack(path),
               ),
-              title: Text(_titleForPath(path)),
+              title: Text(textForPath),
             )
           : null,
       body: showTabBar
@@ -181,9 +150,9 @@ class _OrganizationShellState extends ConsumerState<OrganizationShell> {
                     MediaQuery.of(context).padding.top +
                     DSAppHeader.kPreferredHeight,
               ),
-              child: widget.child,
+              child: widget.navigationShell,
             )
-          : widget.child,
+          : widget.navigationShell,
       bottomNavigationBar: showTabBar
           ? _OrgNavigationBar(
               currentIndex: tabIndex,

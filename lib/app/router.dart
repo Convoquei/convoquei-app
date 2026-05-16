@@ -63,9 +63,26 @@ abstract final class AppPaths {
       '/orgs/$orgId/events/$eventId/edit';
 }
 
-// ── Router provider ─────────────────────────────────────────────────────────
+// ── Branch navigator keys ────────────────────────────────────────────────────
 
-final _shellNavigatorKey = GlobalKey<NavigatorState>();
+final _homeTabKey = GlobalKey<NavigatorState>();
+final _eventsTabKey = GlobalKey<NavigatorState>();
+final _scalesTabKey = GlobalKey<NavigatorState>();
+final _ministryTabKey = GlobalKey<NavigatorState>();
+
+// ── Static branch entry points ───────────────────────────────────────────────
+//
+// StatefulShellBranch.initialLocation must (a) have no path parameters and
+// (b) match a descendant route of the branch. Since all real org routes use
+// `:orgId`, we add non-parameterized sentinel routes that redirect to the
+// correct org path at runtime using selectedOrganizationProvider.
+
+const _kOrgHomeEntry = '/org/home';
+const _kOrgEventsEntry = '/org/events';
+const _kOrgScalesEntry = '/org/scales';
+const _kOrgSettingsEntry = '/org/settings';
+
+// ── Router provider ─────────────────────────────────────────────────────────
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -101,10 +118,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const HomePage(),
       ),
 
-      // ── Organization shell (single persistent shell for tabs + settings) ──
-      ShellRoute(
-        navigatorKey: _shellNavigatorKey,
-        builder: (context, state, child) {
+      // ── Organization shell (4 stateful branches — stacks preserved on tab switch) ──
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
           final org = _orgFromState(ref, state);
           if (org == null) {
             return const Scaffold(
@@ -112,111 +128,179 @@ final routerProvider = Provider<GoRouter>((ref) {
             );
           }
           return OrganizationShell(
-            shellNavigatorKey: _shellNavigatorKey,
+            navigationShell: navigationShell,
             organization: org,
-            child: child,
+            branchNavigatorKeys: [
+              _homeTabKey,
+              _eventsTabKey,
+              _scalesTabKey,
+              _ministryTabKey,
+            ],
           );
         },
-        routes: [
-          GoRoute(
-            path: '/orgs/:orgId/home',
-            name: AppRoutes.orgHome,
-            pageBuilder: (_, state) => _noTransitionPage(
-              ValueKey('${AppRoutes.orgHome}-${state.pathParameters['orgId']}'),
-              const OrgHomePage(),
-            ),
-          ),
-          GoRoute(
-            path: '/orgs/:orgId/events',
-            name: AppRoutes.orgEvents,
-            pageBuilder: (context, state) => _noTransitionPage(
-              ValueKey('${AppRoutes.orgEvents}-${state.pathParameters['orgId']}'),
-              OrgEventsPage(organizationId: state.pathParameters['orgId']!),
-            ),
+        branches: [
+          // ── Branch 0: Início ────────────────────────────────────────────
+          StatefulShellBranch(
+            navigatorKey: _homeTabKey,
+            initialLocation: _kOrgHomeEntry,
             routes: [
+              // Sentinel: static path with no params — redirects to the actual org home.
               GoRoute(
-                path: 'new',
-                name: AppRoutes.orgCreateEvent,
-                pageBuilder: (_, state) => _noTransitionPage(
-                  state.pageKey,
-                  OrgEventConfigurationWizardPage(
-                    organizationId: state.pathParameters['orgId']!,
-                  ),
-                ),
+                path: _kOrgHomeEntry,
+                redirect: (_, __) {
+                  final orgId = ref.read(selectedOrganizationProvider)?.id;
+                  return orgId != null ? AppPaths.orgHome(orgId) : AppPaths.home;
+                },
               ),
               GoRoute(
-                path: ':eventId',
-                name: AppRoutes.orgEventDetail,
+                path: '/orgs/:orgId/home',
+                name: AppRoutes.orgHome,
                 pageBuilder: (_, state) => _noTransitionPage(
-                  state.pageKey,
-                  OrgEventDetailPage(
-                    organizationId: state.pathParameters['orgId']!,
-                    eventId: state.pathParameters['eventId']!,
-                  ),
+                  ValueKey('${AppRoutes.orgHome}-${state.pathParameters['orgId']}'),
+                  const OrgHomePage(),
+                ),
+              ),
+            ],
+          ),
+
+          // ── Branch 1: Eventos ───────────────────────────────────────────
+          StatefulShellBranch(
+            navigatorKey: _eventsTabKey,
+            initialLocation: _kOrgEventsEntry,
+            routes: [
+              GoRoute(
+                path: _kOrgEventsEntry,
+                redirect: (_, __) {
+                  final orgId = ref.read(selectedOrganizationProvider)?.id;
+                  return orgId != null ? AppPaths.orgEvents(orgId) : AppPaths.home;
+                },
+              ),
+              GoRoute(
+                path: '/orgs/:orgId/events',
+                name: AppRoutes.orgEvents,
+                pageBuilder: (_, state) => _noTransitionPage(
+                  ValueKey('${AppRoutes.orgEvents}-${state.pathParameters['orgId']}'),
+                  OrgEventsPage(organizationId: state.pathParameters['orgId']!),
                 ),
                 routes: [
                   GoRoute(
-                    path: 'edit',
-                    name: AppRoutes.orgEditEvent,
+                    path: 'new',
+                    name: AppRoutes.orgCreateEvent,
                     pageBuilder: (_, state) => _noTransitionPage(
                       state.pageKey,
                       OrgEventConfigurationWizardPage(
                         organizationId: state.pathParameters['orgId']!,
+                      ),
+                    ),
+                  ),
+                  GoRoute(
+                    path: ':eventId',
+                    name: AppRoutes.orgEventDetail,
+                    pageBuilder: (_, state) => _noTransitionPage(
+                      state.pageKey,
+                      OrgEventDetailPage(
+                        organizationId: state.pathParameters['orgId']!,
                         eventId: state.pathParameters['eventId']!,
                       ),
                     ),
+                    routes: [
+                      GoRoute(
+                        path: 'edit',
+                        name: AppRoutes.orgEditEvent,
+                        pageBuilder: (_, state) => _noTransitionPage(
+                          state.pageKey,
+                          OrgEventConfigurationWizardPage(
+                            organizationId: state.pathParameters['orgId']!,
+                            eventId: state.pathParameters['eventId']!,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ],
           ),
-          GoRoute(
-            path: '/orgs/:orgId/scales',
-            name: AppRoutes.orgScales,
-            pageBuilder: (_, state) => _noTransitionPage(
-              ValueKey('${AppRoutes.orgScales}-${state.pathParameters['orgId']}'),
-              const OrgScalesPage(),
-            ),
+
+          // ── Branch 2: Escalas ───────────────────────────────────────────
+          StatefulShellBranch(
+            navigatorKey: _scalesTabKey,
+            initialLocation: _kOrgScalesEntry,
+            routes: [
+              GoRoute(
+                path: _kOrgScalesEntry,
+                redirect: (_, __) {
+                  final orgId = ref.read(selectedOrganizationProvider)?.id;
+                  return orgId != null ? AppPaths.orgScales(orgId) : AppPaths.home;
+                },
+              ),
+              GoRoute(
+                path: '/orgs/:orgId/scales',
+                name: AppRoutes.orgScales,
+                pageBuilder: (_, state) => _noTransitionPage(
+                  ValueKey('${AppRoutes.orgScales}-${state.pathParameters['orgId']}'),
+                  const OrgScalesPage(),
+                ),
+              ),
+            ],
           ),
-          GoRoute(
-            path: '/orgs/:orgId/team',
-            name: AppRoutes.orgTeam,
-            pageBuilder: (_, state) => _noTransitionPage(
-              ValueKey('${AppRoutes.orgTeam}-${state.pathParameters['orgId']}'),
-              const OrgMembersPage(),
-            ),
-          ),
-          GoRoute(
-            path: '/orgs/:orgId/settings',
-            name: AppRoutes.orgSettings,
-            pageBuilder: (context, state) => _noTransitionPage(
-              state.pageKey,
-              OrgSettingsPage(organization: _orgFromState(ref, state)!),
-            ),
-          ),
-          GoRoute(
-            path: '/orgs/:orgId/settings/roles',
-            name: AppRoutes.orgSettingsRoles,
-            pageBuilder: (context, state) => _noTransitionPage(
-              state.pageKey,
-              ManageRolesPage(organization: _orgFromState(ref, state)!),
-            ),
-          ),
-          GoRoute(
-            path: '/orgs/:orgId/settings/functions',
-            name: AppRoutes.orgSettingsFunctions,
-            pageBuilder: (context, state) => _noTransitionPage(
-              state.pageKey,
-              ManageFunctionsPage(organization: _orgFromState(ref, state)!),
-            ),
-          ),
-          GoRoute(
-            path: '/orgs/:orgId/settings/groups',
-            name: AppRoutes.orgSettingsGroups,
-            pageBuilder: (context, state) => _noTransitionPage(
-              state.pageKey,
-              ManageGroupsPage(organization: _orgFromState(ref, state)!),
-            ),
+
+          // ── Branch 3: Ministério ────────────────────────────────────────
+          StatefulShellBranch(
+            navigatorKey: _ministryTabKey,
+            initialLocation: _kOrgSettingsEntry,
+            routes: [
+              GoRoute(
+                path: _kOrgSettingsEntry,
+                redirect: (_, __) {
+                  final orgId = ref.read(selectedOrganizationProvider)?.id;
+                  return orgId != null ? AppPaths.orgSettings(orgId) : AppPaths.home;
+                },
+              ),
+              GoRoute(
+                path: '/orgs/:orgId/settings',
+                name: AppRoutes.orgSettings,
+                pageBuilder: (_, state) => _noTransitionPage(
+                  ValueKey('${AppRoutes.orgSettings}-${state.pathParameters['orgId']}'),
+                  OrgSettingsPage(organization: _orgFromState(ref, state)!),
+                ),
+                routes: [
+                  GoRoute(
+                    path: 'roles',
+                    name: AppRoutes.orgSettingsRoles,
+                    pageBuilder: (_, state) => _noTransitionPage(
+                      state.pageKey,
+                      ManageRolesPage(organization: _orgFromState(ref, state)!),
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'functions',
+                    name: AppRoutes.orgSettingsFunctions,
+                    pageBuilder: (_, state) => _noTransitionPage(
+                      state.pageKey,
+                      ManageFunctionsPage(organization: _orgFromState(ref, state)!),
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'groups',
+                    name: AppRoutes.orgSettingsGroups,
+                    pageBuilder: (_, state) => _noTransitionPage(
+                      state.pageKey,
+                      ManageGroupsPage(organization: _orgFromState(ref, state)!),
+                    ),
+                  ),
+                ],
+              ),
+              // Página de membros — acessada de dentro da aba Ministério
+              GoRoute(
+                path: '/orgs/:orgId/team',
+                name: AppRoutes.orgTeam,
+                pageBuilder: (_, state) => _noTransitionPage(
+                  state.pageKey,
+                  const OrgMembersPage(),
+                ),
+              ),
+            ],
           ),
         ],
       ),

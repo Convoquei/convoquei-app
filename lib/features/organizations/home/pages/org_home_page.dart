@@ -539,7 +539,7 @@ class _QuickMenu extends ConsumerWidget {
       (
         icon: Icons.people_rounded,
         label: 'Equipe',
-        onTap: () => context.goNamed(
+        onTap: () => context.pushNamed(
           AppRoutes.orgTeam,
           pathParameters: {'orgId': orgId},
         ),

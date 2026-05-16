@@ -23,11 +23,21 @@ class OrgSettingsPage extends ConsumerWidget {
         .asData!
         .value;
 
-    final canInviteMembers = currentUser.hasPermission(OrganizationPermissionEnum.inviteMembers);
-    final canManageRoles = currentUser.hasPermission(OrganizationPermissionEnum.owner);
-    final canManageSubscription = currentUser.hasPermission(OrganizationPermissionEnum.owner);
-    final canManageGroups = currentUser.hasPermission(OrganizationPermissionEnum.manageGroups);
-    final canManageFunctions = currentUser.hasPermission(OrganizationPermissionEnum.manageFunctions);
+    final canInviteMembers = currentUser.hasPermission(
+      OrganizationPermissionEnum.inviteMembers,
+    );
+    final canManageRoles = currentUser.hasPermission(
+      OrganizationPermissionEnum.owner,
+    );
+    final canManageSubscription = currentUser.hasPermission(
+      OrganizationPermissionEnum.owner,
+    );
+    final canManageGroups = currentUser.hasPermission(
+      OrganizationPermissionEnum.manageGroups,
+    );
+    final canManageFunctions = currentUser.hasPermission(
+      OrganizationPermissionEnum.manageFunctions,
+    );
 
     final orgId = organization.id;
 
@@ -46,12 +56,51 @@ class OrgSettingsPage extends ConsumerWidget {
               title: 'Membros',
               widgets: [
                 DSActionCard(
+                  icon: Icons.group_outlined,
+                  title: canInviteMembers ? 'Gerenciar Membros' : 'Membros',
+                  subtitle: canInviteMembers
+                      ? 'Adicione ou remova membros da organização'
+                      : 'Veja a lista de membros da organização',
+                  outlined: true,
+                  onTap: () => context.pushNamed(
+                    AppRoutes.orgTeam,
+                    pathParameters: {'orgId': orgId},
+                  ),
+                ),
+                if (canManageFunctions)
+                  DSActionCard(
+                    icon: Icons.music_note_outlined,
+                    title: 'Gerenciar Funções',
+                    subtitle:
+                        'Crie e gerencie as funções dos membros da organização',
+                    outlined: true,
+                    onTap: () => context.pushNamed(
+                      AppRoutes.orgSettingsFunctions,
+                      pathParameters: {'orgId': orgId},
+                    ),
+                  ),
+                DSActionCard(
+                  icon: Icons.groups_outlined,
+                  title: canManageGroups ? 'Gerenciar Grupos' : 'Grupos',
+                  subtitle: canManageGroups
+                      ? 'Crie e organize grupos para facilitar a gestão'
+                      : 'Veja os grupos da organização',
+                  outlined: true,
+                  onTap: () => context.pushNamed(
+                    AppRoutes.orgSettingsGroups,
+                    pathParameters: {'orgId': orgId},
+                  ),
+                ),
+                DSActionCard(
                   icon: Icons.shield_outlined,
                   title: 'Gerenciar Papéis',
                   subtitle: 'Gerencie os papéis da organização (Admin, Líder)',
                   outlined: true,
                   onTap: canManageRoles
-                      ? () => context.pushNamed(AppRoutes.orgSettingsRoles, pathParameters: {'orgId': orgId})
+                      ? () => context.pushNamed(
+                          AppRoutes.orgSettingsRoles,
+                          pathParameters: {'orgId': orgId},
+                        )
                       : null,
                 ),
                 DSActionCard(
@@ -61,32 +110,6 @@ class OrgSettingsPage extends ConsumerWidget {
                   outlined: true,
                   onTap: canInviteMembers ? () {} : null,
                 ),
-                DSActionCard(
-                  icon: Icons.group_outlined,
-                  title: canInviteMembers ? 'Gerenciar Membros' : 'Membros',
-                  subtitle: canInviteMembers
-                      ? 'Adicione ou remova membros da organização'
-                      : 'Veja a lista de membros da organização',
-                  outlined: true,
-                  onTap: () => context.goNamed(AppRoutes.orgTeam, pathParameters: {'orgId': orgId}),
-                ),
-                DSActionCard(
-                  icon: Icons.groups_outlined,
-                  title: canManageGroups ? 'Gerenciar Grupos' : 'Grupos',
-                  subtitle: canManageGroups
-                      ? 'Crie e organize grupos para facilitar a gestão'
-                      : 'Veja os grupos da organização',
-                  outlined: true,
-                  onTap: () => context.pushNamed(AppRoutes.orgSettingsGroups, pathParameters: {'orgId': orgId}),
-                ),
-                if (canManageFunctions)
-                  DSActionCard(
-                    icon: Icons.music_note_outlined,
-                    title: 'Gerenciar Funções',
-                    subtitle: 'Crie e gerencie as funções dos membros da organização',
-                    outlined: true,
-                    onTap: () => context.pushNamed(AppRoutes.orgSettingsFunctions, pathParameters: {'orgId': orgId}),
-                  ),
               ],
             ),
             const SizedBox(height: DSSpacing.xl),

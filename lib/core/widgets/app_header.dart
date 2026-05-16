@@ -41,7 +41,7 @@ class AppHeader extends ConsumerWidget implements PreferredSizeWidget {
         DSBaseModal.show(context, OrgSwitcherSheet(currentLocation: location));
       },
       onSettingsTap: currentOrg != null
-          ? () => context.pushNamed(
+          ? () => context.goNamed(
                 AppRoutes.orgSettings,
                 pathParameters: {'orgId': currentOrg.id},
               )

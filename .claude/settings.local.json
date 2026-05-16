@@ -46,7 +46,9 @@
       "Bash(xargs grep -l \"StateListPaged\\\\|state_list\")",
       "Bash(python3 -c ' *)",
       "Bash(python3)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(Find-ChildItem -Path \"C:\\\\repo\\\\convoquei\\\\convoquei-app\\\\lib\\\\features\\\\organizations\" -Name \"organization_tab.dart\" -o -Name \"*tab*.dart\")",
+      "Bash(Select-Object -First 20)"
     ]
   }
 }
