@@ -105,6 +105,8 @@ class OrganizationEventDetailsModel {
   final List<OrganizationEventCalledGroupModel> calledGroups;
   final List<OrganizationEventCalledFunctionDetailsModel> calledFunctions;
   final List<OrganizationEventParticipantModel> participants;
+  final String? dressCodeDescription;
+  final List<String>? dressCodeColors;
 
   OrganizationEventDetailsModel({
     required this.id,
@@ -123,6 +125,8 @@ class OrganizationEventDetailsModel {
     this.calledGroups = const [],
     this.calledFunctions = const [],
     this.participants = const [],
+    this.dressCodeDescription,
+    this.dressCodeColors,
   });
 
   factory OrganizationEventDetailsModel.fromJson(Map<String, dynamic> json) {
@@ -154,6 +158,8 @@ class OrganizationEventDetailsModel {
               ?.map((e) => OrganizationEventParticipantModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
+      dressCodeDescription: json['dressCodeDescription'] as String?,
+      dressCodeColors: (json['dressCodeColors'] as List<dynamic>?)?.cast<String>(),
     );
   }
 }

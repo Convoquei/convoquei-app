@@ -37,8 +37,10 @@ class CreateOrganizationEventRequest {
   final List<String> calledGroupIds;
   final DateTime startDate;
   final DateTime endDate;
+  final String? dressCodeDescription;
+  final List<String>? dressCodeColors;
 
-  const CreateOrganizationEventRequest._({
+  const CreateOrganizationEventRequest.fromFields({
     required this.name,
     required this.description,
     required this.location,
@@ -50,6 +52,8 @@ class CreateOrganizationEventRequest {
     required this.calledGroupIds,
     required this.startDate,
     required this.endDate,
+    this.dressCodeDescription,
+    this.dressCodeColors,
   });
 
   factory CreateOrganizationEventRequest.fromSteps({
@@ -60,6 +64,8 @@ class CreateOrganizationEventRequest {
     required DateTime endDate,
     required CreateEventStep2Data step2,
     required CreateEventStep3Data step3,
+    String? dressCodeDescription,
+    List<String>? dressCodeColors,
   }) {
     final callMode = step2.callMode;
 
@@ -88,7 +94,7 @@ class CreateOrganizationEventRequest {
             .toList()
         : <CalledFunctionPayload>[];
 
-    return CreateOrganizationEventRequest._(
+    return CreateOrganizationEventRequest.fromFields(
       name: name,
       description: description,
       location: location,
@@ -100,6 +106,8 @@ class CreateOrganizationEventRequest {
       calledGroupIds: calledGroupIds,
       startDate: startDate,
       endDate: endDate,
+      dressCodeDescription: dressCodeDescription,
+      dressCodeColors: dressCodeColors,
     );
   }
 
@@ -116,5 +124,7 @@ class CreateOrganizationEventRequest {
         'calledGroupIds': calledGroupIds,
         'startDate': startDate.toUtc().toIso8601String(),
         'endDate': endDate.toUtc().toIso8601String(),
+        if (dressCodeDescription != null) 'dressCodeDescription': dressCodeDescription,
+        if (dressCodeColors != null) 'dressCodeColors': dressCodeColors,
       };
 }

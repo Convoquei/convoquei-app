@@ -61,8 +61,8 @@ class _OrgHomePageState extends ConsumerState<OrgHomePage> {
                 _AvailabilityHeroCard(orgId: orgId),
                 const SizedBox(height: DSSpacing.xl),
                 _QuickMenu(orgId: orgId),
-                const SizedBox(height: DSSpacing.xl),
-                const _BirthdaysSection(),
+                // const _BirthdaysSection(),
+                // const SizedBox(height: DSSpacing.xl),
                 const SizedBox(height: DSSpacing.xl),
                 const _NoticesSection(),
                 const SizedBox(height: DSSpacing.xl),
@@ -72,8 +72,8 @@ class _OrgHomePageState extends ConsumerState<OrgHomePage> {
                 const _AvailabilityCardSkeleton(),
                 const SizedBox(height: DSSpacing.xl),
                 const _QuickMenuSkeleton(),
-                const SizedBox(height: DSSpacing.xl),
-                const _BirthdaysSectionSkeleton(),
+                // const SizedBox(height: DSSpacing.xl),
+                // const _BirthdaysSectionSkeleton(),
                 const SizedBox(height: DSSpacing.xl),
                 const _NoticesSectionSkeleton(),
                 const SizedBox(height: DSSpacing.xl),
@@ -303,6 +303,7 @@ class _AvailabilityHeroCard extends ConsumerWidget {
         .read(answerAvailabilityProvider.notifier)
         .answer(organizationId: orgId, eventId: eventId, available: available);
     ref.invalidate(nextPendingAvailabilityEventProvider(orgId));
+    ref.invalidate(nextAssignedEventProvider(orgId));
   }
 
   @override
@@ -625,7 +626,7 @@ class _BirthdayItem extends StatelessWidget {
         Stack(
           clipBehavior: Clip.none,
           children: [
-            DSAvatar(name: name, radius: 28),
+            DSAvatar(name: name, radius: 22),
             Positioned(
               bottom: -6,
               right: -10,

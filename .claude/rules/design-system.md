@@ -348,6 +348,51 @@ Widgets **não migrados** (não usar como referência de estilo — todos têm e
 
 ---
 
+## Layouts
+
+### DSWizardPage
+Layout genérico de wizard multi-passo com header sticky, barra de progresso animada e footer fixo.
+
+```dart
+DSWizardPage(
+  pageTitle: 'Criar Evento',
+  steps: [
+    DSWizardStep(
+      title: 'O Básico',
+      subtitle: 'Identifique o evento e defina o tempo.',
+      builder: (context) => _BasicInfoStep(...),
+      canAdvance: () => form.step1IsValid,
+    ),
+    DSWizardStep(
+      title: 'Convocação',
+      subtitle: 'Quem deve ser avisado?',
+      builder: (context) => _SummonStep(...),
+      canAdvance: () => form.step2IsValid,
+    ),
+    DSWizardStep(
+      title: 'Inteligência',
+      subtitle: 'Regras de confirmação e participação.',
+      builder: (context) => _IntelligenceStep(...),
+      canAdvance: () => true,
+    ),
+  ],
+  onFinish: () async => _submit(),
+  finishLabel: 'Publicar evento',
+  isSubmitting: _isSubmitting,
+  readOnly: false,
+)
+```
+
+**Comportamento:**
+- Passo 1: leading icon = `Icons.close` (fecha sem confirmação); demais passos = `Icons.arrow_back`
+- Barra de progresso anima suavemente entre passos via `TweenAnimationBuilder`
+- `canAdvance()` bloqueia o botão "Seguinte" quando retorna `false`
+- `onFinish` recebe `Future<bool>` — retorna `true` para fechar a tela, `false` para manter aberta (exibir erro)
+- `readOnly: true` desabilita o footer e exibe `DSAlertBanner` no topo do conteúdo
+- Conteúdo de cada step renderiza em `SingleChildScrollView` com `AnimatedSwitcher` entre passos
+
+---
+
 ## Checklist de revisão
 
 Antes de concluir qualquer PR que toque UI, verificar:

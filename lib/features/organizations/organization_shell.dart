@@ -53,11 +53,11 @@ class _OrganizationShellState extends ConsumerState<OrganizationShell> {
       path.startsWith('${AppPaths.orgEvents(_orgId())}/');
 
   bool _showTabBar(String path) {
-      if (_isSettingsLocation(path) || _isDetailsEventLocation(path)) {
-        return false;
-      }
+    if (_isSettingsLocation(path) || _isDetailsEventLocation(path)) {
+      return false;
+    }
 
-      return true;
+    return true;
   }
 
   int _tabIndexForPath(String path) {
@@ -70,11 +70,13 @@ class _OrganizationShellState extends ConsumerState<OrganizationShell> {
 
   String _titleForPath(String path) {
     final id = _orgId();
-    if (path.startsWith(AppPaths.orgSettingsRoles(id))) return 'Gerenciar Papéis';
-    if (path.startsWith(AppPaths.orgSettingsFunctions(id))) return 'Gerenciar Funções';
+    if (path.startsWith(AppPaths.orgSettingsRoles(id)))
+      return 'Gerenciar Papéis';
+    if (path.startsWith(AppPaths.orgSettingsFunctions(id)))
+      return 'Gerenciar Funções';
     if (path.startsWith(AppPaths.orgSettings(id))) return 'Configurações';
-    if (path.startsWith(AppPaths.orgCreateEvent(id))) return 'Novo Evento';
-    if (path.endsWith('/edit')) return 'Editar Evento';
+    if (path.startsWith(AppPaths.orgCreateEvent(id))) return '';
+    if (path.endsWith('/edit')) return '';
     if (_isDetailsEventLocation(path)) return 'Detalhes do Evento';
     if (path.startsWith(AppPaths.orgEvents(id))) return kOrgTabs[1].label;
     if (path.startsWith(AppPaths.orgScales(id))) return kOrgTabs[2].label;
@@ -143,9 +145,7 @@ class _OrganizationShellState extends ConsumerState<OrganizationShell> {
         children: [
           OrganizationSideRail(
             organization: widget.organization,
-            currentIndex: _tabIndexForPath(
-              GoRouterState.of(context).uri.path,
-            ),
+            currentIndex: _tabIndexForPath(GoRouterState.of(context).uri.path),
             onTabChanged: _onTabChanged,
             onSettingsTap: _openSettings,
             onExitTap: _exitOrganization,
@@ -159,22 +159,26 @@ class _OrganizationShellState extends ConsumerState<OrganizationShell> {
   Widget _buildNarrowLayout(String path) {
     final showTabBar = _showTabBar(path);
     final tabIndex = _tabIndexForPath(path);
+    final textForPath = _titleForPath(path);
 
     return Scaffold(
       extendBodyBehindAppBar: showTabBar,
       appBar: showTabBar
           ? AppHeader()
-          : AppBar(
+          : textForPath.isNotEmpty
+          ? AppBar(
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back_rounded),
                 onPressed: () => _handleBack(path),
               ),
               title: Text(_titleForPath(path)),
-            ),
+            )
+          : null,
       body: showTabBar
           ? Padding(
               padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top +
+                top:
+                    MediaQuery.of(context).padding.top +
                     DSAppHeader.kPreferredHeight,
               ),
               child: widget.child,

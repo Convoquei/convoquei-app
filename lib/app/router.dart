@@ -2,8 +2,7 @@ import 'package:convoquei_app/features/auth/models/auth_state.dart';
 import 'package:convoquei_app/features/auth/pages/login_page.dart';
 import 'package:convoquei_app/features/auth/providers/auth_providers.dart';
 import 'package:convoquei_app/features/home/pages/home_page.dart';
-import 'package:convoquei_app/features/organizations/events/pages/org_create_event_page.dart';
-import 'package:convoquei_app/features/organizations/events/pages/org_edit_event_page.dart';
+import 'package:convoquei_app/features/organizations/events/pages/org_event_configuration_wizard_page.dart';
 import 'package:convoquei_app/features/organizations/events/pages/org_event_detail_page.dart';
 import 'package:convoquei_app/features/organizations/events/pages/org_events_page.dart';
 import 'package:convoquei_app/features/organizations/home/pages/org_home_page.dart';
@@ -134,24 +133,33 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'new',
                 name: AppRoutes.orgCreateEvent,
-                builder: (_, state) => OrgCreateEventPage(
-                  organizationId: state.pathParameters['orgId']!,
+                pageBuilder: (_, state) => _noTransitionPage(
+                  state.pageKey,
+                  OrgEventConfigurationWizardPage(
+                    organizationId: state.pathParameters['orgId']!,
+                  ),
                 ),
               ),
               GoRoute(
                 path: ':eventId',
                 name: AppRoutes.orgEventDetail,
-                builder: (_, state) => OrgEventDetailPage(
-                  organizationId: state.pathParameters['orgId']!,
-                  eventId: state.pathParameters['eventId']!,
+                pageBuilder: (_, state) => _noTransitionPage(
+                  state.pageKey,
+                  OrgEventDetailPage(
+                    organizationId: state.pathParameters['orgId']!,
+                    eventId: state.pathParameters['eventId']!,
+                  ),
                 ),
                 routes: [
                   GoRoute(
                     path: 'edit',
                     name: AppRoutes.orgEditEvent,
-                    builder: (_, state) => OrgEditEventPage(
-                      organizationId: state.pathParameters['orgId']!,
-                      eventId: state.pathParameters['eventId']!,
+                    pageBuilder: (_, state) => _noTransitionPage(
+                      state.pageKey,
+                      OrgEventConfigurationWizardPage(
+                        organizationId: state.pathParameters['orgId']!,
+                        eventId: state.pathParameters['eventId']!,
+                      ),
                     ),
                   ),
                 ],
@@ -177,26 +185,26 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/orgs/:orgId/settings',
             name: AppRoutes.orgSettings,
-            builder: (context, state) {
-              final org = _orgFromState(ref, state)!;
-              return OrgSettingsPage(organization: org);
-            },
+            pageBuilder: (context, state) => _noTransitionPage(
+              state.pageKey,
+              OrgSettingsPage(organization: _orgFromState(ref, state)!),
+            ),
           ),
           GoRoute(
             path: '/orgs/:orgId/settings/roles',
             name: AppRoutes.orgSettingsRoles,
-            builder: (context, state) {
-              final org = _orgFromState(ref, state)!;
-              return ManageRolesPage(organization: org);
-            },
+            pageBuilder: (context, state) => _noTransitionPage(
+              state.pageKey,
+              ManageRolesPage(organization: _orgFromState(ref, state)!),
+            ),
           ),
           GoRoute(
             path: '/orgs/:orgId/settings/functions',
             name: AppRoutes.orgSettingsFunctions,
-            builder: (context, state) {
-              final org = _orgFromState(ref, state)!;
-              return ManageFunctionsPage(organization: org);
-            },
+            pageBuilder: (context, state) => _noTransitionPage(
+              state.pageKey,
+              ManageFunctionsPage(organization: _orgFromState(ref, state)!),
+            ),
           ),
         ],
       ),

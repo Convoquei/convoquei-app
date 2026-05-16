@@ -59,3 +59,6 @@ export 'components/overlays/ds_multi_select_modal.dart';
 
 // ── Components: chrome ────────────────────────────────────────────────────────
 export 'components/chrome/ds_app_header.dart';
+
+// ── Components: layouts ───────────────────────────────────────────────────────
+export 'components/layouts/ds_wizard_page.dart';

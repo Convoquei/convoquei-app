@@ -3,27 +3,7 @@ import 'package:convoquei_app/features/organizations/events/models/enums/organiz
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_function_call_mode.dart';
 import 'package:convoquei_app/features/organizations/events/models/event_form_step2_data.dart';
 import 'package:convoquei_app/features/organizations/events/models/event_form_step3_data.dart';
-
-class CalledFunctionPayload {
-  final String id;
-  final int minMembers;
-  final int? maxMembers;
-  final OrganizationEventAssignmentMode assignmentMode;
-
-  const CalledFunctionPayload({
-    required this.id,
-    required this.minMembers,
-    this.maxMembers,
-    required this.assignmentMode,
-  });
-
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'minMembers': minMembers,
-        if (maxMembers != null) 'maxMembers': maxMembers,
-        'assignmentMode': assignmentMode.toCode(),
-      };
-}
+import 'package:convoquei_app/features/organizations/events/models/requests/create_organization_event_request.dart';
 
 class UpdateOrganizationEventRequest {
   final String name;
@@ -37,8 +17,10 @@ class UpdateOrganizationEventRequest {
   final List<String> calledGroupIds;
   final DateTime startDate;
   final DateTime endDate;
+  final String? dressCodeDescription;
+  final List<String>? dressCodeColors;
 
-  const UpdateOrganizationEventRequest._({
+  const UpdateOrganizationEventRequest.fromFields({
     required this.name,
     required this.description,
     required this.location,
@@ -50,6 +32,8 @@ class UpdateOrganizationEventRequest {
     required this.calledGroupIds,
     required this.startDate,
     required this.endDate,
+    this.dressCodeDescription,
+    this.dressCodeColors,
   });
 
   factory UpdateOrganizationEventRequest.fromSteps({
@@ -88,7 +72,7 @@ class UpdateOrganizationEventRequest {
             .toList()
         : <CalledFunctionPayload>[];
 
-    return UpdateOrganizationEventRequest._(
+    return UpdateOrganizationEventRequest.fromFields(
       name: name,
       description: description,
       location: location,
@@ -116,5 +100,7 @@ class UpdateOrganizationEventRequest {
         'calledGroupIds': calledGroupIds,
         'startDate': startDate.toUtc().toIso8601String(),
         'endDate': endDate.toUtc().toIso8601String(),
+        if (dressCodeDescription != null) 'dressCodeDescription': dressCodeDescription,
+        if (dressCodeColors != null) 'dressCodeColors': dressCodeColors,
       };
 }
