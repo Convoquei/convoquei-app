@@ -69,6 +69,7 @@ abstract class DSBaseModalState<T extends DSBaseModal> extends State<T> {
   String? get titleText => null;
   Widget? get titleWidget => null;
   bool get showCloseButton => true;
+  bool get showDragHandle => true;
 
   List<Widget> buildBody(BuildContext context);
 
@@ -98,7 +99,7 @@ abstract class DSBaseModalState<T extends DSBaseModal> extends State<T> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (!isDialog) ...[
+            if (!isDialog && showDragHandle) ...[
               const SizedBox(height: DSSpacing.md),
               Center(
                 child: Container(

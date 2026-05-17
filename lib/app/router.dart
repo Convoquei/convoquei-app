@@ -14,6 +14,7 @@ import 'package:convoquei_app/features/organizations/groups/pages/manage_groups_
 import 'package:convoquei_app/features/organizations/roles/pages/manage_roles_page.dart';
 import 'package:convoquei_app/features/organizations/settings/pages/org_settings_page.dart';
 import 'package:convoquei_app/features/organizations/shared/providers/selected_organization_provider.dart';
+import 'package:convoquei_app/features/profile/pages/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,6 +36,7 @@ abstract final class AppRoutes {
   static const orgMinistryRoles = 'org-ministry-roles';
   static const orgMinistryFunctions = 'org-ministry-functions';
   static const orgMinistryGroups = 'org-ministry-groups';
+  static const profile = 'profile';
 }
 
 // ── Route paths ──────────────────────────────────────────────────────────────
@@ -55,6 +57,7 @@ abstract final class AppPaths {
   static const orgMinistryRoles = '/org/ministry/roles';
   static const orgMinistryFunctions = '/org/ministry/functions';
   static const orgMinistryGroups = '/org/ministry/groups';
+  static const profile = '/profile';
 }
 
 // ── Router provider ─────────────────────────────────────────────────────────
@@ -213,6 +216,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           final org = ref.read(selectedOrganizationProvider)!;
           return ManageGroupsPage(organization: org);
         },
+      ),
+
+      GoRoute(
+        path: AppPaths.profile,
+        name: AppRoutes.profile,
+        builder: (_, _) => const ProfilePage(),
       ),
     ],
   );
