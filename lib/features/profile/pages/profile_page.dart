@@ -2,9 +2,8 @@ import 'package:convoquei_app/core/services/toast_feedback_service.dart';
 import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/auth/providers/auth_providers.dart';
 import 'package:convoquei_app/features/profile/providers/app_version_provider.dart';
-import 'package:convoquei_app/features/profile/providers/theme_mode_provider.dart';
 import 'package:convoquei_app/features/profile/widgets/profile_header.dart';
-import 'package:convoquei_app/features/profile/widgets/theme_picker_sheet.dart';
+import 'package:convoquei_app/features/profile/widgets/theme_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,7 +14,6 @@ class ProfilePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).user;
     final versionAsync = ref.watch(appVersionProvider);
-    final themeMode = ref.watch(themeModeProvider);
 
     if (user == null) {
       return const Scaffold(
@@ -26,12 +24,6 @@ class ProfilePage extends ConsumerWidget {
         ),
       );
     }
-
-    final themeModeLabel = switch (themeMode) {
-      ThemeMode.light => 'Claro',
-      ThemeMode.dark => 'Escuro',
-      ThemeMode.system => 'Automático',
-    };
 
     return Scaffold(
       appBar: AppBar(),
@@ -80,28 +72,26 @@ class ProfilePage extends ConsumerWidget {
                     subtitle: 'Marque dias em que você não pode participar',
                     onTap: () => _stub(context),
                   ),
-                  DSMenuTile(
-                    icon: Icons.brightness_medium_rounded,
-                    title: 'Aparência',
-                    subtitle: 'Claro, escuro ou automático',
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        DSText(
-                          themeModeLabel,
-                          variant: DSTextVariant.bodySmall,
-                          color: context.colors.textSecondary,
-                        ),
-                        const SizedBox(width: DSSpacing.xs),
-                        DSIcon(
-                          Icons.chevron_right_rounded,
-                          color: context.colors.textSecondary,
-                          size: DSIconSize.md,
-                        ),
-                      ],
+                ],
+              ),
+              const SizedBox(height: DSSpacing.xl),
+
+              // ── Aparência ────────────────────────────────────────────────
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      left: DSSpacing.xs,
+                      bottom: DSSpacing.sm,
                     ),
-                    onTap: () => ThemePickerSheet.show(context),
+                    child: DSText(
+                      'Aparência',
+                      variant: DSTextVariant.labelMedium,
+                      color: context.colors.textSecondary,
+                    ),
                   ),
+                  const ThemeSelector(),
                 ],
               ),
               const SizedBox(height: DSSpacing.xl),
