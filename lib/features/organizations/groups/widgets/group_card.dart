@@ -59,6 +59,7 @@ class GroupCard extends ConsumerWidget {
           icon: Icons.delete_outline_rounded,
           schema: DSButtonSchema.danger,
           size: DSButtonSize.sm,
+          fullWidth: false,
           onPressed: () => _confirmDelete(context, ref),
         ),
       ],

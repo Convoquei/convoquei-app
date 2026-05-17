@@ -53,6 +53,8 @@ export 'components/lists/ds_selectable_tile.dart';
 export 'components/lists/ds_timeline_group.dart';
 export 'components/lists/ds_quick_menu_item.dart';
 export 'components/lists/ds_list_header.dart';
+export 'components/lists/ds_menu_section.dart';
+export 'components/lists/ds_menu_tile.dart';
 
 // ── Components: overlays ──────────────────────────────────────────────────────
 export 'components/overlays/ds_modal.dart';

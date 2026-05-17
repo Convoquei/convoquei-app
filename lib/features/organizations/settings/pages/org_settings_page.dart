@@ -1,7 +1,6 @@
 import 'package:convoquei_app/app/router.dart';
 import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/settings/widgets/organization_header_card.dart';
-import 'package:convoquei_app/features/organizations/settings/widgets/section_buttons_organization_settings.dart';
 import 'package:convoquei_app/features/organizations/settings/widgets/subscription_plan_card.dart';
 import 'package:convoquei_app/features/organizations/shared/models/enums/organization_permission.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_my_member_profile_model.dart';
@@ -50,79 +49,72 @@ class OrgSettingsPage extends ConsumerWidget {
               monthEvents: 223,
             ),
             const SizedBox(height: DSSpacing.xl),
-            SectionButtonsOrganizationSettings(
+            DSMenuSection(
               title: 'Membros',
-              widgets: [
-                DSActionCard(
+              children: [
+                DSMenuTile(
                   icon: Icons.group_outlined,
                   title: canInviteMembers ? 'Gerenciar Membros' : 'Membros',
                   subtitle: canInviteMembers
                       ? 'Adicione ou remova membros da organização'
                       : 'Veja a lista de membros da organização',
-                  outlined: true,
                   onTap: () => context.push(AppPaths.orgTeam),
                 ),
                 if (canManageFunctions)
-                  DSActionCard(
+                  DSMenuTile(
                     icon: Icons.music_note_outlined,
                     title: 'Gerenciar Funções',
                     subtitle:
                         'Crie e gerencie as funções dos membros da organização',
-                    outlined: true,
                     onTap: () => context.push(AppPaths.orgMinistryFunctions),
                   ),
-                DSActionCard(
+                DSMenuTile(
                   icon: Icons.groups_outlined,
                   title: canManageGroups ? 'Gerenciar Grupos' : 'Grupos',
                   subtitle: canManageGroups
                       ? 'Crie e organize grupos para facilitar a gestão'
                       : 'Veja os grupos da organização',
-                  outlined: true,
                   onTap: () => context.push(AppPaths.orgMinistryGroups),
                 ),
-                DSActionCard(
+                DSMenuTile(
                   icon: Icons.shield_outlined,
                   title: 'Gerenciar Papéis',
                   subtitle: 'Gerencie os papéis da organização (Admin, Líder)',
-                  outlined: true,
                   onTap: canManageRoles
                       ? () => context.push(AppPaths.orgMinistryRoles)
                       : null,
                 ),
-                DSActionCard(
+                DSMenuTile(
                   icon: Icons.mail_outline_rounded,
                   title: 'Convites Pendentes',
                   subtitle: 'Veja quem ainda não aceitou entrar',
-                  outlined: true,
                   onTap: canInviteMembers ? () {} : null,
                 ),
               ],
             ),
             const SizedBox(height: DSSpacing.xl),
-            SectionButtonsOrganizationSettings(
-              title: 'EVENTOS',
-              widgets: [
-                DSActionCard(
+            DSMenuSection(
+              title: 'Eventos',
+              children: [
+                DSMenuTile(
                   icon: Icons.repeat_outlined,
                   title: 'Recorrências',
                   subtitle: 'Crie padrões de eventos de forma automática',
-                  outlined: true,
                   onTap: () {},
                 ),
-                DSActionCard(
+                DSMenuTile(
                   icon: Icons.event_outlined,
                   title: 'Todos os Eventos',
                   subtitle: 'Visualize e edite todo o histórico',
-                  outlined: true,
                   onTap: () {},
                 ),
               ],
             ),
             if (canManageSubscription) ...[
               const SizedBox(height: DSSpacing.xl),
-              SectionButtonsOrganizationSettings(
-                title: 'ASSINATURA',
-                widgets: [SubscriptionPlanCard()],
+              DSMenuSection(
+                title: 'Assinatura',
+                children: [const SubscriptionPlanCard()],
               ),
             ],
           ],

@@ -63,8 +63,8 @@ class _OrgHomePageState extends ConsumerState<OrgHomePage> {
                 _QuickMenu(orgId: orgId),
                 // const _BirthdaysSection(),
                 // const SizedBox(height: DSSpacing.xl),
-                const SizedBox(height: DSSpacing.xl),
-                const _NoticesSection(),
+                // const SizedBox(height: DSSpacing.xl),
+                // const _NoticesSection(),
                 const SizedBox(height: DSSpacing.xl),
                 _NextAssignedSection(orgId: orgId),
               ]
