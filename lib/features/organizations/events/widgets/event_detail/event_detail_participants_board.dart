@@ -35,6 +35,20 @@ class _EventDetailParticipantsBoardState
     extends ConsumerState<EventDetailParticipantsBoard> {
   final _searchController = TextEditingController();
   String _query = '';
+  final Set<String> _loadingIds = {};
+
+  Future<void> _runAction(
+    String participantId,
+    Future<void> Function() action,
+  ) async {
+    if (_loadingIds.contains(participantId)) return;
+    setState(() => _loadingIds.add(participantId));
+    try {
+      await action();
+    } finally {
+      if (mounted) setState(() => _loadingIds.remove(participantId));
+    }
+  }
 
   @override
   void dispose() {
@@ -353,21 +367,22 @@ class _EventDetailParticipantsBoardState
         EventDetailParticipantTile(
           participant: p,
           variant: variant,
+          isLoading: _loadingIds.contains(p.participantId),
           onApprove: widget.canManageEvents
-              ? () => _approve(p.participantId)
+              ? () => _runAction(p.participantId, () => _approve(p.participantId))
               : null,
           onReject: widget.canManageEvents
-              ? () => _reject(p.participantId)
+              ? () => _runAction(p.participantId, () => _reject(p.participantId))
               : null,
           onRemove: widget.canManageEvents
-              ? () => _remove(p.participantId)
+              ? () => _runAction(p.participantId, () => _remove(p.participantId))
               : null,
           onRequest: widget.canManageEvents
               ? () => _request(p.participantId)
               : null,
           onAssign: widget.canManageEvents &&
                   variant == EventDetailParticipantVariant.dismissed
-              ? () => _assign(p.participantId)
+              ? () => _runAction(p.participantId, () => _assign(p.participantId))
               : null,
           requestCooldown: ref
               .read(requestAvailabilityProvider.notifier)

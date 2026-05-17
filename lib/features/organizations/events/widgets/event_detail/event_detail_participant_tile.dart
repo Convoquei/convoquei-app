@@ -11,6 +11,7 @@ class EventDetailParticipantTile extends StatelessWidget {
     super.key,
     required this.participant,
     required this.variant,
+    this.isLoading = false,
     this.onApprove,
     this.onReject,
     this.onRemove,
@@ -21,6 +22,7 @@ class EventDetailParticipantTile extends StatelessWidget {
 
   final OrganizationEventParticipantModel participant;
   final EventDetailParticipantVariant variant;
+  final bool isLoading;
   final VoidCallback? onApprove;
   final VoidCallback? onReject;
   final VoidCallback? onRemove;
@@ -114,14 +116,16 @@ class EventDetailParticipantTile extends StatelessWidget {
                 icon: Icons.check_rounded,
                 color: context.colors.success,
                 bgColor: context.colors.successTint,
-                onTap: onApprove,
+                isLoading: isLoading,
+                onTap: isLoading ? null : onApprove,
               ),
               const SizedBox(width: 6),
               _ActionIcon(
                 icon: Icons.close_rounded,
                 color: context.colors.danger,
                 bgColor: context.colors.dangerTint,
-                onTap: onReject,
+                isLoading: false,
+                onTap: isLoading ? null : onReject,
               ),
             ],
           ),
@@ -130,7 +134,8 @@ class EventDetailParticipantTile extends StatelessWidget {
             icon: Icons.remove_rounded,
             color: context.colors.textSecondary,
             bgColor: context.colors.surfaceSubtle,
-            onTap: onRemove,
+            isLoading: isLoading,
+            onTap: isLoading ? null : onRemove,
           ),
         EventDetailParticipantVariant.pending when onRequest != null =>
           _RequestButton(
@@ -142,7 +147,8 @@ class EventDetailParticipantTile extends StatelessWidget {
             icon: Icons.add_rounded,
             color: context.colors.primary,
             bgColor: context.colors.primaryTint,
-            onTap: onAssign,
+            isLoading: isLoading,
+            onTap: isLoading ? null : onAssign,
           ),
         _ => const SizedBox.shrink(),
       };
@@ -153,12 +159,14 @@ class _ActionIcon extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.bgColor,
+    this.isLoading = false,
     this.onTap,
   });
 
   final IconData icon;
   final Color color;
   final Color bgColor;
+  final bool isLoading;
   final VoidCallback? onTap;
 
   @override
@@ -173,7 +181,15 @@ class _ActionIcon extends StatelessWidget {
           borderRadius: DSRadius.allSm,
           border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
-        child: Icon(icon, size: 16, color: color),
+        child: isLoading
+            ? Padding(
+                padding: const EdgeInsets.all(7),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: color,
+                ),
+              )
+            : Icon(icon, size: 16, color: color),
       ),
     );
   }

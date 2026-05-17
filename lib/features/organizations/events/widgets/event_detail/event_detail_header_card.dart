@@ -374,9 +374,7 @@ class _PersonalStatusRow extends StatelessWidget {
   final VoidCallback onAvailable;
   final VoidCallback onUnavailable;
 
-  bool get _availabilityOpen =>
-      details.status == OrganizationEventStatus.scheduled &&
-      details.availabilityLockEpochSeconds > 0;
+  bool get _availabilityOpen => details.allowAssignment;
 
   @override
   Widget build(BuildContext context) {
@@ -584,14 +582,10 @@ class _AnswerAvailabilityBottomSheet extends DSBaseModal {
     BuildContext context,
     String eventName,
     DateTime eventDate,
-  ) =>
-      DSBaseModal.show<bool>(
-        context,
-        _AnswerAvailabilityBottomSheet(
-          eventName: eventName,
-          eventDate: eventDate,
-        ),
-      );
+  ) => DSBaseModal.show<bool>(
+    context,
+    _AnswerAvailabilityBottomSheet(eventName: eventName, eventDate: eventDate),
+  );
 
   @override
   State<_AnswerAvailabilityBottomSheet> createState() =>
@@ -620,10 +614,7 @@ class _AnswerAvailabilityBottomSheetState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    widget.eventName,
-                    style: context.textStyles.titleMedium,
-                  ),
+                  Text(widget.eventName, style: context.textStyles.titleMedium),
                   const SizedBox(height: 4),
                   Text(
                     _formatDate(widget.eventDate),
@@ -662,8 +653,18 @@ class _AnswerAvailabilityBottomSheetState
 
   String _formatDate(DateTime date) {
     const months = [
-      'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
-      'jul', 'ago', 'set', 'out', 'nov', 'dez',
+      'jan',
+      'fev',
+      'mar',
+      'abr',
+      'mai',
+      'jun',
+      'jul',
+      'ago',
+      'set',
+      'out',
+      'nov',
+      'dez',
     ];
     const weekdays = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
     final weekday = weekdays[date.weekday - 1];
