@@ -268,7 +268,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                   values: _EventDetailTab.values,
                   labelBuilder: (t) => switch (t) {
                     _EventDetailTab.people => 'Escala',
-                    _EventDetailTab.rules => 'Regras de Inteligência',
+                    _EventDetailTab.rules => 'Personalização',
                   },
                   onChanged: (t) => setState(() => _tab = t),
                 ),
@@ -335,7 +335,9 @@ class _EscalaTabContent extends StatelessWidget {
           organizationId: organizationId,
           eventId: eventId,
           participants: details.participants,
-          canManageEvents: canManageEvents,
+          canManageEvents:
+              canManageEvents &&
+              details.status == OrganizationEventStatus.scheduled,
         ),
       ],
     );
@@ -425,8 +427,7 @@ class _EventOptionsModalState extends DSBaseModalState<_EventOptionsModal> {
             },
           ),
         ),
-      if (widget.canManageEvents &&
-          widget.eventStatus != OrganizationEventStatus.canceled)
+      if (canEdit)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: ActionTile(

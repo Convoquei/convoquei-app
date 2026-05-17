@@ -89,7 +89,9 @@ class EventDetailParticipantTile extends StatelessWidget {
   }
 
   Widget _trailing(BuildContext context) => switch (variant) {
-        EventDetailParticipantVariant.candidate => Row(
+        EventDetailParticipantVariant.candidate when onApprove != null ||
+            onReject != null =>
+          Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               _ActionIcon(
@@ -107,17 +109,19 @@ class EventDetailParticipantTile extends StatelessWidget {
               ),
             ],
           ),
-        EventDetailParticipantVariant.assigned => _ActionIcon(
+        EventDetailParticipantVariant.assigned when onRemove != null =>
+          _ActionIcon(
             icon: Icons.remove_rounded,
             color: context.colors.textSecondary,
             bgColor: context.colors.surfaceSubtle,
             onTap: onRemove,
           ),
-        EventDetailParticipantVariant.pending => _RequestButton(
+        EventDetailParticipantVariant.pending when onRequest != null =>
+          _RequestButton(
             onTap: onRequest,
             cooldown: requestCooldown,
           ),
-        EventDetailParticipantVariant.dismissed => const SizedBox.shrink(),
+        _ => const SizedBox.shrink(),
       };
 }
 
