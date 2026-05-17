@@ -11,12 +11,12 @@ class RequestAvailability extends _$RequestAvailability {
   @override
   Map<String, DateTime> build() => {};
 
-  void request(String membershipId) {
-    state = {...state, membershipId: DateTime.now()};
+  void request(String participantId) {
+    state = {...state, participantId: DateTime.now()};
   }
 
-  bool hasCooldown(String membershipId) {
-    final ts = state[membershipId];
+  bool hasCooldown(String participantId) {
+    final ts = state[participantId];
     if (ts == null) return false;
     return DateTime.now().difference(ts) < _cooldown;
   }

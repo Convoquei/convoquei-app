@@ -30,22 +30,26 @@ class EventCard extends StatefulWidget {
     this.onUnavailable,
     this.onLeaveSchedule,
     this.onTap,
-  }) : assert(skeleton || event != null, 'event is required when skeleton is false');
+  }) : assert(
+         skeleton || event != null,
+         'event is required when skeleton is false',
+       );
 
   @override
   State<EventCard> createState() => _EventCardState();
 }
 
 class _EventCardState extends State<EventCard> {
-  bool _isLoadingAvailable   = false;
+  bool _isLoadingAvailable = false;
   bool _isLoadingUnavailable = false;
-  bool _isLoadingLeave       = false;
+  bool _isLoadingLeave = false;
 
   bool get _isAnyLoading =>
       _isLoadingAvailable || _isLoadingUnavailable || _isLoadingLeave;
 
   // ── Accent color by membership status ────────────────────────────
-  Color _accentColor(BuildContext context) => switch (widget.event!.membershipStatus) {
+  Color _accentColor(BuildContext context) =>
+      switch (widget.event!.membershipStatus) {
         OrganizationEventMembershipStatus.assigned => context.colors.primary,
         OrganizationEventMembershipStatus.pending =>
           switch (widget.event!.membershipAvailabilityStatus) {
@@ -54,16 +58,14 @@ class _EventCardState extends State<EventCard> {
             OrganizationEventMembershipAvailabilityStatus.unavailable =>
               context.colors.danger,
             OrganizationEventMembershipAvailabilityStatus.notAnswered ||
-            null =>
-              context.colors.warning,
+            null => context.colors.warning,
           },
         OrganizationEventMembershipStatus.notAssigned ||
         OrganizationEventMembershipStatus.expired ||
-        null =>
-          context.colors.border,
-        OrganizationEventMembershipStatus.awaitingAssignment ||
-            OrganizationEventMembershipStatus.awaitingDraw =>
-          const Color(0xFF8B5CF6),
+        null => context.colors.border,
+        OrganizationEventMembershipStatus.awaitingAssignment =>
+          context.colors.info,
+        OrganizationEventMembershipStatus.invited => context.colors.warning,
       };
 
   // ─────────────────────────────────────────────────────────────────
@@ -71,11 +73,12 @@ class _EventCardState extends State<EventCard> {
   Widget build(BuildContext context) {
     if (widget.skeleton) return _EventCardSkeleton();
 
-    final event      = widget.event!;
+    final event = widget.event!;
     final isCanceled = event.status == OrganizationEventStatus.canceled;
 
-    final showUrgent = !isCanceled &&
-        event.availabilityLockBeforeStartMinutes > 0 &&
+    final showUrgent =
+        !isCanceled &&
+        event.availabilityLockBeforeStartInMinutes > 0 &&
         event.availabilityLockEpochSeconds <= 86400 &&
         event.availabilityLockEpochSeconds > 0;
 
@@ -152,7 +155,8 @@ class _EventCardState extends State<EventCard> {
                                 Flexible(child: UrgentBadge(event: event)),
                                 const SizedBox(width: 6),
                               ],
-                              if (showInProgress) EventStatusBadge(event.status),
+                              if (showInProgress)
+                                EventStatusBadge(event.status),
                             ],
                           ),
                           const SizedBox(height: 8),
@@ -175,11 +179,15 @@ class _EventCardState extends State<EventCard> {
                             const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 7, vertical: 3),
+                                horizontal: 7,
+                                vertical: 3,
+                              ),
                               decoration: BoxDecoration(
                                 color: context.colors.surfaceSubtle,
                                 borderRadius: DSRadius.allSm,
-                                border: Border.all(color: context.colors.border),
+                                border: Border.all(
+                                  color: context.colors.border,
+                                ),
                               ),
                               child: Text(
                                 '${DateFormat('HH:mm').format(event.startTime)} – ${DateFormat('HH:mm').format(event.endTime)}',
@@ -197,8 +205,11 @@ class _EventCardState extends State<EventCard> {
                         // ── Localização ───────────────────────────
                         Row(
                           children: [
-                            Icon(Icons.location_on_rounded,
-                                size: 12, color: context.colors.textSecondary),
+                            Icon(
+                              Icons.location_on_rounded,
+                              size: 12,
+                              color: context.colors.textSecondary,
+                            ),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
@@ -274,7 +285,8 @@ class _EventCardState extends State<EventCard> {
                 schema: DSButtonSchema.success,
                 size: DSButtonSize.sm,
                 isLoading: _isLoadingAvailable,
-                onPressed: (widget.onAvailable == null ||
+                onPressed:
+                    (widget.onAvailable == null ||
                         (_isAnyLoading && !_isLoadingAvailable))
                     ? null
                     : () async {
@@ -282,7 +294,8 @@ class _EventCardState extends State<EventCard> {
                         try {
                           await widget.onAvailable!();
                         } finally {
-                          if (mounted) setState(() => _isLoadingAvailable = false);
+                          if (mounted)
+                            setState(() => _isLoadingAvailable = false);
                         }
                       },
               ),
@@ -296,7 +309,8 @@ class _EventCardState extends State<EventCard> {
                 schema: DSButtonSchema.ghost,
                 size: DSButtonSize.sm,
                 isLoading: _isLoadingUnavailable,
-                onPressed: (widget.onUnavailable == null ||
+                onPressed:
+                    (widget.onUnavailable == null ||
                         (_isAnyLoading && !_isLoadingUnavailable))
                     ? null
                     : () async {
@@ -438,8 +452,10 @@ class _EventCardState extends State<EventCard> {
     }
 
     if (event.status == OrganizationEventStatus.completed) {
-      final formattedDate =
-          DateFormat("d 'de' MMMM 'às' HH:mm", 'pt_BR').format(event.endTime);
+      final formattedDate = DateFormat(
+        "d 'de' MMMM 'às' HH:mm",
+        'pt_BR',
+      ).format(event.endTime);
       return DSInfoBanner(
         bgColor: context.colors.surfaceSubtle,
         borderColor: context.colors.border,
@@ -452,7 +468,8 @@ class _EventCardState extends State<EventCard> {
     }
 
     if (!event.allowAssignment) {
-      if (event.membershipStatus == OrganizationEventMembershipStatus.assigned) {
+      if (event.membershipStatus ==
+          OrganizationEventMembershipStatus.assigned) {
         return DSInfoBanner(
           bgColor: context.colors.successTint,
           borderColor: context.colors.success.withValues(alpha: 0.3),
@@ -475,83 +492,83 @@ class _EventCardState extends State<EventCard> {
 
     return switch (event.membershipStatus) {
       OrganizationEventMembershipStatus.assigned => Row(
-          children: [
-            _StatusCircle(
-              bgColor: context.colors.successTint,
-              borderColor: context.colors.success.withValues(alpha: 0.3),
-              icon: Icons.check_rounded,
-              iconColor: context.colors.success,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Você está escalado',
-                style: context.textStyles.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: context.colors.textPrimary,
-                  fontSize: 11,
-                ),
+        children: [
+          _StatusCircle(
+            bgColor: context.colors.successTint,
+            borderColor: context.colors.success.withValues(alpha: 0.3),
+            icon: Icons.check_rounded,
+            iconColor: context.colors.success,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Você está escalado',
+              style: context.textStyles.labelSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: context.colors.textPrimary,
+                fontSize: 11,
               ),
             ),
-            if (event.membershipAvailabilityStatus ==
-                OrganizationEventMembershipAvailabilityStatus.available)
-              DSButton(
-                label: 'Sair',
-                icon: Icons.logout_rounded,
-                outlined: true,
-                schema: DSButtonSchema.ghost,
-                size: DSButtonSize.xs,
-                isLoading: _isLoadingLeave,
-                fullWidth: false,
-                onPressed: (widget.onLeaveSchedule == null || _isAnyLoading)
-                    ? null
-                    : () async {
-                        setState(() => _isLoadingLeave = true);
-                        try {
-                          await widget.onLeaveSchedule!();
-                        } finally {
-                          if (mounted) setState(() => _isLoadingLeave = false);
-                        }
-                      },
-              )
-            else
-              _ParticipantsChip(count: event.participantsCount),
-          ],
-        ),
+          ),
+          if (event.membershipAvailabilityStatus ==
+              OrganizationEventMembershipAvailabilityStatus.available)
+            DSButton(
+              label: 'Sair',
+              icon: Icons.logout_rounded,
+              outlined: true,
+              schema: DSButtonSchema.ghost,
+              size: DSButtonSize.xs,
+              isLoading: _isLoadingLeave,
+              fullWidth: false,
+              onPressed: (widget.onLeaveSchedule == null || _isAnyLoading)
+                  ? null
+                  : () async {
+                      setState(() => _isLoadingLeave = true);
+                      try {
+                        await widget.onLeaveSchedule!();
+                      } finally {
+                        if (mounted) setState(() => _isLoadingLeave = false);
+                      }
+                    },
+            )
+          else
+            _ParticipantsChip(count: event.participantsCount),
+        ],
+      ),
       OrganizationEventMembershipStatus.awaitingAssignment => DSInfoBanner(
-          bgColor: context.colors.infoTint,
-          borderColor: context.colors.info.withValues(alpha: 0.3),
-          icon: Icons.hourglass_top_rounded,
-          iconColor: context.colors.info,
-          label: 'Aguardando escalação',
-          sublabel: 'Aguardando a aprovação da sua escala',
-        ),
-      OrganizationEventMembershipStatus.awaitingDraw => DSInfoBanner(
-          bgColor: context.colors.infoTint,
-          borderColor: context.colors.info.withValues(alpha: 0.3),
-          icon: Icons.casino_rounded,
-          iconColor: context.colors.info,
-          label: 'Aguardando sorteio',
-          sublabel: 'Escalação será definida por sorteio',
-        ),
+        bgColor: context.colors.infoTint,
+        borderColor: context.colors.info.withValues(alpha: 0.3),
+        icon: Icons.hourglass_top_rounded,
+        iconColor: context.colors.info,
+        label: 'Aguardando escalação',
+        sublabel: 'Aguardando a aprovação da sua escala',
+      ),
+      OrganizationEventMembershipStatus.invited => DSInfoBanner(
+        bgColor: context.colors.warningTint,
+        borderColor: context.colors.warning.withValues(alpha: 0.3),
+        icon: Icons.mail_outline_rounded,
+        iconColor: context.colors.warning,
+        label: 'Participação solicitada',
+        sublabel: 'Abra o evento para confirmar.',
+      ),
       OrganizationEventMembershipStatus.notAssigned || null => DSInfoBanner(
-          bgColor: context.colors.surfaceSubtle,
-          borderColor: context.colors.border,
-          icon: Icons.close_rounded,
-          iconColor: context.colors.textSecondary,
-          label: 'Não escalado',
-          sublabel: 'Você não está nesta escala.',
-          labelColor: context.colors.textSecondary,
-        ),
+        bgColor: context.colors.surfaceSubtle,
+        borderColor: context.colors.border,
+        icon: Icons.close_rounded,
+        iconColor: context.colors.textSecondary,
+        label: 'Não escalado',
+        sublabel: 'Você não está nesta escala.',
+        labelColor: context.colors.textSecondary,
+      ),
       OrganizationEventMembershipStatus.expired => DSInfoBanner(
-          bgColor: context.colors.dangerTint,
-          borderColor: context.colors.danger.withValues(alpha: 0.3),
-          icon: Icons.timer_off_rounded,
-          iconColor: context.colors.danger,
-          label: 'Resposta expirada',
-          sublabel: 'O prazo para responder passou.',
-          labelColor: context.colors.textSecondary,
-        ),
+        bgColor: context.colors.dangerTint,
+        borderColor: context.colors.danger.withValues(alpha: 0.3),
+        icon: Icons.timer_off_rounded,
+        iconColor: context.colors.danger,
+        label: 'Resposta expirada',
+        sublabel: 'O prazo para responder passou.',
+        labelColor: context.colors.textSecondary,
+      ),
       OrganizationEventMembershipStatus.pending => const SizedBox.shrink(),
     };
   }
@@ -605,13 +622,26 @@ class _EventCardSkeleton extends StatelessWidget {
                   children: [
                     Row(
                       children: const [
-                        Expanded(child: DSSkeleton(height: 16, borderRadius: DSRadius.sm)),
+                        Expanded(
+                          child: DSSkeleton(
+                            height: 16,
+                            borderRadius: DSRadius.sm,
+                          ),
+                        ),
                         SizedBox(width: 8),
-                        DSSkeleton(width: 72, height: 22, borderRadius: DSRadius.sm),
+                        DSSkeleton(
+                          width: 72,
+                          height: 22,
+                          borderRadius: DSRadius.sm,
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    const DSSkeleton(width: 130, height: 12, borderRadius: DSRadius.sm),
+                    const DSSkeleton(
+                      width: 130,
+                      height: 12,
+                      borderRadius: DSRadius.sm,
+                    ),
                     const SizedBox(height: 10),
                     Divider(height: 1, color: context.colors.surfaceSubtle),
                     const SizedBox(height: 10),
@@ -675,7 +705,11 @@ class _ParticipantsChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.people_rounded, size: 12, color: context.colors.textSecondary),
+          Icon(
+            Icons.people_rounded,
+            size: 12,
+            color: context.colors.textSecondary,
+          ),
           const SizedBox(width: 4),
           Text(
             '$count membros',

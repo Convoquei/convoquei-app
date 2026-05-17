@@ -16,7 +16,9 @@ class OrganizationEventCalledGroupModel {
     required this.icon,
   });
 
-  factory OrganizationEventCalledGroupModel.fromJson(Map<String, dynamic> json) {
+  factory OrganizationEventCalledGroupModel.fromJson(
+    Map<String, dynamic> json,
+  ) {
     return OrganizationEventCalledGroupModel(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -42,20 +44,25 @@ class OrganizationEventCalledFunctionDetailsModel {
     required this.assignmentMode,
   });
 
-  factory OrganizationEventCalledFunctionDetailsModel.fromJson(Map<String, dynamic> json) {
+  factory OrganizationEventCalledFunctionDetailsModel.fromJson(
+    Map<String, dynamic> json,
+  ) {
     return OrganizationEventCalledFunctionDetailsModel(
       functionId: json['functionId'] as String,
       functionName: json['functionName'] as String,
       icon: json['icon'] as String,
       minMembers: json['minMembers'] as int,
       maxMembers: json['maxMembers'] as int?,
-      assignmentMode: OrganizationEventAssignmentMode.fromCode(json['assignmentMode'] as String),
+      assignmentMode: OrganizationEventAssignmentMode.fromCode(
+        json['assignmentMode'] as String,
+      ),
     );
   }
 }
 
 class OrganizationEventParticipantModel {
-  final String membershipId;
+  final String participantId;
+  final String memberId;
   final String name;
   final String? avatarUrl;
   final String? function;
@@ -64,7 +71,8 @@ class OrganizationEventParticipantModel {
   final DateTime updatedAt;
 
   OrganizationEventParticipantModel({
-    required this.membershipId,
+    required this.participantId,
+    required this.memberId,
     required this.name,
     this.avatarUrl,
     this.function,
@@ -73,16 +81,22 @@ class OrganizationEventParticipantModel {
     required this.updatedAt,
   });
 
-  factory OrganizationEventParticipantModel.fromJson(Map<String, dynamic> json) {
+  factory OrganizationEventParticipantModel.fromJson(
+    Map<String, dynamic> json,
+  ) {
     return OrganizationEventParticipantModel(
-      membershipId: json['membershipId'] as String,
+      participantId: json['participantId'] as String,
+      memberId: json['memberId'] as String,
       name: json['name'] as String,
       avatarUrl: json['avatarUrl'] as String?,
       function: json['function'] as String?,
-      status: OrganizationEventMembershipStatus.fromCode(json['status'] as String),
-      availabilityStatus: OrganizationEventMembershipAvailabilityStatus.fromCode(
-        json['availabilityStatus'] as String,
+      status: OrganizationEventMembershipStatus.fromCode(
+        json['status'] as String,
       ),
+      availabilityStatus:
+          OrganizationEventMembershipAvailabilityStatus.fromCode(
+            json['availabilityStatus'] as String,
+          ),
       updatedAt: DateTime.parse(json['updatedAt'] as String).toLocal(),
     );
   }
@@ -138,28 +152,49 @@ class OrganizationEventDetailsModel {
       status: OrganizationEventStatus.fromCode(json['status'] as String),
       startAt: DateTime.parse(json['startAt'] as String).toLocal(),
       endAt: DateTime.parse(json['endAt'] as String).toLocal(),
-      assignmentMode: OrganizationEventAssignmentMode.fromCode(json['assignmentMode'] as String),
+      assignmentMode: OrganizationEventAssignmentMode.fromCode(
+        json['assignmentMode'] as String,
+      ),
       callMode: OrganizationEventCallMode.fromCode(json['callMode'] as String),
       functionCallMode: json['functionCallMode'] != null
-          ? OrganizationEventFunctionCallMode.fromCode(json['functionCallMode'] as String)
+          ? OrganizationEventFunctionCallMode.fromCode(
+              json['functionCallMode'] as String,
+            )
           : null,
-      availabilityLockBeforeStartInMinutes: json['availabilityLockBeforeStartInMinutes'] as int,
+      availabilityLockBeforeStartInMinutes:
+          json['availabilityLockBeforeStartInMinutes'] as int,
       availabilityLockEpochSeconds: json['availabilityLockEpochSeconds'] as int,
       allowAssignment: json['allowAssignment'] as bool,
-      calledGroups: (json['calledGroups'] as List<dynamic>?)
-              ?.map((e) => OrganizationEventCalledGroupModel.fromJson(e as Map<String, dynamic>))
+      calledGroups:
+          (json['calledGroups'] as List<dynamic>?)
+              ?.map(
+                (e) => OrganizationEventCalledGroupModel.fromJson(
+                  e as Map<String, dynamic>,
+                ),
+              )
               .toList() ??
           [],
-      calledFunctions: (json['calledFunctions'] as List<dynamic>?)
-              ?.map((e) => OrganizationEventCalledFunctionDetailsModel.fromJson(e as Map<String, dynamic>))
+      calledFunctions:
+          (json['calledFunctions'] as List<dynamic>?)
+              ?.map(
+                (e) => OrganizationEventCalledFunctionDetailsModel.fromJson(
+                  e as Map<String, dynamic>,
+                ),
+              )
               .toList() ??
           [],
-      participants: (json['participants'] as List<dynamic>?)
-              ?.map((e) => OrganizationEventParticipantModel.fromJson(e as Map<String, dynamic>))
+      participants:
+          (json['participants'] as List<dynamic>?)
+              ?.map(
+                (e) => OrganizationEventParticipantModel.fromJson(
+                  e as Map<String, dynamic>,
+                ),
+              )
               .toList() ??
           [],
       dressCodeDescription: json['dressCodeDescription'] as String?,
-      dressCodeColors: (json['dressCodeColors'] as List<dynamic>?)?.cast<String>(),
+      dressCodeColors: (json['dressCodeColors'] as List<dynamic>?)
+          ?.cast<String>(),
     );
   }
 }

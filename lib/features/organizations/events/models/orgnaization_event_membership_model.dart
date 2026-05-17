@@ -28,7 +28,9 @@ class EventCalledFunctionModel {
       emoji: json['emoji'] as String,
       minMembers: json['minMembers'] as int,
       maxMembers: json['maxMembers'] as int?,
-      assignmentMode: OrganizationEventAssignmentMode.fromCode(json['assignmentMode'] as String),
+      assignmentMode: OrganizationEventAssignmentMode.fromCode(
+        json['assignmentMode'] as String,
+      ),
     );
   }
 }
@@ -41,12 +43,13 @@ class OrganizationEventMembershipModel {
   final DateTime startTime;
   final DateTime endTime;
   final OrganizationEventStatus status;
-  final int availabilityLockBeforeStartMinutes;
+  final int availabilityLockBeforeStartInMinutes;
   final int availabilityLockEpochSeconds;
   final int participantsCount;
   final bool allowAssignment;
   final OrganizationEventAssignmentMode assignmentMode;
-  final OrganizationEventMembershipAvailabilityStatus? membershipAvailabilityStatus;
+  final OrganizationEventMembershipAvailabilityStatus?
+  membershipAvailabilityStatus;
   final OrganizationEventMembershipStatus? membershipStatus;
   final String? membershipFunctionId;
   final String? membershipFunctionName;
@@ -54,7 +57,8 @@ class OrganizationEventMembershipModel {
   final OrganizationEventFunctionCallMode? functionCallMode;
   final List<EventCalledFunctionModel> calledFunctions;
 
-  Duration get durationBeforeStartEvent => Duration(seconds: availabilityLockEpochSeconds);
+  Duration get durationBeforeStartEvent =>
+      Duration(seconds: availabilityLockEpochSeconds);
 
   OrganizationEventMembershipModel({
     required this.id,
@@ -64,7 +68,7 @@ class OrganizationEventMembershipModel {
     required this.startTime,
     required this.endTime,
     required this.status,
-    required this.availabilityLockBeforeStartMinutes,
+    required this.availabilityLockBeforeStartInMinutes,
     required this.availabilityLockEpochSeconds,
     required this.participantsCount,
     required this.allowAssignment,
@@ -87,11 +91,14 @@ class OrganizationEventMembershipModel {
       startTime: DateTime.parse(json['startTime'] as String).toLocal(),
       endTime: DateTime.parse(json['endTime'] as String).toLocal(),
       status: OrganizationEventStatus.fromCode(json['status'] as String),
-      availabilityLockBeforeStartMinutes: json['availabilityLockBeforeStartMinutes'] as int,
+      availabilityLockBeforeStartInMinutes:
+          json['availabilityLockBeforeStartInMinutes'] as int,
       availabilityLockEpochSeconds: json['availabilityLockEpochSeconds'] as int,
       allowAssignment: json['allowAssignment'] as bool,
       participantsCount: json['participantsCount'] as int,
-      assignmentMode: OrganizationEventAssignmentMode.fromCode(json['assignmentMode'] as String),
+      assignmentMode: OrganizationEventAssignmentMode.fromCode(
+        json['assignmentMode'] as String,
+      ),
       membershipAvailabilityStatus: json['membershipAvailabilityStatus'] != null
           ? OrganizationEventMembershipAvailabilityStatus.fromCode(
               json['membershipAvailabilityStatus'] as String,
@@ -106,10 +113,17 @@ class OrganizationEventMembershipModel {
       membershipFunctionName: json['membershipFunctionName'] as String?,
       membershipFunctionEmoji: json['membershipFunctionEmoji'] as String?,
       functionCallMode: json['functionCallMode'] != null
-          ? OrganizationEventFunctionCallMode.fromCode(json['functionCallMode'] as String)
+          ? OrganizationEventFunctionCallMode.fromCode(
+              json['functionCallMode'] as String,
+            )
           : null,
-      calledFunctions: (json['calledFunctions'] as List<dynamic>?)
-              ?.map((e) => EventCalledFunctionModel.fromJson(e as Map<String, dynamic>))
+      calledFunctions:
+          (json['calledFunctions'] as List<dynamic>?)
+              ?.map(
+                (e) => EventCalledFunctionModel.fromJson(
+                  e as Map<String, dynamic>,
+                ),
+              )
               .toList() ??
           [],
     );

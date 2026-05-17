@@ -1,4 +1,6 @@
 import 'package:convoquei_app/design_system/ds.dart';
+import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_availability_status.dart';
+import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_status.dart';
 import 'package:convoquei_app/features/organizations/events/models/organization_event_details_model.dart';
 import 'package:flutter/material.dart';
 
@@ -13,6 +15,7 @@ class EventDetailParticipantTile extends StatelessWidget {
     this.onReject,
     this.onRemove,
     this.onRequest,
+    this.onAssign,
     this.requestCooldown = false,
   });
 
@@ -22,6 +25,7 @@ class EventDetailParticipantTile extends StatelessWidget {
   final VoidCallback? onReject;
   final VoidCallback? onRemove;
   final VoidCallback? onRequest;
+  final VoidCallback? onAssign;
   final bool requestCooldown;
 
   @override
@@ -60,10 +64,22 @@ class EventDetailParticipantTile extends StatelessWidget {
     );
   }
 
+  String get _dismissedSubtitle {
+    if (participant.availabilityStatus ==
+        OrganizationEventMembershipAvailabilityStatus.unavailable) {
+      return 'Informou indisponibilidade';
+    }
+    return switch (participant.status) {
+      OrganizationEventMembershipStatus.notAssigned => 'Não escalado',
+      OrganizationEventMembershipStatus.expired => 'Prazo expirado',
+      _ => 'Dispensado',
+    };
+  }
+
   Widget _subtitle(BuildContext context) {
     return switch (variant) {
       EventDetailParticipantVariant.dismissed => Text(
-          'Informou indisponibilidade',
+          _dismissedSubtitle,
           style: context.textStyles.labelSmall.copyWith(
             color: context.colors.danger,
           ),
@@ -120,6 +136,13 @@ class EventDetailParticipantTile extends StatelessWidget {
           _RequestButton(
             onTap: onRequest,
             cooldown: requestCooldown,
+          ),
+        EventDetailParticipantVariant.dismissed when onAssign != null =>
+          _ActionIcon(
+            icon: Icons.add_rounded,
+            color: context.colors.primary,
+            bgColor: context.colors.primaryTint,
+            onTap: onAssign,
           ),
         _ => const SizedBox.shrink(),
       };

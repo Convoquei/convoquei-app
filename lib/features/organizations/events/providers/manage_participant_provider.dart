@@ -11,38 +11,42 @@ class ManageParticipant extends _$ManageParticipant {
   Future<void> assign({
     required String organizationId,
     required String eventId,
-    required String membershipId,
+    required String participantId,
   }) async {
-    await ref.read(organizationEventsRepositoryProvider).assignParticipant(
+    await ref
+        .read(organizationEventsRepositoryProvider)
+        .assignParticipant(
           organizationId: organizationId,
           eventId: eventId,
-          membershipId: membershipId,
+          participantId: participantId,
         );
   }
 
   Future<void> reject({
     required String organizationId,
     required String eventId,
-    required String membershipId,
+    required String participantId,
   }) async {
-    await ref.read(organizationEventsRepositoryProvider).rejectParticipant(
+    await ref
+        .read(organizationEventsRepositoryProvider)
+        .rejectParticipant(
           organizationId: organizationId,
           eventId: eventId,
-          membershipId: membershipId,
+          participantId: participantId,
         );
   }
 
   Future<void> removeAssigned({
     required String organizationId,
     required String eventId,
-    required String membershipId,
+    required String participantId,
   }) async {
     await ref
         .read(organizationEventsRepositoryProvider)
         .removeAssignedParticipant(
           organizationId: organizationId,
           eventId: eventId,
-          membershipId: membershipId,
+          participantId: participantId,
         );
   }
 
@@ -50,10 +54,9 @@ class ManageParticipant extends _$ManageParticipant {
     required String organizationId,
     required String eventId,
   }) async {
-    await ref.read(organizationEventsRepositoryProvider).removeAvailability(
-          organizationId: organizationId,
-          eventId: eventId,
-        );
+    await ref
+        .read(organizationEventsRepositoryProvider)
+        .removeAvailability(organizationId: organizationId, eventId: eventId);
   }
 
   Future<void> approveAssignment({

@@ -285,8 +285,8 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
                             organizationId: widget.organizationId,
                             eventId: widget.eventId,
                             canManageEvents: widget.canManageEvents,
-                            onLockAssignments: _handleLockAssignments,
-                            onReopenAssignments: _handleReopenAssignments,
+                            onLockAssignments: () => _handleLockAssignments(),
+                            onReopenAssignments: () => _handleReopenAssignments(),
                           )
                         : EventDetailRulesView(details: widget.details),
                   ),
@@ -316,8 +316,8 @@ class _EscalaTabContent extends StatelessWidget {
   final String organizationId;
   final String eventId;
   final bool canManageEvents;
-  final VoidCallback onLockAssignments;
-  final VoidCallback onReopenAssignments;
+  final Future<void> Function() onLockAssignments;
+  final Future<void> Function() onReopenAssignments;
 
   @override
   Widget build(BuildContext context) {
@@ -470,8 +470,8 @@ class _EventStatusCard extends StatefulWidget {
 
   final OrganizationEventDetailsModel details;
   final bool canManageEvents;
-  final VoidCallback onLockAssignments;
-  final VoidCallback onReopenAssignments;
+  final Future<void> Function() onLockAssignments;
+  final Future<void> Function() onReopenAssignments;
 
   @override
   State<_EventStatusCard> createState() => _EventStatusCardState();
@@ -482,9 +482,21 @@ class _EventStatusCardState extends State<_EventStatusCard>
   late final AnimationController _ctrl;
   late final Animation<double> _opacity;
 
+  bool _isLoading = false;
+
   bool get _shouldPulse =>
       widget.details.status == OrganizationEventStatus.scheduled &&
       widget.details.allowAssignment;
+
+  Future<void> _runAction(Future<void> Function() action) async {
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+    try {
+      await action();
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   void initState() {
@@ -572,7 +584,10 @@ class _EventStatusCardState extends State<_EventStatusCard>
           ),
         ),
         actionLabel: widget.canManageEvents ? 'Fechar Agora' : null,
-        onAction: widget.canManageEvents ? widget.onLockAssignments : null,
+        isLoading: _isLoading,
+        onAction: widget.canManageEvents
+            ? () => _runAction(widget.onLockAssignments)
+            : null,
       );
     }
 
@@ -606,7 +621,10 @@ class _EventStatusCardState extends State<_EventStatusCard>
         ),
       ),
       actionLabel: widget.canManageEvents ? 'Reabrir Escala' : null,
-      onAction: widget.canManageEvents ? widget.onReopenAssignments : null,
+      isLoading: _isLoading,
+      onAction: widget.canManageEvents
+          ? () => _runAction(widget.onReopenAssignments)
+          : null,
     );
   }
 
@@ -708,6 +726,7 @@ class _StatusCardShell extends StatelessWidget {
     required this.statusColor,
     required this.description,
     this.actionLabel,
+    this.isLoading = false,
     this.onAction,
   });
 
@@ -721,6 +740,7 @@ class _StatusCardShell extends StatelessWidget {
   final Color statusColor;
   final Widget description;
   final String? actionLabel;
+  final bool isLoading;
   final VoidCallback? onAction;
 
   @override
@@ -773,18 +793,28 @@ class _StatusCardShell extends StatelessWidget {
           ),
 
           // Action button
-          if (actionLabel != null && onAction != null) ...[
+          if (actionLabel != null) ...[
             const SizedBox(width: DSSpacing.sm),
-            GestureDetector(
-              onTap: onAction,
-              child: Text(
-                actionLabel!,
-                style: context.textStyles.labelSmall.copyWith(
+            if (isLoading)
+              SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
                   color: context.colors.primary,
-                  fontWeight: FontWeight.w700,
+                ),
+              )
+            else
+              GestureDetector(
+                onTap: onAction,
+                child: Text(
+                  actionLabel!,
+                  style: context.textStyles.labelSmall.copyWith(
+                    color: context.colors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
-            ),
           ],
         ],
       ),

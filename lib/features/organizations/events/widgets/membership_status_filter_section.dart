@@ -24,8 +24,8 @@ class _MembershipStatusFilterSectionState
 
   static const _options = <OrganizationEventMembershipStatus, String>{
     OrganizationEventMembershipStatus.pending:            'Aguardando Resposta',
+    OrganizationEventMembershipStatus.invited:            'Convidado',
     OrganizationEventMembershipStatus.awaitingAssignment: 'Aguardando Escalação',
-    OrganizationEventMembershipStatus.awaitingDraw:       'Aguardando Sorteio',
     OrganizationEventMembershipStatus.assigned:           'Escalado',
     OrganizationEventMembershipStatus.notAssigned:        'Não Escalado',
   };

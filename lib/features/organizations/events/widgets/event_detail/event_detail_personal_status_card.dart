@@ -8,7 +8,13 @@ import 'package:convoquei_app/features/organizations/events/providers/find_event
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-enum _PersonalStatus { assigned, awaitingApproval, available, unavailable, notAnswered }
+enum _PersonalStatus {
+  assigned,
+  awaitingApproval,
+  available,
+  unavailable,
+  notAnswered,
+}
 
 class EventDetailPersonalStatusCard extends ConsumerStatefulWidget {
   const EventDetailPersonalStatusCard({
@@ -35,7 +41,7 @@ class _EventDetailPersonalStatusCardState
 
   _PersonalStatus get _status {
     final me = widget.participants
-        .where((p) => p.membershipId == widget.currentMemberId)
+        .where((p) => p.participantId == widget.currentMemberId)
         .firstOrNull;
 
     if (me == null) return _PersonalStatus.notAnswered;
@@ -43,8 +49,7 @@ class _EventDetailPersonalStatusCardState
     if (me.status == OrganizationEventMembershipStatus.assigned) {
       return _PersonalStatus.assigned;
     }
-    if (me.status == OrganizationEventMembershipStatus.awaitingAssignment ||
-        me.status == OrganizationEventMembershipStatus.awaitingDraw) {
+    if (me.status == OrganizationEventMembershipStatus.awaitingAssignment) {
       return _PersonalStatus.awaitingApproval;
     }
     if (me.availabilityStatus ==
@@ -61,20 +66,27 @@ class _EventDetailPersonalStatusCardState
   Future<void> _markAvailable() async {
     setState(() => _loading = true);
     try {
-      await ref.read(answerAvailabilityProvider.notifier).answer(
+      await ref
+          .read(answerAvailabilityProvider.notifier)
+          .answer(
             organizationId: widget.organizationId,
             eventId: widget.eventId,
             available: true,
           );
       if (!mounted) return;
-      ref.invalidate(findEventDetailsByIdProvider(
-        organizationId: widget.organizationId,
-        eventId: widget.eventId,
-      ));
+      ref.invalidate(
+        findEventDetailsByIdProvider(
+          organizationId: widget.organizationId,
+          eventId: widget.eventId,
+        ),
+      );
     } catch (_) {
       if (!mounted) return;
       ToastFeedbackService.showToast(
-          context, 'Não foi possível registrar disponibilidade.', ToastType.error);
+        context,
+        'Não foi possível registrar disponibilidade.',
+        ToastType.error,
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -137,37 +149,36 @@ class _EventDetailPersonalStatusCardState
   ({IconData icon, Color color, Color tint, String label}) _statusConfig(
     BuildContext context,
     _PersonalStatus status,
-  ) =>
-      switch (status) {
-        _PersonalStatus.assigned => (
-          icon: Icons.check_circle_rounded,
-          color: context.colors.success,
-          tint: context.colors.successTint,
-          label: 'Você está escalado',
-        ),
-        _PersonalStatus.awaitingApproval => (
-          icon: Icons.hourglass_top_rounded,
-          color: context.colors.warning,
-          tint: context.colors.warningTint,
-          label: 'Aguardando aprovação',
-        ),
-        _PersonalStatus.available => (
-          icon: Icons.thumb_up_rounded,
-          color: context.colors.info,
-          tint: context.colors.infoTint,
-          label: 'Disponível — aguardando escala',
-        ),
-        _PersonalStatus.unavailable => (
-          icon: Icons.block_rounded,
-          color: context.colors.danger,
-          tint: context.colors.dangerTint,
-          label: 'Você informou indisponibilidade',
-        ),
-        _PersonalStatus.notAnswered => (
-          icon: Icons.help_outline_rounded,
-          color: context.colors.textSecondary,
-          tint: context.colors.surfaceSubtle,
-          label: 'Você ainda não respondeu',
-        ),
-      };
+  ) => switch (status) {
+    _PersonalStatus.assigned => (
+      icon: Icons.check_circle_rounded,
+      color: context.colors.success,
+      tint: context.colors.successTint,
+      label: 'Você está escalado',
+    ),
+    _PersonalStatus.awaitingApproval => (
+      icon: Icons.hourglass_top_rounded,
+      color: context.colors.warning,
+      tint: context.colors.warningTint,
+      label: 'Aguardando aprovação',
+    ),
+    _PersonalStatus.available => (
+      icon: Icons.thumb_up_rounded,
+      color: context.colors.info,
+      tint: context.colors.infoTint,
+      label: 'Disponível — aguardando escala',
+    ),
+    _PersonalStatus.unavailable => (
+      icon: Icons.block_rounded,
+      color: context.colors.danger,
+      tint: context.colors.dangerTint,
+      label: 'Você informou indisponibilidade',
+    ),
+    _PersonalStatus.notAnswered => (
+      icon: Icons.help_outline_rounded,
+      color: context.colors.textSecondary,
+      tint: context.colors.surfaceSubtle,
+      label: 'Você ainda não respondeu',
+    ),
+  };
 }

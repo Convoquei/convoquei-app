@@ -111,33 +111,46 @@ class OrganizationEventsRepository extends BaseRepository {
     return OrganizationEventDetailsModel.fromJson(data as Map<String, dynamic>);
   }
 
+  Future<OrganizationEventMembershipModel> findEventMembershipById({
+    required String organizationId,
+    required String eventId,
+  }) async {
+    final data = await apiClient.get(
+      '/v1/organizations/$organizationId/events/$eventId',
+    );
+
+    return OrganizationEventMembershipModel.fromJson(
+      data as Map<String, dynamic>,
+    );
+  }
+
   Future<void> assignParticipant({
     required String organizationId,
     required String eventId,
-    required String membershipId,
+    required String participantId,
   }) async {
     await apiClient.post(
-      '/v1/organizations/$organizationId/events/$eventId/participants/$membershipId/assign',
+      '/v1/organizations/$organizationId/events/$eventId/participants/$participantId/assign',
     );
   }
 
   Future<void> rejectParticipant({
     required String organizationId,
     required String eventId,
-    required String membershipId,
+    required String participantId,
   }) async {
     await apiClient.patch(
-      '/v1/organizations/$organizationId/events/$eventId/participants/$membershipId/reject',
+      '/v1/organizations/$organizationId/events/$eventId/participants/$participantId/reject',
     );
   }
 
   Future<void> removeAssignedParticipant({
     required String organizationId,
     required String eventId,
-    required String membershipId,
+    required String participantId,
   }) async {
     await apiClient.delete(
-      '/v1/organizations/$organizationId/events/$eventId/participants/$membershipId',
+      '/v1/organizations/$organizationId/events/$eventId/participants/$participantId',
     );
   }
 

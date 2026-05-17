@@ -4,6 +4,7 @@ import 'package:convoquei_app/design_system/ds.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_assignment_mode.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_availability_status.dart';
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_status.dart';
+import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_status.dart';
 import 'package:convoquei_app/features/organizations/events/models/organization_event_details_model.dart';
 import 'package:convoquei_app/features/organizations/events/providers/answer_availability_provider.dart';
 import 'package:convoquei_app/features/organizations/events/providers/find_event_details_by_id_provider.dart';
@@ -29,62 +30,48 @@ class EventDetailHeaderCard extends ConsumerStatefulWidget {
   final VoidCallback? onOptions;
 
   @override
-  ConsumerState<EventDetailHeaderCard> createState() => _EventDetailHeaderCardState();
+  ConsumerState<EventDetailHeaderCard> createState() =>
+      _EventDetailHeaderCardState();
 }
 
 class _EventDetailHeaderCardState extends ConsumerState<EventDetailHeaderCard> {
   bool _answerLoading = false;
 
-  // ── Personal status ────────────────────────────────────────────────────────
-
   OrganizationEventParticipantModel? get _me => widget.details.participants
-      .where((p) => p.membershipId == widget.currentMemberId)
+      .where((p) => p.memberId == widget.currentMemberId)
       .firstOrNull;
-
-  _PersonalStatus get _status {
-    final me = _me;
-    if (me == null) return _PersonalStatus.notAnswered;
-    if (me.status == OrganizationEventMembershipStatus.assigned) {
-      return _PersonalStatus.assigned;
-    }
-    if (me.status == OrganizationEventMembershipStatus.awaitingAssignment ||
-        me.status == OrganizationEventMembershipStatus.awaitingDraw) {
-      return _PersonalStatus.awaitingApproval;
-    }
-    if (me.availabilityStatus ==
-        OrganizationEventMembershipAvailabilityStatus.unavailable) {
-      return _PersonalStatus.unavailable;
-    }
-    if (me.availabilityStatus ==
-        OrganizationEventMembershipAvailabilityStatus.available) {
-      return _PersonalStatus.available;
-    }
-    return _PersonalStatus.notAnswered;
-  }
 
   Future<void> _answer(bool available) async {
     setState(() => _answerLoading = true);
     try {
-      await ref.read(answerAvailabilityProvider.notifier).answer(
+      await ref
+          .read(answerAvailabilityProvider.notifier)
+          .answer(
             organizationId: widget.organizationId,
             eventId: widget.eventId,
             available: available,
           );
+
       if (!mounted) return;
-      ref.invalidate(findEventDetailsByIdProvider(
-        organizationId: widget.organizationId,
-        eventId: widget.eventId,
-      ));
+
+      ref.invalidate(
+        findEventDetailsByIdProvider(
+          organizationId: widget.organizationId,
+          eventId: widget.eventId,
+        ),
+      );
     } catch (_) {
       if (!mounted) return;
+
       ToastFeedbackService.showToast(
-          context, 'Não foi possível registrar disponibilidade.', ToastType.error);
+        context,
+        'Não foi possível registrar disponibilidade.',
+        ToastType.error,
+      );
     } finally {
       if (mounted) setState(() => _answerLoading = false);
     }
   }
-
-  // ── Scale type ─────────────────────────────────────────────────────────────
 
   String get _scaleTypeLabel {
     if (details.calledFunctions.isEmpty) {
@@ -92,8 +79,9 @@ class _EventDetailHeaderCardState extends ConsumerState<EventDetailHeaderCard> {
           ? 'Escala Manual'
           : 'Escala Automática';
     }
-    final allMatch = details.calledFunctions
-        .every((f) => f.assignmentMode == details.assignmentMode);
+    final allMatch = details.calledFunctions.every(
+      (f) => f.assignmentMode == details.assignmentMode,
+    );
     if (allMatch) {
       return details.assignmentMode == OrganizationEventAssignmentMode.manual
           ? 'Escala Manual'
@@ -115,40 +103,31 @@ class _EventDetailHeaderCardState extends ConsumerState<EventDetailHeaderCard> {
 
   OrganizationEventDetailsModel get details => widget.details;
 
-  // ── Formatting ─────────────────────────────────────────────────────────────
-
   static String _formatTime(DateTime dt) =>
       '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-
-  // ── Build ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     final sc = _scaleColors;
-    final showPersonal = widget.currentMemberId != null;
 
     return DSCard(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Row: info + date badge ─────────────────────────────────────────
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Left: badge + name + location ──────────────────────────────
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Badge tipo de escala
                     _ScaleBadge(
                       label: _scaleTypeLabel,
                       color: sc.color,
                       tint: sc.tint,
                     ),
                     const SizedBox(height: 6),
-                    // Nome
                     Text(
                       details.name,
                       style: context.textStyles.titleLarge,
@@ -156,7 +135,6 @@ class _EventDetailHeaderCardState extends ConsumerState<EventDetailHeaderCard> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    // Local
                     Row(
                       children: [
                         Icon(
@@ -181,7 +159,6 @@ class _EventDetailHeaderCardState extends ConsumerState<EventDetailHeaderCard> {
                 ),
               ),
               const SizedBox(width: 12),
-              // ── Right: date badge + options menu ───────────────────────────
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -195,7 +172,10 @@ class _EventDetailHeaderCardState extends ConsumerState<EventDetailHeaderCard> {
                         icon: const Icon(Icons.more_vert_rounded, size: 20),
                         onPressed: widget.onOptions,
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
                         color: context.colors.textSecondary,
                       ),
                     ),
@@ -226,21 +206,19 @@ class _EventDetailHeaderCardState extends ConsumerState<EventDetailHeaderCard> {
             ],
           ),
 
-          // ── Divider + personal status ──────────────────────────────────────
-          if (showPersonal) ...[
-            Padding(
-              padding: const EdgeInsets.only(top: 14),
-              child: Divider(height: 1, color: context.colors.border),
-            ),
-            const SizedBox(height: 12),
-            _PersonalStatusRow(
-              status: _status,
-              functionName: _me?.function,
-              loading: _answerLoading,
-              onAvailable: () => _answer(true),
-              onUnavailable: () => _answer(false),
-            ),
-          ],
+          Padding(
+            padding: const EdgeInsets.only(top: 14),
+            child: Divider(height: 1, color: context.colors.border),
+          ),
+          const SizedBox(height: 12),
+
+          _PersonalStatusRow(
+            currentParticipantMembership: _me,
+            details: widget.details,
+            loading: _answerLoading,
+            onAvailable: () => _answer(true),
+            onUnavailable: () => _answer(false),
+          ),
         ],
       ),
     );
@@ -302,7 +280,9 @@ class _DateSquare extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.colors.primaryTint,
         borderRadius: DSRadius.allMd,
-        border: Border.all(color: context.colors.primary.withValues(alpha: 0.15)),
+        border: Border.all(
+          color: context.colors.primary.withValues(alpha: 0.15),
+        ),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -379,67 +359,187 @@ class _TimeInfo extends StatelessWidget {
   }
 }
 
-// ─── Personal status row ──────────────────────────────────────────────────────
-
-enum _PersonalStatus { assigned, awaitingApproval, available, unavailable, notAnswered }
-
 class _PersonalStatusRow extends StatelessWidget {
   const _PersonalStatusRow({
-    required this.status,
-    this.functionName,
+    required this.currentParticipantMembership,
+    required this.details,
     required this.loading,
     required this.onAvailable,
     required this.onUnavailable,
   });
 
-  final _PersonalStatus status;
-  final String? functionName;
+  final OrganizationEventParticipantModel? currentParticipantMembership;
+  final OrganizationEventDetailsModel details;
   final bool loading;
   final VoidCallback onAvailable;
   final VoidCallback onUnavailable;
 
+  bool get _availabilityOpen =>
+      details.status == OrganizationEventStatus.scheduled &&
+      details.availabilityLockEpochSeconds > 0;
+
   @override
   Widget build(BuildContext context) {
-    final dotColor = switch (status) {
-      _PersonalStatus.assigned => context.colors.success,
-      _PersonalStatus.awaitingApproval => context.colors.warning,
-      _PersonalStatus.available => context.colors.info,
-      _PersonalStatus.unavailable => context.colors.danger,
-      _PersonalStatus.notAnswered => context.colors.warning,
-    };
+    final m = currentParticipantMembership;
+    final open = _availabilityOpen;
 
-    final (String leftText, String? bold) = switch (status) {
-      _PersonalStatus.assigned => (
-        functionName != null ? 'Você está escalado: ' : 'Você está escalado',
-        functionName,
-      ),
-      _PersonalStatus.awaitingApproval => ('Aguardando aprovação', null),
-      _PersonalStatus.available => ('Disponível — aguardando escalação', null),
-      _PersonalStatus.unavailable => ('Você não pode participar', null),
-      _PersonalStatus.notAnswered => (
-        'Você foi convocado',
-        functionName != null ? ': $functionName' : null,
-      ),
-    };
+    Color dotColor;
+    bool pulse;
+    String text;
+    String? boldSuffix;
+    List<Widget> actions = const [];
 
-    final showActions = status == _PersonalStatus.notAnswered ||
-        status == _PersonalStatus.unavailable;
+    if (m == null) {
+      dotColor = context.colors.textSecondary;
+      pulse = false;
+      text = 'Você não foi convocado para este evento.';
+      boldSuffix = null;
+    } else if (m.status == OrganizationEventMembershipStatus.invited) {
+      // O invite sobrescreve a disponibilidade. O backend hoje não invita
+      // indisponíveis, mas a lógica aqui não depende disso — basta o status
+      // chegar como `invited` para mostrar o UI correto.
+      dotColor = context.colors.warning;
+      pulse = true;
+      text = 'Sua participação foi solicitada';
+      boldSuffix = m.function != null ? ': ${m.function}' : null;
+      actions = [
+        const SizedBox(width: 8),
+        GestureDetector(
+          onTap: onAvailable,
+          child: Text(
+            'Aceitar convite',
+            style: context.textStyles.labelSmall.copyWith(
+              color: context.colors.success,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Text(
+            '|',
+            style: TextStyle(color: context.colors.border, fontSize: 12),
+          ),
+        ),
+        GestureDetector(
+          onTap: onUnavailable,
+          child: Text(
+            'Recusar',
+            style: context.textStyles.labelSmall.copyWith(
+              color: context.colors.danger,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ];
+    } else if (m.availabilityStatus ==
+        OrganizationEventMembershipAvailabilityStatus.notAnswered) {
+      if (open) {
+        dotColor = context.colors.warning;
+        pulse = true;
+        text = 'Você ainda não respondeu.';
+        boldSuffix = null;
+        actions = [
+          const SizedBox(width: 8),
+          Builder(
+            builder: (ctx) => GestureDetector(
+              onTap: () async {
+                final result = await _AnswerAvailabilityBottomSheet.show(
+                  ctx,
+                  details.name,
+                  details.startAt,
+                );
+                if (result == true) onAvailable();
+                if (result == false) onUnavailable();
+              },
+              child: Text(
+                'Responder',
+                style: ctx.textStyles.labelSmall.copyWith(
+                  color: ctx.colors.success,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ];
+      } else {
+        dotColor = context.colors.textSecondary;
+        pulse = false;
+        text = 'Prazo de resposta encerrado.';
+        boldSuffix = null;
+      }
+    } else if (m.availabilityStatus ==
+        OrganizationEventMembershipAvailabilityStatus.unavailable) {
+      if (open) {
+        dotColor = context.colors.danger;
+        pulse = false;
+        text = 'Você informou que não pode participar.';
+        boldSuffix = null;
+        actions = [
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: onAvailable,
+            child: Text(
+              'Disponibilizar-me',
+              style: context.textStyles.labelSmall.copyWith(
+                color: context.colors.success,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ];
+      } else {
+        dotColor = context.colors.danger;
+        pulse = false;
+        text = 'Você não pode participar deste evento.';
+        boldSuffix = null;
+      }
+    } else {
+      // availabilityStatus == available — derivar do status de participação
+      switch (m.status) {
+        case OrganizationEventMembershipStatus.awaitingAssignment:
+          dotColor = context.colors.info;
+          pulse = true;
+          text = 'Disponível — aguardando escalação.';
+          boldSuffix = null;
+        case OrganizationEventMembershipStatus.assigned:
+          dotColor = context.colors.success;
+          pulse = true;
+          text = 'Você foi escalado';
+          boldSuffix = m.function != null ? ': ${m.function}' : null;
+        case OrganizationEventMembershipStatus.notAssigned:
+          dotColor = context.colors.textSecondary;
+          pulse = false;
+          text = 'Você não foi escalado para este evento.';
+          boldSuffix = null;
+        case OrganizationEventMembershipStatus.expired:
+          dotColor = context.colors.danger;
+          pulse = false;
+          text = 'Prazo de disponibilidade expirado.';
+          boldSuffix = null;
+        default:
+          dotColor = context.colors.warning;
+          pulse = false;
+          text = 'Status indefinido. Recarregue o evento.';
+          boldSuffix = null;
+      }
+    }
 
     return Row(
       children: [
-        _PulseDot(color: dotColor, pulse: status == _PersonalStatus.notAnswered),
+        _PulseDot(color: dotColor, pulse: pulse),
         const SizedBox(width: 8),
         Expanded(
           child: Text.rich(
             TextSpan(
-              text: leftText,
+              text: text,
               style: context.textStyles.bodySmall.copyWith(
                 color: context.colors.textSecondary,
               ),
               children: [
-                if (bold != null)
+                if (boldSuffix != null)
                   TextSpan(
-                    text: bold,
+                    text: boldSuffix,
                     style: context.textStyles.bodySmall.copyWith(
                       color: context.colors.textPrimary,
                       fontWeight: FontWeight.w600,
@@ -450,36 +550,6 @@ class _PersonalStatusRow extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        if (showActions && !loading) ...[
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: onAvailable,
-            child: Text(
-              'Disponível',
-              style: context.textStyles.labelSmall.copyWith(
-                color: context.colors.success,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: Text(
-              '|',
-              style: TextStyle(color: context.colors.border, fontSize: 12),
-            ),
-          ),
-          GestureDetector(
-            onTap: onUnavailable,
-            child: Text(
-              'Não Posso',
-              style: context.textStyles.labelSmall.copyWith(
-                color: context.colors.danger,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
         if (loading)
           Padding(
             padding: const EdgeInsets.only(left: 8),
@@ -491,9 +561,116 @@ class _PersonalStatusRow extends StatelessWidget {
                 color: context.colors.primary,
               ),
             ),
-          ),
+          )
+        else
+          ...actions,
       ],
     );
+  }
+}
+
+// ─── Answer availability bottom sheet ────────────────────────────────────────
+
+class _AnswerAvailabilityBottomSheet extends DSBaseModal {
+  const _AnswerAvailabilityBottomSheet({
+    required this.eventName,
+    required this.eventDate,
+  });
+
+  final String eventName;
+  final DateTime eventDate;
+
+  static Future<bool?> show(
+    BuildContext context,
+    String eventName,
+    DateTime eventDate,
+  ) =>
+      DSBaseModal.show<bool>(
+        context,
+        _AnswerAvailabilityBottomSheet(
+          eventName: eventName,
+          eventDate: eventDate,
+        ),
+      );
+
+  @override
+  State<_AnswerAvailabilityBottomSheet> createState() =>
+      _AnswerAvailabilityBottomSheetState();
+}
+
+class _AnswerAvailabilityBottomSheetState
+    extends DSBaseModalState<_AnswerAvailabilityBottomSheet> {
+  @override
+  String? get titleText => 'Confirmar disponibilidade';
+
+  @override
+  List<Widget> buildBody(BuildContext context) {
+    return [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(
+          DSSpacing.xl,
+          0,
+          DSSpacing.xl,
+          DSSpacing.xl,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            DSCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.eventName,
+                    style: context.textStyles.titleMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _formatDate(widget.eventDate),
+                    style: context.textStyles.bodySmall.copyWith(
+                      color: context.colors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: DSSpacing.md),
+            Text(
+              'Você pode participar deste evento? Sua resposta ajuda a montar a escala.',
+              style: context.textStyles.bodyMedium.copyWith(
+                color: context.colors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: DSSpacing.lg),
+            DSButton(
+              label: 'Sim, estou disponível',
+              schema: DSButtonSchema.success,
+              onPressed: () => DSBaseModal.hide(context, true),
+            ),
+            const SizedBox(height: DSSpacing.sm),
+            DSButton(
+              label: 'Não posso participar',
+              schema: DSButtonSchema.danger,
+              outlined: true,
+              onPressed: () => DSBaseModal.hide(context, false),
+            ),
+          ],
+        ),
+      ),
+    ];
+  }
+
+  String _formatDate(DateTime date) {
+    const months = [
+      'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
+      'jul', 'ago', 'set', 'out', 'nov', 'dez',
+    ];
+    const weekdays = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
+    final weekday = weekdays[date.weekday - 1];
+    final month = months[date.month - 1];
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    return '$weekday, ${date.day} de $month às $hour:$minute';
   }
 }
 
@@ -506,7 +683,8 @@ class _PulseDot extends StatefulWidget {
   State<_PulseDot> createState() => _PulseDotState();
 }
 
-class _PulseDotState extends State<_PulseDot> with SingleTickerProviderStateMixin {
+class _PulseDotState extends State<_PulseDot>
+    with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _opacity;
 
@@ -517,9 +695,10 @@ class _PulseDotState extends State<_PulseDot> with SingleTickerProviderStateMixi
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    _opacity = Tween(begin: 0.35, end: 1.0).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
+    _opacity = Tween(
+      begin: 0.35,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
     if (widget.pulse) _ctrl.repeat(reverse: true);
   }
 
