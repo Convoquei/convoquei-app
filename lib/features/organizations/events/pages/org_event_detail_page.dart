@@ -13,9 +13,9 @@ import 'package:convoquei_app/features/organizations/home/providers/next_assigne
 import 'package:convoquei_app/features/organizations/home/providers/next_pending_availability_event_provider.dart';
 import 'package:convoquei_app/features/organizations/events/providers/manage_assignments_provider.dart';
 import 'package:convoquei_app/features/organizations/events/services/event_share_service.dart';
-import 'package:convoquei_app/features/organizations/events/widgets/event_detail_hero_card.dart';
-import 'package:convoquei_app/features/organizations/events/widgets/event_participants_view.dart';
-import 'package:convoquei_app/features/organizations/events/widgets/event_rules_view.dart';
+import 'package:convoquei_app/features/organizations/events/widgets/event_detail/event_detail_header_card.dart';
+import 'package:convoquei_app/features/organizations/events/widgets/event_detail/event_detail_participants_board.dart';
+import 'package:convoquei_app/features/organizations/events/widgets/event_detail/event_detail_rules_view.dart';
 import 'package:convoquei_app/features/organizations/home/widgets/team_toggle_widget.dart';
 import 'package:convoquei_app/features/organizations/shared/models/enums/organization_permission.dart';
 import 'package:convoquei_app/features/organizations/shared/models/organization_my_member_profile_model.dart';
@@ -45,7 +45,8 @@ class OrgEventDetailPage extends ConsumerWidget {
       ),
     );
 
-    final canManageEvents = ref
+    final canManageEvents =
+        ref
             .watch(currentUserMembershipOrganizationProvider(organizationId))
             .asData
             ?.value
@@ -114,9 +115,6 @@ class _EventDetailContent extends ConsumerStatefulWidget {
 
 class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
   _EventDetailTab _tab = _EventDetailTab.people;
-  final _rulesKey = GlobalKey<EventRulesViewState>();
-  bool _rulesIsDirty = false;
-  bool _rulesSaving = false;
 
   void _showOptionsModal() {
     _EventOptionsModal.show(
@@ -126,11 +124,8 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
       eventName: widget.details.name,
       canManageEvents: widget.canManageEvents,
       eventStatus: widget.details.status,
-      allowAssignment: widget.details.allowAssignment,
       onShareEvent: _handleShare,
       onCancelEvent: _handleCancelEvent,
-      onLockAssignments: _handleLockAssignments,
-      onReopenAssignments: _handleReopenAssignments,
     );
   }
 
@@ -146,24 +141,29 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
     final confirmed = await UserFeedbackService.confirm(
       context,
       title: 'Fechar Escalação',
-      message: 'Deseja fechar as respostas? Os membros não poderão mais confirmar disponibilidade.',
+      message:
+          'Deseja fechar as respostas? Os membros não poderão mais confirmar disponibilidade.',
       confirmLabel: 'Fechar Escalação',
       cancelLabel: 'Voltar',
     );
     if (!confirmed || !mounted) return;
 
     try {
-      await ref.read(manageAssignmentsProvider.notifier).lock(
-            organizationId: widget.organizationId,
-            eventId: widget.eventId,
-          );
+      await ref
+          .read(manageAssignmentsProvider.notifier)
+          .lock(organizationId: widget.organizationId, eventId: widget.eventId);
       if (!mounted) return;
-      ref.invalidate(findEventDetailsByIdProvider(
-        organizationId: widget.organizationId,
-        eventId: widget.eventId,
-      ));
+      ref.invalidate(
+        findEventDetailsByIdProvider(
+          organizationId: widget.organizationId,
+          eventId: widget.eventId,
+        ),
+      );
       ToastFeedbackService.showToast(
-          context, 'Escalação fechada com sucesso.', ToastType.success);
+        context,
+        'Escalação fechada com sucesso.',
+        ToastType.success,
+      );
     } on ApiException catch (e) {
       if (!mounted) return;
       ToastFeedbackService.showToast(context, e.userMessage, ToastType.error);
@@ -172,17 +172,24 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
 
   Future<void> _handleReopenAssignments() async {
     try {
-      await ref.read(manageAssignmentsProvider.notifier).reopen(
+      await ref
+          .read(manageAssignmentsProvider.notifier)
+          .reopen(
             organizationId: widget.organizationId,
             eventId: widget.eventId,
           );
       if (!mounted) return;
-      ref.invalidate(findEventDetailsByIdProvider(
-        organizationId: widget.organizationId,
-        eventId: widget.eventId,
-      ));
+      ref.invalidate(
+        findEventDetailsByIdProvider(
+          organizationId: widget.organizationId,
+          eventId: widget.eventId,
+        ),
+      );
       ToastFeedbackService.showToast(
-          context, 'Escalação reaberta com sucesso.', ToastType.success);
+        context,
+        'Escalação reaberta com sucesso.',
+        ToastType.success,
+      );
     } on ApiException catch (e) {
       if (!mounted) return;
       ToastFeedbackService.showToast(context, e.userMessage, ToastType.error);
@@ -201,22 +208,29 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
     if (!confirmed || !mounted) return;
 
     try {
-      await ref.read(cancelEventProvider.notifier).cancel(
+      await ref
+          .read(cancelEventProvider.notifier)
+          .cancel(
             organizationId: widget.organizationId,
             eventId: widget.eventId,
           );
       if (!mounted) return;
-      ref.invalidate(findEventDetailsByIdProvider(
-        organizationId: widget.organizationId,
-        eventId: widget.eventId,
-      ));
+      ref.invalidate(
+        findEventDetailsByIdProvider(
+          organizationId: widget.organizationId,
+          eventId: widget.eventId,
+        ),
+      );
       ref.invalidate(eventMembershipProvider(widget.organizationId));
       ref.invalidate(
         nextPendingAvailabilityEventProvider(widget.organizationId),
       );
       ref.invalidate(nextAssignedEventProvider(widget.organizationId));
       ToastFeedbackService.showToast(
-          context, 'Evento cancelado com sucesso.', ToastType.success);
+        context,
+        'Evento cancelado com sucesso.',
+        ToastType.success,
+      );
     } on ApiException catch (e) {
       if (!mounted) return;
       ToastFeedbackService.showToast(context, e.userMessage, ToastType.error);
@@ -225,116 +239,104 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent> {
 
   @override
   Widget build(BuildContext context) {
-    final showBottomBar = _tab == _EventDetailTab.rules && _rulesIsDirty;
-    return Stack(
-      children: [
-        RefreshIndicator(
-          onRefresh: () async => ref.refresh(
-            findEventDetailsByIdProvider(
-              organizationId: widget.organizationId,
-              eventId: widget.eventId,
-            ).future,
-          ),
-          child: CustomScrollView(
-            slivers: [
-              SliverPadding(
-                padding: EdgeInsets.fromLTRB(16, 16, 16, showBottomBar ? 104 : 32),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    EventDetailHeroCard(
-                      details: widget.details,
-                      onOptions:
-                          widget.canManageEvents ? _showOptionsModal : null,
-                    ),
-                    const SizedBox(height: 16),
-                    ToggleTabs<_EventDetailTab>(
-                      selected: _tab,
-                      values: _EventDetailTab.values,
-                      labelBuilder: (t) => switch (t) {
-                        _EventDetailTab.people => 'Pessoas',
-                        _EventDetailTab.rules => 'Regras do Evento',
-                      },
-                      onChanged: (t) => setState(() {
-                        _tab = t;
-                        if (t != _EventDetailTab.rules) {
-                          _rulesIsDirty = false;
-                          _rulesSaving = false;
-                        }
-                      }),
-                    ),
-                    const SizedBox(height: 16),
-                    AnimatedSwitcher(
-                      duration: DSMotion.fast,
-                      child: KeyedSubtree(
-                        key: ValueKey(_tab),
-                        child: _tab == _EventDetailTab.people
-                            ? EventParticipantsView(
-                                organizationId: widget.organizationId,
-                                eventId: widget.eventId,
-                                currentMemberId: widget.currentMember?.id ?? '',
-                                canManageEvents: widget.canManageEvents,
-                                participants: widget.details.participants,
-                              )
-                            : EventRulesView(
-                                key: _rulesKey,
-                                organizationId: widget.organizationId,
-                                canManageEvents: widget.canManageEvents,
-                                details: widget.details,
-                                onDirtyChanged: (dirty) =>
-                                    setState(() => _rulesIsDirty = dirty),
-                                onSavingChanged: (saving) =>
-                                    setState(() => _rulesSaving = saving),
-                              ),
-                      ),
-                    ),
-                  ]),
+    return RefreshIndicator(
+      onRefresh: () async => ref.refresh(
+        findEventDetailsByIdProvider(
+          organizationId: widget.organizationId,
+          eventId: widget.eventId,
+        ).future,
+      ),
+      child: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // ── Header card ────────────────────────────────────────────────
+                EventDetailHeaderCard(
+                  details: widget.details,
+                  organizationId: widget.organizationId,
+                  eventId: widget.eventId,
+                  currentMemberId: widget.currentMember?.id,
+                  onOptions: widget.canManageEvents ? _showOptionsModal : null,
                 ),
-              ),
-            ],
-          ),
-        ),
-        if (showBottomBar)
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              top: false,
-              child: Builder(
-                builder: (context) => Container(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                  decoration: BoxDecoration(
-                    color: context.colors.surface,
-                    border: Border(
-                      top: BorderSide(color: context.colors.border),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: DSButton(
-                          label: 'Redefinir',
-                          icon: Icons.restart_alt_rounded,
-                          outlined: true,
-                          schema: DSButtonSchema.ghost,
-                          onPressed: () => _rulesKey.currentState?.reset(),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: DSButton(
-                          label: 'Salvar Regras',
-                          icon: Icons.save_rounded,
-                          isLoading: _rulesSaving,
-                          onPressed: () => _rulesKey.currentState?.save(),
-                        ),
-                      ),
-                    ],
+                const SizedBox(height: 16),
+
+                // ── Tabs ───────────────────────────────────────────────────────
+                ToggleTabs<_EventDetailTab>(
+                  selected: _tab,
+                  values: _EventDetailTab.values,
+                  labelBuilder: (t) => switch (t) {
+                    _EventDetailTab.people => 'Escala',
+                    _EventDetailTab.rules => 'Regras de Inteligência',
+                  },
+                  onChanged: (t) => setState(() => _tab = t),
+                ),
+                const SizedBox(height: 16),
+
+                // ── Tab content ────────────────────────────────────────────────
+                AnimatedSwitcher(
+                  duration: DSMotion.fast,
+                  child: KeyedSubtree(
+                    key: ValueKey(_tab),
+                    child: _tab == _EventDetailTab.people
+                        ? _EscalaTabContent(
+                            details: widget.details,
+                            organizationId: widget.organizationId,
+                            eventId: widget.eventId,
+                            canManageEvents: widget.canManageEvents,
+                            onLockAssignments: _handleLockAssignments,
+                            onReopenAssignments: _handleReopenAssignments,
+                          )
+                        : EventDetailRulesView(details: widget.details),
                   ),
                 ),
-              ),
+              ]),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Escala Tab Content ───────────────────────────────────────────────────────
+
+class _EscalaTabContent extends StatelessWidget {
+  const _EscalaTabContent({
+    required this.details,
+    required this.organizationId,
+    required this.eventId,
+    required this.canManageEvents,
+    required this.onLockAssignments,
+    required this.onReopenAssignments,
+  });
+
+  final OrganizationEventDetailsModel details;
+  final String organizationId;
+  final String eventId;
+  final bool canManageEvents;
+  final VoidCallback onLockAssignments;
+  final VoidCallback onReopenAssignments;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _EventStatusCard(
+          details: details,
+          canManageEvents: canManageEvents,
+          onLockAssignments: onLockAssignments,
+          onReopenAssignments: onReopenAssignments,
+        ),
+        const SizedBox(height: 16),
+        EventDetailParticipantsBoard(
+          organizationId: organizationId,
+          eventId: eventId,
+          participants: details.participants,
+          canManageEvents: canManageEvents,
+        ),
       ],
     );
   }
@@ -349,11 +351,8 @@ class _EventOptionsModal extends DSBaseModal {
     required this.eventName,
     required this.canManageEvents,
     required this.eventStatus,
-    required this.allowAssignment,
     this.onShareEvent,
     this.onCancelEvent,
-    this.onLockAssignments,
-    this.onReopenAssignments,
   });
 
   final String organizationId;
@@ -361,11 +360,8 @@ class _EventOptionsModal extends DSBaseModal {
   final String eventName;
   final bool canManageEvents;
   final OrganizationEventStatus eventStatus;
-  final bool allowAssignment;
   final VoidCallback? onShareEvent;
   final VoidCallback? onCancelEvent;
-  final VoidCallback? onLockAssignments;
-  final VoidCallback? onReopenAssignments;
 
   static Future<void> show(
     BuildContext context, {
@@ -374,27 +370,20 @@ class _EventOptionsModal extends DSBaseModal {
     required String eventName,
     required bool canManageEvents,
     required OrganizationEventStatus eventStatus,
-    required bool allowAssignment,
     VoidCallback? onShareEvent,
     VoidCallback? onCancelEvent,
-    VoidCallback? onLockAssignments,
-    VoidCallback? onReopenAssignments,
-  }) =>
-      DSBaseModal.show(
-        context,
-        _EventOptionsModal(
-          organizationId: organizationId,
-          eventId: eventId,
-          eventName: eventName,
-          canManageEvents: canManageEvents,
-          eventStatus: eventStatus,
-          allowAssignment: allowAssignment,
-          onShareEvent: onShareEvent,
-          onCancelEvent: onCancelEvent,
-          onLockAssignments: onLockAssignments,
-          onReopenAssignments: onReopenAssignments,
-        ),
-      );
+  }) => DSBaseModal.show(
+    context,
+    _EventOptionsModal(
+      organizationId: organizationId,
+      eventId: eventId,
+      eventName: eventName,
+      canManageEvents: canManageEvents,
+      eventStatus: eventStatus,
+      onShareEvent: onShareEvent,
+      onCancelEvent: onCancelEvent,
+    ),
+  );
 
   @override
   State<_EventOptionsModal> createState() => _EventOptionsModalState();
@@ -402,16 +391,13 @@ class _EventOptionsModal extends DSBaseModal {
 
 class _EventOptionsModalState extends DSBaseModalState<_EventOptionsModal> {
   @override
-  Widget? get titleWidget => DSModalHeader(
-        title: 'Opções do evento',
-        subtitle: widget.eventName,
-      );
+  Widget? get titleWidget =>
+      DSModalHeader(title: 'Opções do evento', subtitle: widget.eventName);
 
   @override
   List<Widget> buildBody(BuildContext context) {
     final isScheduled = widget.eventStatus == OrganizationEventStatus.scheduled;
     final canEdit = widget.canManageEvents && isScheduled;
-    final canManageAssignments = widget.canManageEvents && isScheduled;
 
     return [
       Padding(
@@ -439,36 +425,6 @@ class _EventOptionsModalState extends DSBaseModalState<_EventOptionsModal> {
             },
           ),
         ),
-      if (canManageAssignments && widget.allowAssignment)
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: ActionTile(
-            icon: Icons.lock_rounded,
-            title: 'Fechar Escalação',
-            description: 'Encerrar respostas de disponibilidade',
-            iconColor: context.colors.warning,
-            iconBgColor: context.colors.warningTint,
-            onTap: () {
-              DSBaseModal.hide(context);
-              widget.onLockAssignments?.call();
-            },
-          ),
-        ),
-      if (canManageAssignments && !widget.allowAssignment)
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: ActionTile(
-            icon: Icons.lock_open_rounded,
-            title: 'Reabrir Escalação',
-            description: 'Permitir novas respostas de disponibilidade',
-            iconColor: context.colors.success,
-            iconBgColor: context.colors.successTint,
-            onTap: () {
-              DSBaseModal.hide(context);
-              widget.onReopenAssignments?.call();
-            },
-          ),
-        ),
       if (widget.canManageEvents &&
           widget.eventStatus != OrganizationEventStatus.canceled)
         Padding(
@@ -486,5 +442,365 @@ class _EventOptionsModalState extends DSBaseModalState<_EventOptionsModal> {
         ),
       const SizedBox(height: 8),
     ];
+  }
+}
+
+// ─── Event Status Card ────────────────────────────────────────────────────────
+
+String _formatLockMinutes(int minutes) {
+  if (minutes == 0) return 'imediatamente';
+  final h = minutes ~/ 60;
+  final m = minutes % 60;
+  if (h == 0) return '${m}min';
+  if (m == 0) return '${h}h';
+  return '${h}h${m}min';
+}
+
+String _formatEventTime(DateTime dt) =>
+    '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+
+class _EventStatusCard extends StatefulWidget {
+  const _EventStatusCard({
+    required this.details,
+    required this.canManageEvents,
+    required this.onLockAssignments,
+    required this.onReopenAssignments,
+  });
+
+  final OrganizationEventDetailsModel details;
+  final bool canManageEvents;
+  final VoidCallback onLockAssignments;
+  final VoidCallback onReopenAssignments;
+
+  @override
+  State<_EventStatusCard> createState() => _EventStatusCardState();
+}
+
+class _EventStatusCardState extends State<_EventStatusCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _opacity;
+
+  bool get _shouldPulse =>
+      widget.details.status == OrganizationEventStatus.scheduled &&
+      widget.details.allowAssignment;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: DSMotion.slow + DSMotion.slow,
+    );
+    _opacity = Tween(
+      begin: 0.3,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: DSMotion.standard));
+    if (_shouldPulse) _ctrl.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(_EventStatusCard old) {
+    super.didUpdateWidget(old);
+    if (_shouldPulse && !_ctrl.isAnimating) {
+      _ctrl.repeat(reverse: true);
+    } else if (!_shouldPulse && _ctrl.isAnimating) {
+      _ctrl.stop();
+      _ctrl.value = 1.0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return switch (widget.details.status) {
+      OrganizationEventStatus.scheduled => _buildScheduled(context),
+      OrganizationEventStatus.inProgress => _buildInProgress(context),
+      OrganizationEventStatus.completed => _buildCompleted(context),
+      OrganizationEventStatus.canceled => _buildCanceled(context),
+    };
+  }
+
+  // ── scheduled ───────────────────────────────────────────────────────────────
+
+  Widget _buildScheduled(BuildContext context) {
+    final open = widget.details.allowAssignment;
+    final lockMinutes = widget.details.availabilityLockBeforeStartInMinutes;
+    final lockAt = widget.details.startAt.subtract(
+      Duration(minutes: lockMinutes),
+    );
+    final lockLabel = _formatLockMinutes(lockMinutes);
+    final lockTimeStr = _formatEventTime(lockAt);
+
+    if (open) {
+      return _StatusCardShell(
+        background: context.colors.surface,
+        borderColor: context.colors.border,
+        iconData: Icons.access_time_rounded,
+        iconColor: context.colors.info,
+        iconTint: context.colors.infoTint,
+        dot: FadeTransition(
+          opacity: _opacity,
+          child: _StatusDot(color: context.colors.success),
+        ),
+        statusText: 'Respostas Abertas',
+        statusColor: context.colors.success,
+        description: Text.rich(
+          TextSpan(
+            text: 'Esta escala fecha automaticamente ',
+            style: context.textStyles.bodySmall.copyWith(
+              color: context.colors.textSecondary,
+              height: 1.4,
+            ),
+            children: [
+              TextSpan(
+                text: '$lockLabel antes',
+                style: context.textStyles.bodySmall.copyWith(
+                  color: context.colors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                  height: 1.4,
+                ),
+              ),
+              TextSpan(text: ' (às $lockTimeStr).'),
+            ],
+          ),
+        ),
+        actionLabel: widget.canManageEvents ? 'Fechar Agora' : null,
+        onAction: widget.canManageEvents ? widget.onLockAssignments : null,
+      );
+    }
+
+    return _StatusCardShell(
+      background: context.colors.surface,
+      borderColor: context.colors.border,
+      iconData: Icons.lock_rounded,
+      iconColor: context.colors.danger,
+      iconTint: context.colors.dangerTint,
+      dot: _StatusDot(color: context.colors.danger),
+      statusText: 'Respostas Bloqueadas',
+      statusColor: context.colors.danger,
+      description: Text.rich(
+        TextSpan(
+          text: 'As respostas foram bloqueadas ',
+          style: context.textStyles.bodySmall.copyWith(
+            color: context.colors.textSecondary,
+            height: 1.4,
+          ),
+          children: [
+            TextSpan(
+              text: '$lockLabel antes',
+              style: context.textStyles.bodySmall.copyWith(
+                color: context.colors.textPrimary,
+                fontWeight: FontWeight.w600,
+                height: 1.4,
+              ),
+            ),
+            TextSpan(text: ' do evento.'),
+          ],
+        ),
+      ),
+      actionLabel: widget.canManageEvents ? 'Reabrir Escala' : null,
+      onAction: widget.canManageEvents ? widget.onReopenAssignments : null,
+    );
+  }
+
+  // ── inProgress ───────────────────────────────────────────────────────────────
+
+  Widget _buildInProgress(BuildContext context) {
+    final endTime = _formatEventTime(widget.details.endAt);
+    return _StatusCardShell(
+      background: context.colors.surface,
+      borderColor: context.colors.border,
+      iconData: Icons.play_circle_rounded,
+      iconColor: context.colors.success,
+      iconTint: context.colors.successTint,
+      dot: FadeTransition(
+        opacity: _opacity,
+        child: _StatusDot(color: context.colors.success),
+      ),
+      statusText: 'Evento em Andamento',
+      statusColor: context.colors.success,
+      description: Text.rich(
+        TextSpan(
+          text: 'Termina às ',
+          style: context.textStyles.bodySmall.copyWith(
+            color: context.colors.textSecondary,
+            height: 1.4,
+          ),
+          children: [
+            TextSpan(
+              text: endTime,
+              style: context.textStyles.bodySmall.copyWith(
+                color: context.colors.textPrimary,
+                fontWeight: FontWeight.w600,
+                height: 1.4,
+              ),
+            ),
+            TextSpan(text: '.'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── completed ────────────────────────────────────────────────────────────────
+
+  Widget _buildCompleted(BuildContext context) {
+    return _StatusCardShell(
+      background: context.colors.surface,
+      borderColor: context.colors.border,
+      iconData: Icons.check_circle_rounded,
+      iconColor: context.colors.textSecondary,
+      iconTint: context.colors.surfaceSubtle,
+      dot: _StatusDot(color: context.colors.textSecondary),
+      statusText: 'Evento Finalizado',
+      statusColor: context.colors.textSecondary,
+      description: Text(
+        'Este evento foi concluído com sucesso.',
+        style: context.textStyles.bodySmall.copyWith(
+          color: context.colors.textSecondary,
+          height: 1.4,
+        ),
+      ),
+    );
+  }
+
+  // ── canceled ─────────────────────────────────────────────────────────────────
+
+  Widget _buildCanceled(BuildContext context) {
+    return _StatusCardShell(
+      background: context.colors.surface,
+      borderColor: context.colors.border,
+      iconData: Icons.cancel_rounded,
+      iconColor: context.colors.danger,
+      iconTint: context.colors.dangerTint,
+      dot: _StatusDot(color: context.colors.danger),
+      statusText: 'Evento Cancelado',
+      statusColor: context.colors.danger,
+      description: Text(
+        'Este evento foi cancelado e não ocorrerá.',
+        style: context.textStyles.bodySmall.copyWith(
+          color: context.colors.textSecondary,
+          height: 1.4,
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Status card shell ────────────────────────────────────────────────────────
+
+class _StatusCardShell extends StatelessWidget {
+  const _StatusCardShell({
+    required this.background,
+    required this.borderColor,
+    required this.iconData,
+    required this.iconColor,
+    required this.iconTint,
+    required this.dot,
+    required this.statusText,
+    required this.statusColor,
+    required this.description,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final Color background;
+  final Color borderColor;
+  final IconData iconData;
+  final Color iconColor;
+  final Color iconTint;
+  final Widget dot;
+  final String statusText;
+  final Color statusColor;
+  final Widget description;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(DSSpacing.lg),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: DSRadius.allLg,
+        border: Border.all(color: borderColor),
+        boxShadow: DSElevation.sm,
+      ),
+      child: Row(
+        children: [
+          // Icon box
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: iconTint,
+              borderRadius: DSRadius.allMd,
+            ),
+            child: Icon(iconData, size: 20, color: iconColor),
+          ),
+          const SizedBox(width: DSSpacing.md),
+
+          // Text content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    dot,
+                    const SizedBox(width: 6),
+                    Text(
+                      statusText.toUpperCase(),
+                      style: context.textStyles.labelSmall.copyWith(
+                        color: statusColor,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                description,
+              ],
+            ),
+          ),
+
+          // Action button
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(width: DSSpacing.sm),
+            GestureDetector(
+              onTap: onAction,
+              child: Text(
+                actionLabel!,
+                style: context.textStyles.labelSmall.copyWith(
+                  color: context.colors.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusDot extends StatelessWidget {
+  const _StatusDot({required this.color});
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
   }
 }

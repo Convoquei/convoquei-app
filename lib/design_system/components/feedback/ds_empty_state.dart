@@ -8,6 +8,13 @@
 //     actionLabel: 'Criar evento',
 //     onAction: _createEvent,
 //   )
+//
+// Variante compacta (inline em seções):
+//   DSEmptyState(
+//     icon: Icons.group_off_rounded,
+//     title: 'Nenhum candidato aguardando.',
+//     compact: true,
+//   )
 import 'package:flutter/material.dart';
 
 import '../../theme/ds_context_extensions.dart';
@@ -22,6 +29,7 @@ class DSEmptyState extends StatelessWidget {
     this.description,
     this.actionLabel,
     this.onAction,
+    this.compact = false,
   });
 
   final IconData icon;
@@ -30,8 +38,14 @@ class DSEmptyState extends StatelessWidget {
   final String? actionLabel;
   final VoidCallback? onAction;
 
+  /// Variante compacta para uso inline em seções — sem círculo, ícone menor,
+  /// sem ação, padding reduzido.
+  final bool compact;
+
   @override
   Widget build(BuildContext context) {
+    if (compact) return _CompactEmptyState(icon: icon, title: title);
+
     final colors = context.colors;
     return Center(
       child: Padding(
@@ -74,6 +88,34 @@ class DSEmptyState extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _CompactEmptyState extends StatelessWidget {
+  const _CompactEmptyState({required this.icon, required this.title});
+
+  final IconData icon;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: DSSpacing.lg, horizontal: DSSpacing.md),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16, color: context.colors.textSecondary),
+          const SizedBox(width: DSSpacing.sm),
+          Text(
+            title,
+            style: context.textStyles.bodySmall.copyWith(
+              color: context.colors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
