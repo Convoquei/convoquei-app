@@ -122,18 +122,28 @@ class _QuickMenuSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: List.generate(4, (_) {
-        return Expanded(
-          child: Column(
-            children: const [
-              DSSkeleton(height: 56, width: 56, borderRadius: DSRadius.lg),
-              SizedBox(height: DSSpacing.xs),
-              DSSkeleton(height: 10, width: 40),
-            ],
-          ),
-        );
-      }),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const DSSkeleton(height: 16, width: 140),
+        const SizedBox(height: DSSpacing.md),
+        Row(
+          children: List.generate(4, (_) {
+            return const Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DSSkeleton(height: 56, width: 56, borderRadius: DSRadius.lg),
+                    SizedBox(height: DSSpacing.xs),
+                    DSSkeleton(height: 10, width: 40),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ),
+      ],
     );
   }
 }
@@ -504,7 +514,10 @@ class _QuickMenu extends ConsumerWidget {
     final memberAsync = ref.watch(
       currentUserMembershipOrganizationProvider(orgId),
     );
-    final member = memberAsync.asData?.value;
+
+    if (!memberAsync.hasValue) return const _QuickMenuSkeleton();
+
+    final member = memberAsync.value;
 
     final canManageEvents =
         member?.hasPermission(OrganizationPermissionEnum.manageEvents) ?? false;
@@ -537,16 +550,35 @@ class _QuickMenu extends ConsumerWidget {
       ),
     ];
 
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final item in items)
-          Expanded(
-            child: DSQuickMenuItem(
-              icon: item.icon,
-              label: item.label,
-              onTap: item.onTap,
-            ),
-          ),
+        const DSText('Ações Rápidas', variant: DSTextVariant.titleMedium),
+        const SizedBox(height: DSSpacing.md),
+        Row(
+          children: [
+            for (int i = 0; i < items.length; i++) ...[
+              if (items.length == 4)
+                Expanded(
+                  child: Center(
+                    child: DSQuickMenuItem(
+                      icon: items[i].icon,
+                      label: items[i].label,
+                      onTap: items[i].onTap,
+                    ),
+                  ),
+                )
+              else ...[
+                DSQuickMenuItem(
+                  icon: items[i].icon,
+                  label: items[i].label,
+                  onTap: items[i].onTap,
+                ),
+                if (i < items.length - 1) const SizedBox(width: DSSpacing.xl),
+              ],
+            ],
+          ],
+        ),
       ],
     );
   }
@@ -773,11 +805,56 @@ class _NextAssignedSection extends ConsumerWidget {
 
     return async.when(
       loading: () => const _NextAssignedSectionSkeleton(),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (_, _) => const _NextAssignedEmpty(),
       data: (event) {
-        if (event == null) return const SizedBox.shrink();
+        if (event == null) return const _NextAssignedEmpty();
         return _NextAssignedCard(orgId: orgId, event: event);
       },
+    );
+  }
+}
+
+class _NextAssignedHeader extends StatelessWidget {
+  const _NextAssignedHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const DSText('Sua Próxima Escala', variant: DSTextVariant.titleMedium),
+        GestureDetector(
+          onTap: () => context.go(AppPaths.orgScales),
+          child: DSText(
+            'Ver todas',
+            variant: DSTextVariant.labelSmall,
+            color: context.colors.primary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _NextAssignedEmpty extends StatelessWidget {
+  const _NextAssignedEmpty();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _NextAssignedHeader(),
+        const SizedBox(height: DSSpacing.md),
+        DSCard(
+          child: DSEmptyState(
+            icon: Icons.event_available_rounded,
+            title: 'Nenhuma escala nos próximos 30 dias',
+            description:
+                'Quando você for escalado para um evento, ele aparece aqui.',
+          ),
+        ),
+      ],
     );
   }
 }
@@ -799,23 +876,7 @@ class _NextAssignedCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const DSText(
-              'Sua Próxima Escala',
-              variant: DSTextVariant.titleMedium,
-            ),
-            GestureDetector(
-              onTap: () => context.go(AppPaths.orgScales),
-              child: DSText(
-                'Ver todas',
-                variant: DSTextVariant.labelSmall,
-                color: colors.primary,
-              ),
-            ),
-          ],
-        ),
+        const _NextAssignedHeader(),
         const SizedBox(height: DSSpacing.md),
         DSCard(
           padding: EdgeInsets.zero,

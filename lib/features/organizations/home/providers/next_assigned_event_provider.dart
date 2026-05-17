@@ -1,4 +1,5 @@
 import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_membership_status.dart';
+import 'package:convoquei_app/features/organizations/events/models/enums/organization_event_status.dart';
 import 'package:convoquei_app/features/organizations/events/models/orgnaization_event_membership_model.dart';
 import 'package:convoquei_app/features/organizations/events/models/requests/find_all_events_organization_membership_request.dart';
 import 'package:convoquei_app/features/organizations/events/repositories/organization_events_repository.dart';
@@ -11,6 +12,7 @@ Future<OrganizationEventMembershipModel?> nextAssignedEvent(
   Ref ref,
   String organizationId,
 ) async {
+  final now = DateTime.now();
   final result = await ref
       .read(organizationEventsRepositoryProvider)
       .findAllEvents(
@@ -19,7 +21,9 @@ Future<OrganizationEventMembershipModel?> nextAssignedEvent(
           page: 0,
           size: 1,
           membershipStatus: [OrganizationEventMembershipStatus.assigned],
-          startAfter: DateTime.now(),
+          eventStatus: [OrganizationEventStatus.scheduled],
+          startAfter: now,
+          startBefore: now.add(const Duration(days: 30)),
         ),
       );
   return result.items.isEmpty ? null : result.items.first;

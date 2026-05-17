@@ -66,7 +66,7 @@ final class NextAssignedEventProvider
   }
 }
 
-String _$nextAssignedEventHash() => r'8aed246c0c6d6cabd20b952db99b4d8bee7b521e';
+String _$nextAssignedEventHash() => r'4bdf1edec9c0b463ceca636509675f5b495ee79a';
 
 final class NextAssignedEventFamily extends $Family
     with
